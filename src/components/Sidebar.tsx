@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { BookOpen, Calculator, Globe, FlaskConical, Atom, Languages, History, Settings, GraduationCap, LogOut } from "lucide-react";
+import { BookOpen, Calculator, Globe, FlaskConical, Atom, Languages, History, Settings, GraduationCap, LogOut, MapPin, Monitor, Plus } from "lucide-react";
 
 interface SidebarProps {
   selectedSubject: string;
@@ -17,11 +17,13 @@ interface SidebarProps {
 
 const subjects = [
   { id: 'math', name: '数学', icon: Calculator, color: 'bg-blue-100 text-blue-700' },
-  { id: 'english', name: '英語', icon: Languages, color: 'bg-green-100 text-green-700' },
-  { id: 'science', name: '理科', icon: FlaskConical, color: 'bg-purple-100 text-purple-700' },
-  { id: 'social', name: '社会', icon: Globe, color: 'bg-orange-100 text-orange-700' },
-  { id: 'physics', name: '物理', icon: Atom, color: 'bg-indigo-100 text-indigo-700' },
-  { id: 'history', name: '歴史', icon: History, color: 'bg-amber-100 text-amber-700' },
+  { id: 'chemistry', name: '化学', icon: FlaskConical, color: 'bg-purple-100 text-purple-700' },
+  { id: 'biology', name: '生物', icon: Atom, color: 'bg-green-100 text-green-700' },
+  { id: 'english', name: '英語', icon: Languages, color: 'bg-indigo-100 text-indigo-700' },
+  { id: 'japanese', name: '国語', icon: BookOpen, color: 'bg-red-100 text-red-700' },
+  { id: 'geography', name: '地理', icon: MapPin, color: 'bg-teal-100 text-teal-700' },
+  { id: 'information', name: '情報', icon: Monitor, color: 'bg-gray-100 text-gray-700' },
+  { id: 'other', name: 'その他', icon: Plus, color: 'bg-orange-100 text-orange-700' },
 ];
 
 const Sidebar = ({ selectedSubject, onSubjectChange, onSettingsClick, onLogout, dailyQuestions, totalCost }: SidebarProps) => {
@@ -45,7 +47,7 @@ const Sidebar = ({ selectedSubject, onSubjectChange, onSettingsClick, onLogout, 
           <GraduationCap className="h-8 w-8 text-blue-600" />
           <BookOpen className="h-8 w-8 text-green-600" />
         </div>
-        <h1 className="text-xl font-bold text-gray-900">受験AI チャット</h1>
+        <h1 className="text-xl font-bold text-gray-900">スーパー受験アシスタント</h1>
         <p className="text-sm text-gray-600 mt-1">AIとの対話で効率的に学習</p>
       </div>
 

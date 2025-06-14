@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,6 +19,9 @@ const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Check if running in local environment
+  const isLocalEnvironment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
   useEffect(() => {
     // Set up auth state listener
@@ -119,6 +121,10 @@ const Index = () => {
     }
   };
 
+  const handleSkipLogin = () => {
+    navigate('/app');
+  };
+
   // Already authenticated, show loading or redirect
   if (user) {
     return (
@@ -141,12 +147,24 @@ const Index = () => {
               <BookOpen className="h-8 w-8 text-green-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              受験AI チャット
+              スーパー受験アシスタント
             </h1>
             <p className="text-gray-600 text-sm">
               AIとの対話で効率的に学習しよう
             </p>
           </div>
+
+          {isLocalEnvironment && (
+            <div className="mb-4">
+              <Button
+                onClick={handleSkipLogin}
+                variant="outline"
+                className="w-full bg-yellow-50 hover:bg-yellow-100 border-yellow-300 text-yellow-700"
+              >
+                🚀 開発用スキップ
+              </Button>
+            </div>
+          )}
 
           <Tabs value={isLogin ? "login" : "signup"} className="w-full">
             <TabsList className="grid w-full grid-cols-2">

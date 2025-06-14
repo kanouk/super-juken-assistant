@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Sidebar from './Sidebar';
 import ChatScreen from './ChatScreen';
@@ -17,11 +16,13 @@ const MainApp = () => {
 
   const subjectNames: { [key: string]: string } = {
     math: '数学',
+    chemistry: '化学',
+    biology: '生物',
     english: '英語',
-    science: '理科',
-    social: '社会',
-    physics: '物理',
-    history: '歴史'
+    japanese: '国語',
+    geography: '地理',
+    information: '情報',
+    other: 'その他'
   };
 
   const handleSubjectChange = (subject: string) => {
