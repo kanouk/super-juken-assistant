@@ -1,8 +1,7 @@
 
 import React, { useRef } from 'react';
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Paperclip, Send } from 'lucide-react';
+import { Paperclip } from 'lucide-react';
 import { ImageData } from './types';
 
 interface MessageInputProps {
@@ -52,46 +51,55 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   return (
-    <div className="p-3 lg:p-4 bg-white border-t border-gray-200">
-      <form onSubmit={handleSubmit} className="flex items-end space-x-2">
-        <div className="flex-1">
+    <div className="p-4 bg-white border-t border-gray-200">
+      {/* 選択された画像のプレビュー */}
+      {selectedImages.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {selectedImages.map((image, index) => (
+            <div key={index} className="relative">
+              <img
+                src={image.url}
+                alt={image.alt}
+                className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+              />
+              <button
+                onClick={() => onImagesChange(selectedImages.filter((_, i) => i !== index))}
+                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="relative">
+        <div className="relative">
           <Textarea
             value={inputText}
             onChange={handleTextareaChange}
-            placeholder="質問してください..."
-            className="min-h-[60px] max-h-32 resize-none text-sm lg:text-base"
+            placeholder="質問してください... (Enterで送信、Shift+Enterで改行)"
+            className="min-h-[60px] max-h-32 resize-none pr-12 border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl"
             onKeyDown={handleKeyDown}
             disabled={isLoading}
           />
-        </div>
-        <div className="flex flex-col space-y-2 flex-shrink-0">
-          <Button
+          <button
             type="button"
-            variant="outline"
-            size="sm"
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
-            className="p-2"
+            className="absolute right-3 bottom-3 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <Paperclip className="h-4 w-4" />
-          </Button>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={isLoading || (!inputText.trim() && selectedImages.length === 0)}
-            className="bg-blue-600 hover:bg-blue-700 p-2"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+            <Paperclip className="h-5 w-5" />
+          </button>
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageSelect}
+          className="hidden"
+        />
       </form>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleImageSelect}
-        className="hidden"
-      />
     </div>
   );
 };
