@@ -30,43 +30,49 @@ export const ModelsTab = ({ models, updateSetting }: ModelsTabProps) => {
             onValueChange={(value) => updateSetting('models.openai', value)}
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="モデルを選択" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-              <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
-              <SelectItem value="gpt-4">GPT-4</SelectItem>
+              <SelectItem value="gpt-4.1-2025-04-14">GPT-4.1 (2025-04-14)</SelectItem>
+              <SelectItem value="o3-2025-04-16">O3 (2025-04-16)</SelectItem>
+              <SelectItem value="o4-mini-2025-04-16">O4 Mini (2025-04-16)</SelectItem>
+              <SelectItem value="gpt-4o">GPT-4o（旧モデル）</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div>
-          <Label>Google AI モデル</Label>
+          <Label>Google Gemini モデル</Label>
           <Select
             value={models.google}
             onValueChange={(value) => updateSetting('models.google', value)}
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="モデルを選択" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="gemini-2.5-pro">Gemini 2.5 Pro</SelectItem>
               <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
               <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div>
-          <Label>Anthropic モデル</Label>
+          <Label>Anthropic Claude モデル</Label>
           <Select
             value={models.anthropic}
             onValueChange={(value) => updateSetting('models.anthropic', value)}
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="モデルを選択" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
-              <SelectItem value="claude-3-haiku">Claude 3 Haiku</SelectItem>
-              <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
+              <SelectItem value="claude-sonnet-4-20250514">Sonnet 4 (2025-05-14)</SelectItem>
+              <SelectItem value="claude-opus-4-20250514">Opus 4 (2025-05-14)</SelectItem>
+              <SelectItem value="claude-3-5-haiku-20241022">3.5 Haiku (2024-10-22)</SelectItem>
+              <SelectItem value="claude-3-7-sonnet-20250219">3.7 Sonnet (2025-02-19)</SelectItem>
+              <SelectItem value="claude-3-sonnet">3 Sonnet（旧モデル）</SelectItem>
+              <SelectItem value="claude-3-haiku">3 Haiku（旧モデル）</SelectItem>
+              <SelectItem value="claude-3-opus">3 Opus（旧モデル）</SelectItem>
             </SelectContent>
           </Select>
         </div>

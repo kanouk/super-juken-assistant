@@ -67,9 +67,13 @@ const defaultSubjectConfigs: SubjectConfig[] = [
   { id: 'biology', name: '生物', visible: true, order: 3, instruction: '生物の概念は図表を用いて視覚的に説明してください。専門用語は分かりやすく解説してください。' },
   { id: 'english', name: '英語', visible: true, order: 4, instruction: '英語の文法や単語について、例文を交えて説明してください。発音記号も適宜使用してください。' },
   { id: 'japanese', name: '国語', visible: true, order: 5, instruction: '国語の内容は古文・漢文も含めて丁寧に説明してください。語彙や文法事項を重視してください。' },
-  { id: 'geography', name: '地理', visible: true, order: 6, instruction: '地理の内容は地図や統計データを参考に説明してください。地域性や環境要因も考慮してください。' },
-  { id: 'information', name: '情報', visible: true, order: 7, instruction: '情報の内容はプログラミングやデータ処理について具体例を交えて説明してください。' },
-  { id: 'other', name: '全般', visible: true, order: 8, instruction: 'その他の教科についても基礎から応用まで幅広く対応します。具体例を交えて分かりやすく説明してください。' }
+  { id: 'physics', name: '物理', visible: true, order: 6, instruction: '物理の問題は公式や原理を分かりやすく、図や数式を交えて解説してください。' },
+  { id: 'earth_science', name: '地学', visible: true, order: 7, instruction: '地学の内容は地球や宇宙、自然現象を具体例と図を用いて説明してください。' },
+  { id: 'world_history', name: '世界史', visible: true, order: 8, instruction: '世界史の出来事は時代背景や因果関係を重視して説明してください。年号や史実の正確さも心がけてください。' },
+  { id: 'japanese_history', name: '日本史', visible: true, order: 9, instruction: '日本史の出来事は時代区分とともに流れを重視して説明してください。人物名や文化の背景も補足してください。' },
+  { id: 'geography', name: '地理', visible: true, order: 10, instruction: '地理の内容は地図や統計データを参考に説明してください。地域性や環境要因も考慮してください。' },
+  { id: 'information', name: '情報', visible: true, order: 11, instruction: '情報の内容はプログラミングやデータ処理について具体例を交えて説明してください。' },
+  { id: 'other', name: '全般', visible: true, order: 12, instruction: 'その他の教科についても基礎から応用まで幅広く対応します。具体例を交えて分かりやすく説明してください。' }
 ];
 
 export const useSettings = () => {

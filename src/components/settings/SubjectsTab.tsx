@@ -29,6 +29,10 @@ export const SubjectsTab = ({ subjectConfigs, updateSubjectConfig, moveSubject }
       biology: Atom,
       english: Languages,
       japanese: BookOpen,
+      physics: Zap,
+      earth_science: Globe,
+      world_history: Globe,
+      japanese_history: BookOpen,
       geography: MapPin,
       information: Monitor,
       other: Plus
@@ -43,6 +47,10 @@ export const SubjectsTab = ({ subjectConfigs, updateSubjectConfig, moveSubject }
       biology: 'text-green-600',
       english: 'text-indigo-600',
       japanese: 'text-red-600',
+      physics: 'text-orange-600',
+      earth_science: 'text-cyan-700',
+      world_history: 'text-yellow-700',
+      japanese_history: 'text-pink-600',
       geography: 'text-teal-600',
       information: 'text-gray-600',
       other: 'text-orange-600'
