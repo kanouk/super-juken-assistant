@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +35,7 @@ const subjects = [
   { id: 'japanese', name: '国語', icon: BookOpen, color: 'bg-red-100 text-red-700 hover:bg-red-200', gradient: 'from-red-400 to-red-600' },
   { id: 'geography', name: '地理', icon: MapPin, color: 'bg-teal-100 text-teal-700 hover:bg-teal-200', gradient: 'from-teal-400 to-teal-600' },
   { id: 'information', name: '情報', icon: Monitor, color: 'bg-gray-100 text-gray-700 hover:bg-gray-200', gradient: 'from-gray-400 to-gray-600' },
-  { id: 'other', name: 'その他', icon: Plus, color: 'bg-orange-100 text-orange-700 hover:bg-orange-200', gradient: 'from-orange-400 to-orange-600' },
+  { id: 'other', name: '全般', icon: Plus, color: 'bg-orange-100 text-orange-700 hover:bg-orange-200', gradient: 'from-orange-400 to-orange-600' },
 ];
 
 const Sidebar = ({ 

@@ -49,10 +49,10 @@ export const useChatStats = (userId: string | undefined) => {
         return;
       }
 
-      // Get understood count
-      const { data: understoodData, error: understoodError } = await supabase
+      // Get understood count - fix the query to properly count understood messages
+      const { count: understoodCount, error: understoodError } = await supabase
         .from('messages')
-        .select('id', { count: 'exact' })
+        .select('*', { count: 'exact', head: true })
         .eq('role', 'assistant')
         .eq('is_understood', true)
         .in('conversation_id', conversationIds);
@@ -78,13 +78,12 @@ export const useChatStats = (userId: string | undefined) => {
 
       if (todayError) throw todayError;
 
-      const understoodCount = understoodData?.length || 0;
       const totalCost = totalCostData?.reduce((sum, msg) => sum + (msg.cost || 0), 0) || 0;
       const dailyCost = todayData?.reduce((sum, msg) => sum + (msg.cost || 0), 0) || 0;
       const dailyQuestions = todayData?.filter(msg => msg.role === 'user').length || 0;
 
       setStats({
-        understoodCount,
+        understoodCount: understoodCount || 0,
         dailyCost,
         totalCost,
         dailyQuestions,
@@ -101,7 +100,7 @@ export const useChatStats = (userId: string | undefined) => {
     fetchStats();
   }, [userId]);
 
-  // Set up real-time subscription for messages table
+  // Set up real-time subscription for messages table changes
   useEffect(() => {
     if (!userId) return;
 

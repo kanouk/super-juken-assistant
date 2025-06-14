@@ -18,9 +18,10 @@ interface ChatScreenProps {
   subjectName: string;
   currentModel: string;
   userId: string | undefined;
+  onSubjectChange?: (subject: string) => void;
 }
 
-const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenProps) => {
+const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChange }: ChatScreenProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -66,6 +67,47 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
       scrollToBottom();
     }
   }, [messages]);
+
+  // 教科マッピング用のヘルパー関数を追加
+  const getSubjectFromDetected = (detectedSubject: string): string => {
+    const subjectMap: { [key: string]: string } = {
+      'math': 'math',
+      'mathematics': 'math',
+      '数学': 'math',
+      'chemistry': 'chemistry',
+      '化学': 'chemistry',
+      'biology': 'biology',
+      '生物': 'biology',
+      'english': 'english',
+      '英語': 'english',
+      'japanese': 'japanese',
+      '国語': 'japanese',
+      'geography': 'geography',
+      '地理': 'geography',
+      'information': 'information',
+      '情報': 'information',
+      'other': 'other',
+      'general': 'other',
+      '全般': 'other',
+      '一般': 'other'
+    };
+    
+    return subjectMap[detectedSubject.toLowerCase()] || 'other';
+  };
+
+  const getSubjectDisplayName = (subjectId: string): string => {
+    const displayNames: { [key: string]: string } = {
+      'math': '数学',
+      'chemistry': '化学',
+      'biology': '生物',
+      'english': '英語',
+      'japanese': '国語',
+      'geography': '地理',
+      'information': '情報',
+      'other': '全般'
+    };
+    return displayNames[subjectId] || '全般';
+  };
 
   // 新規チャット開始時のタイトル生成 - 教科名を削除
   const generateConversationTitle = (firstMessage: string): string => {
@@ -259,7 +301,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
         msg.id === localUserMessageId ? { ...msg, db_id: dbUserMessage.id, id: dbUserMessage.id } : msg
       ));
       
-      // AI関数を呼び出し
+      // AI関数を呼び出し（教科判定を含む）
       const conversationHistory = messages
         .slice(-10) 
         .map(msg => ({
@@ -281,11 +323,34 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
           imageUrl: imageUrlSupabase || undefined,
           conversationHistory: finalHistory,
           currentModel: currentModel,
+          detectSubject: true, // 教科判定を有効にする
         }
       });
 
       if (functionError) throw new Error(functionError.message || 'AI応答でエラーが発生しました');
       if (functionData.error) throw new Error(functionData.error);
+
+      // 教科判定の処理
+      if (functionData.detectedSubject && functionData.detectedSubject !== subject) {
+        const detectedSubjectId = getSubjectFromDetected(functionData.detectedSubject);
+        const detectedSubjectName = getSubjectDisplayName(detectedSubjectId);
+        
+        if (detectedSubjectId !== subject && onSubjectChange) {
+          // 別の教科が検出された場合の処理
+          toast({
+            title: "教科が異なります",
+            description: `この質問は${detectedSubjectName}に関する内容のようです。${detectedSubjectName}のチャットに移動します。`,
+            duration: 3000,
+          });
+
+          // 教科を変更し、そちらに質問を保存
+          setTimeout(() => {
+            onSubjectChange(detectedSubjectId);
+          }, 1000);
+          
+          return;
+        }
+      }
 
       // AIメッセージをDBに保存
       const aiMessageContent = functionData.response;
