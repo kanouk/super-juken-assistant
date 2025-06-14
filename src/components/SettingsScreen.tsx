@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react'; // useEffectとuseRefをインポート
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -19,12 +19,26 @@ interface SettingsScreenProps {
 
 const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const { settings, setSettings, saveSettings, isLoading } = useSettings();
-  const [showPasscodeModal, setShowPasscodeModal] = useState(true);
+  const [showPasscodeModal, setShowPasscodeModal] = useState(true); // This state seems to always be true when !isAuthenticated
   const [passcodeInput, setPasscodeInput] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const { toast } = useToast();
+  const otpGroupRef = useRef<HTMLDivElement>(null); // Ref for InputOTPGroup
+
+  useEffect(() => {
+    // Focus the first OTP input when the modal is shown and user is not authenticated
+    if (!isAuthenticated && showPasscodeModal) { // showPasscodeModal is true by default when !isAuthenticated
+      const timer = setTimeout(() => {
+        if (otpGroupRef.current) {
+          const firstInput = otpGroupRef.current.querySelector('input');
+          firstInput?.focus();
+        }
+      }, 100); // Small delay to ensure element is rendered and focusable
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, showPasscodeModal]);
 
   const handlePasscodeChange = (value: string) => {
     setPasscodeInput(value);
@@ -109,9 +123,9 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
                 maxLength={6}
                 value={passcodeInput}
                 onChange={handlePasscodeChange}
-                className="gap-2"
+                // className="gap-2" // This className is typically on InputOTP itself, not InputOTPGroup
               >
-                <InputOTPGroup>
+                <InputOTPGroup ref={otpGroupRef} className="gap-2"> {/* Added ref here and moved gap-2 for styling consistency */}
                   <InputOTPSlot 
                     index={0}
                     className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
