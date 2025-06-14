@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Paperclip, Send, X, Bot, User, ThumbsUp, Brain, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import LaTeXRenderer from "./LaTeXRenderer";
 import TypewriterEffect from './TypewriterEffect';
 import ConfettiComponent from './Confetti';
 import { supabase } from "@/integrations/supabase/client";
@@ -97,7 +96,6 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
     const submittingText = textForSubmission; 
     const submittingImageFile = imageForSubmission;
     const submittingImagePreview = imagePreviewForSubmission;
-
 
     setInputText(''); 
     removeImage();    
@@ -198,7 +196,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
       setInputText(submittingText);
       if (submittingImagePreview) {
         setImagePreview(submittingImagePreview);
-        setSelectedImage(submittingImageFile);
+        setSelectedImage(submittingImageFile); // Restore the actual file for potential re-submission
       }
     } finally {
       setIsLoading(false);
@@ -294,7 +292,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
                       ) : (
                         <TypewriterEffect
                           content={message.content} 
-                          className="text-sm"
+                          className="text-sm" // This className is passed to LaTeXRenderer
                           speed={20}
                           onComplete={() => {
                             const currentMessagesForSubject = allMessages[subject] || [];
@@ -382,17 +380,18 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
               value={inputText}
               onChange={(e) => {
                 setInputText(e.target.value);
-                if (e.target.value.trim() !== '') { // Clear actions only if user types something meaningful
+                if (e.target.value.trim() !== '') {
                   setLatestAIMessageIdForActions(null);
                 }
               }}
               placeholder={`${subjectName}について質問してください...`}
               className="min-h-[60px] resize-none"
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                // IME変換確定時のEnterキーでは送信しないようにする
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
                   e.preventDefault();
-                  if (inputText.trim() || selectedImage) { // Ensure there's content to submit
-                    handleSubmit(e as any); // Pass event, explicitText is not needed here
+                  if (inputText.trim() || selectedImage) {
+                    handleSubmit(e as any);
                   }
                 }
               }}
