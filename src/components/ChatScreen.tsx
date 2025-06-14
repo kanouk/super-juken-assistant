@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -106,9 +105,11 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
       };
 
       // 科目ごとにメッセージを更新
+      const updatedMessagesForSubject = [...(allMessages[subject] || []), userMessage];
+      
       setAllMessages(prev => ({
         ...prev,
-        [subject]: [...(prev[subject] || []), userMessage]
+        [subject]: updatedMessagesForSubject
       }));
 
       // Upload image to Supabase Storage if present
@@ -131,21 +132,22 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
         }
       }
 
-      // 現在の科目のメッセージ履歴のみを送信
-      const currentSubjectMessages = allMessages[subject] || [];
-      const conversationHistory = currentSubjectMessages.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-        image_url: msg.image_url
-      }));
-
+      const conversationHistory = updatedMessagesForSubject
+        .slice(-11, -1) // Send up to the last 10 messages (excluding the current user message)
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content,
+          image_url: msg.image_url 
+        }));
+      
       // Call ask-ai Edge Function with conversation history
       const { data, error } = await supabase.functions.invoke('ask-ai', {
         body: {
           message: currentInputText,
           subject: subject,
-          imageUrl: imageUrl || currentImagePreview,
-          conversationHistory: conversationHistory
+          imageUrl: imageUrl || undefined, // Ensure undefined if no image
+          conversationHistory: conversationHistory,
+          currentModel: currentModel,
         }
       });
 
@@ -171,7 +173,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
       // 科目ごとにAIメッセージを追加
       setAllMessages(prev => ({
         ...prev,
-        [subject]: [...(prev[subject] || []), userMessage, aiMessage]
+        [subject]: [...updatedMessagesForSubject, aiMessage]
       }));
 
       toast({
@@ -199,7 +201,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-full bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 p-4">
         <div className="flex items-center justify-between">
@@ -231,10 +233,10 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
               key={message.id}
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`flex items-start space-x-3 max-w-3xl ${
+              <div className={`flex items-start space-x-3 max-w-2xl ${
                 message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
               }`}>
-                <Avatar className="w-8 h-8">
+                <Avatar className="w-8 h-8 shrink-0">
                   <AvatarFallback className={
                     message.role === 'user' 
                       ? 'bg-blue-100 text-blue-700' 
@@ -247,7 +249,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
                 <Card className={`${
                   message.role === 'user' 
                     ? 'bg-blue-600 text-white border-blue-600' 
-                    : 'bg-white border-gray-200'
+                    : 'bg-gray-100 border-gray-200 text-gray-900'
                 }`}>
                   <CardContent className="p-3">
                     {message.image_url && (
@@ -262,7 +264,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
                     ) : (
                       <LaTeXRenderer 
                         content={message.content} 
-                        className="text-sm text-gray-900"
+                        className="text-sm"
                       />
                     )}
                     {message.role === 'assistant' && message.cost && (
@@ -280,13 +282,13 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
         
         {isLoading && (
           <div className="flex justify-start">
-            <div className="flex items-start space-x-3 max-w-3xl">
-              <Avatar className="w-8 h-8">
+            <div className="flex items-start space-x-3 max-w-2xl">
+              <Avatar className="w-8 h-8 shrink-0">
                 <AvatarFallback className="bg-green-100 text-green-700">
                   <Bot className="h-4 w-4" />
                 </AvatarFallback>
               </Avatar>
-              <Card className="bg-white border-gray-200">
+              <Card className="bg-gray-100 border-gray-200 text-gray-900">
                 <CardContent className="p-3">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
