@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MessageType } from './types';
+import { MessageType, Message } from './types';
 import MessageItem from './MessageItem';
 
 interface MessageListProps {
@@ -16,12 +16,27 @@ const MessageList: React.FC<MessageListProps> = ({
   onUnderstood,
   messagesEndRef,
 }) => {
+  // Convert MessageType to Message format for MessageItem
+  const convertToMessage = (msg: MessageType): Message => ({
+    id: msg.id,
+    content: msg.content,
+    role: msg.isUser ? 'user' : 'assistant',
+    created_at: msg.timestamp.toISOString(),
+    subject: '', // Default empty subject for legacy messages
+    image_url: msg.images?.[0]?.url,
+    is_understood: msg.isUnderstood
+  });
+
   return (
     <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-4">
       {messages.map((message) => (
         <MessageItem
           key={message.id}
-          message={message}
+          message={convertToMessage(message)}
+          onCopyToClipboard={() => {}}
+          onTypewriterComplete={() => {}}
+          showQuickActions={false}
+          onQuickAction={() => {}}
           onUnderstood={() => onUnderstood(message.id)}
         />
       ))}
