@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { User, Bot, Copy } from 'lucide-react';
-import TypewriterEffect from '../TypewriterEffect';
 import LaTeXRenderer from '../LaTeXRenderer';
 import QuickActions from './QuickActions';
 
@@ -27,6 +26,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
   onQuickAction,
   onUnderstood,
 }) => {
+  // AIメッセージが表示された時に即座にコールバックを呼び出す
+  React.useEffect(() => {
+    if (message.role === 'assistant' && message.db_id) {
+      onTypewriterComplete(message.db_id);
+    }
+  }, [message.role, message.db_id, onTypewriterComplete]);
+
   return (
     <div key={message.id} data-message-id={message.db_id || message.id}>
       <div
@@ -65,17 +71,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   <LaTeXRenderer content={message.content} className="text-sm" />
                 </div>
               ) : (
-                <TypewriterEffect
-                  content={message.content}
-                  className="text-base"
-                  speed={20}
-                  onComplete={() => onTypewriterComplete(message.db_id)}
-                  renderer={(content) => (
-                    <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700">
-                      <LaTeXRenderer content={content} className="text-base" />
-                    </div>
-                  )}
-                />
+                <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700">
+                  <LaTeXRenderer content={message.content} className="text-base" />
+                </div>
               )}
               {message.role === 'assistant' && (message.cost || message.model) && (
                 <div className="mt-3">

@@ -80,6 +80,13 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     const fetchMessages = async () => {
       if (!userId || !subject) return;
       setIsLoading(true);
+      
+      // メッセージ読み込み時に入力をクリア
+      setInputText('');
+      setSelectedImage(null);
+      setImagePreview(null);
+      setLatestAIMessageIdForActions(null);
+      
       try {
         // 1. Find or create conversation
         let { data: conversation, error: convError } = await supabase
