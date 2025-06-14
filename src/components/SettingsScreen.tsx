@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Settings, Key, Brain, MessageSquare, Shield, Save, Lock, Sparkles } from "lucide-react";
+import { Settings, Key, Brain, MessageSquare, Shield, Save, Lock, Sparkles, Delete } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SettingsScreenProps {
@@ -57,6 +57,16 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
     }
   };
 
+  const handleNumberClick = (num: string) => {
+    if (passcodeInput.length < 6) {
+      setPasscodeInput(prev => prev + num);
+    }
+  };
+
+  const handleDelete = () => {
+    setPasscodeInput(prev => prev.slice(0, -1));
+  };
+
   const handleSave = async () => {
     try {
       // TODO: Save settings to Supabase
@@ -92,63 +102,82 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
 
   if (!isAuthenticated) {
     return (
-      <Dialog open={showPasscodeModal} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-blue-50 via-white to-indigo-50 border-2 border-blue-200">
-          <DialogHeader className="text-center pb-6">
-            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
-              <Lock className="h-10 w-10 text-white" />
-            </div>
-            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
-              設定へのアクセス
-            </DialogTitle>
-            <p className="text-gray-600 mt-2">
-              管理者権限が必要です
-            </p>
-          </DialogHeader>
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <Label htmlFor="passcode" className="text-sm font-medium text-gray-700">
-                6桁のパスコードを入力してください
-              </Label>
-              <div className="relative">
-                <Input
-                  id="passcode"
-                  type="password"
-                  value={passcodeInput}
-                  onChange={(e) => setPasscodeInput(e.target.value)}
-                  placeholder="••••••"
-                  maxLength={6}
-                  className="text-center text-2xl font-mono tracking-wider h-14 border-2 border-gray-200 focus:border-blue-500 bg-white/80 backdrop-blur-sm"
-                />
-                <div className="absolute inset-y-0 right-3 flex items-center">
-                  <Key className="h-5 w-5 text-gray-400" />
-                </div>
+      <div className="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
+        {/* Glassmorphism Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20 backdrop-blur-3xl"></div>
+        
+        {/* Floating Elements for Depth */}
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-white/10 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-blue-400/20 rounded-full blur-xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 right-1/3 w-16 h-16 bg-purple-400/20 rounded-full blur-xl animate-pulse delay-2000"></div>
+
+        {/* Main Card */}
+        <div className="relative w-full max-w-sm mx-auto">
+          <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl p-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="mx-auto w-20 h-20 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center mb-6 shadow-lg border border-white/30">
+                <Lock className="h-10 w-10 text-white/90" />
               </div>
-              {passcodeInput.length > 0 && (
-                <div className="flex justify-center space-x-2 mt-2">
-                  {[...Array(6)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                        i < passcodeInput.length 
-                          ? "bg-blue-500 shadow-md" 
-                          : "bg-gray-200"
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
+              <h1 className="text-2xl font-bold text-white mb-2">設定へのアクセス</h1>
+              <p className="text-white/70">6桁のパスコードを入力してください</p>
             </div>
-            <div className="flex space-x-3 pt-4">
+
+            {/* Passcode Display */}
+            <div className="flex justify-center space-x-4 mb-8">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                    i < passcodeInput.length 
+                      ? "bg-white shadow-lg shadow-white/50" 
+                      : "bg-white/20 border border-white/30"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Number Pad */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                <button
+                  key={num}
+                  onClick={() => handleNumberClick(num.toString())}
+                  className="w-16 h-16 mx-auto bg-white/10 backdrop-blur-xl border border-white/20 rounded-full text-white text-xl font-semibold hover:bg-white/20 active:bg-white/30 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                >
+                  {num}
+                </button>
+              ))}
+            </div>
+
+            {/* Bottom Row */}
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <div></div>
+              <button
+                onClick={() => handleNumberClick('0')}
+                className="w-16 h-16 mx-auto bg-white/10 backdrop-blur-xl border border-white/20 rounded-full text-white text-xl font-semibold hover:bg-white/20 active:bg-white/30 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+              >
+                0
+              </button>
+              <button
+                onClick={handleDelete}
+                className="w-16 h-16 mx-auto bg-white/10 backdrop-blur-xl border border-white/20 rounded-full text-white hover:bg-white/20 active:bg-white/30 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center"
+              >
+                <Delete className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3">
               <Button
                 variant="outline"
-                className="flex-1 h-12 border-2 hover:bg-gray-50"
+                className="flex-1 h-12 bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 hover:text-white"
                 onClick={onBack}
               >
                 キャンセル
               </Button>
               <Button
-                className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
+                className="flex-1 h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handlePasscodeSubmit}
                 disabled={passcodeInput.length !== 6}
               >
@@ -157,8 +186,8 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
     );
   }
 
