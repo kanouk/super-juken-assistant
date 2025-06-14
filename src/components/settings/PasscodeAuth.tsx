@@ -15,15 +15,16 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
   const [isShaking, setIsShaking] = useState(false);
   const otpGroupRef = useRef<HTMLDivElement>(null);
 
+  // 毎回初回マウント時のみ1桁目にフォーカス
   useEffect(() => {
     const timer = setTimeout(() => {
       if (otpGroupRef.current) {
         const firstInput = otpGroupRef.current.querySelector('input');
         firstInput?.focus();
       }
-    }, 100);
+    }, 10); // 最小限の遅延
     return () => clearTimeout(timer);
-  }, []);
+  }, []); // ← 毎回開かれるたび必ず1文字目にfocus
 
   const handlePasscodeChange = (value: string) => {
     setPasscodeInput(value);
@@ -49,11 +50,9 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
   return (
     <div className="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20 backdrop-blur-3xl"></div>
-      
       <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-white/10 rounded-full blur-xl animate-pulse"></div>
       <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-blue-400/20 rounded-full blur-xl animate-pulse delay-1000"></div>
       <div className="absolute top-1/2 right-1/3 w-16 h-16 bg-purple-400/20 rounded-full blur-xl animate-pulse delay-2000"></div>
-
       <div className="relative w-full max-w-sm mx-auto">
         <div className={`bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl p-8 transition-transform duration-200 ${isShaking ? 'animate-bounce' : ''}`}>
           <div className="text-center mb-8">

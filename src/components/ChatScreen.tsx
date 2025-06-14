@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import ConfettiComponent from './Confetti';
@@ -14,21 +15,38 @@ import { v4 as uuidv4 } from 'uuid';
 import ChatMainView from "./chat/ChatMainView";
 import ConversationHistoryView from "./chat/ConversationHistoryView";
 
-const modelOptions = [
-  { label: "GPT-4.1 (2025-04-14)", value: "gpt-4.1-2025-04-14" },
-  { label: "O3 (2025-04-16)", value: "o3-2025-04-16" },
-  { label: "O4 Mini (2025-04-16)", value: "o4-mini-2025-04-16" },
-  { label: "GPT-4o（旧モデル）", value: "gpt-4o" },
-  { label: "Gemini 2.5 Pro", value: "gemini-2.5-pro" },
-  { label: "Gemini 1.5 Pro", value: "gemini-1.5-pro" },
-  { label: "Gemini 1.5 Flash", value: "gemini-1.5-flash" },
-  { label: "Sonnet 4 (2025-05-14)", value: "claude-sonnet-4-20250514" },
-  { label: "Opus 4 (2025-05-14)", value: "claude-opus-4-20250514" },
-  { label: "3.5 Haiku (2024-10-22)", value: "claude-3-5-haiku-20241022" },
-  { label: "3.7 Sonnet (2025-02-19)", value: "claude-3-7-sonnet-20250219" },
-  { label: "3 Sonnet（旧モデル）", value: "claude-3-sonnet" },
-  { label: "3 Haiku（旧モデル）", value: "claude-3-haiku" },
-  { label: "3 Opus（旧モデル）", value: "claude-3-opus" },
+// ChatScreenコンポーネントprops
+interface ChatScreenProps {
+  subject: string;
+  subjectName: string;
+  currentModel: string;
+  userId: string | undefined;
+  onSubjectChange?: (subject: string) => void;
+  onToggleSidebar: () => void;
+  isMobile: boolean;
+  // 追加: modelOptionの配列型をpropsで受け取る
+  availableModels?: {
+    openai?: { label: string; value: string };
+    google?: { label: string; value: string };
+    anthropic?: { label: string; value: string };
+  };
+}
+
+const allModelOptions = [
+  { label: "GPT-4.1 (2025-04-14)", value: "gpt-4.1-2025-04-14", service: "openai"},
+  { label: "O3 (2025-04-16)", value: "o3-2025-04-16", service: "openai" },
+  { label: "O4 Mini (2025-04-16)", value: "o4-mini-2025-04-16", service: "openai" },
+  { label: "GPT-4o（旧モデル）", value: "gpt-4o", service: "openai" },
+  { label: "Gemini 2.5 Pro", value: "gemini-2.5-pro", service: "google" },
+  { label: "Gemini 1.5 Pro", value: "gemini-1.5-pro", service: "google" },
+  { label: "Gemini 1.5 Flash", value: "gemini-1.5-flash", service: "google" },
+  { label: "Sonnet 4 (2025-05-14)", value: "claude-sonnet-4-20250514", service: "anthropic" },
+  { label: "Opus 4 (2025-05-14)", value: "claude-opus-4-20250514", service: "anthropic" },
+  { label: "3.5 Haiku (2024-10-22)", value: "claude-3-5-haiku-20241022", service: "anthropic" },
+  { label: "3.7 Sonnet (2025-02-19)", value: "claude-3-7-sonnet-20250219", service: "anthropic" },
+  { label: "3 Sonnet（旧モデル）", value: "claude-3-sonnet", service: "anthropic" },
+  { label: "3 Haiku（旧モデル）", value: "claude-3-haiku", service: "anthropic" },
+  { label: "3 Opus（旧モデル）", value: "claude-3-opus", service: "anthropic" },
 ];
 
 const ChatScreen = (props: ChatScreenProps) => {
@@ -39,9 +57,21 @@ const ChatScreen = (props: ChatScreenProps) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showConversations, setShowConversations] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState(currentModel);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // 設定画面で指定されたモデルのみ表示
+  const selectedModelsObj = props.availableModels;
+  const filteredModelOptions = allModelOptions.filter(opt => (
+    (!selectedModelsObj?.openai || opt.value === selectedModelsObj.openai.value) ||
+    (!selectedModelsObj?.google || opt.value === selectedModelsObj.google.value) ||
+    (!selectedModelsObj?.anthropic || opt.value === selectedModelsObj.anthropic.value)
+  ));
+
+  // 選べるモデルがなければデフォルト
+  const displayModelOptions = filteredModelOptions.length > 0 ? filteredModelOptions : allModelOptions;
 
   // Clear messages when subject changes
   useEffect(() => {
@@ -75,6 +105,11 @@ const ChatScreen = (props: ChatScreenProps) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // モデル変更イベント
+  const handleModelChange = (value: string) => {
+    setSelectedModel(value);
+  };
 
   const handleSendMessage = async (content: string, images: ImageData[] = []) => {
     if (!content.trim() && images.length === 0) return;
@@ -134,6 +169,7 @@ const ChatScreen = (props: ChatScreenProps) => {
 
       if (messageError) throw messageError;
 
+      // モデル（selectedModel）をAIへ必ず渡すように修正
       const { data, error } = await supabase.functions.invoke('ask-ai', {
         body: {
           message: content,
@@ -143,7 +179,8 @@ const ChatScreen = (props: ChatScreenProps) => {
             isUser: msg.isUser
           })),
           images: images.length > 0 ? images : undefined,
-          userId: userId
+          userId: userId,
+          model: selectedModel
         }
       });
 
@@ -317,8 +354,9 @@ const ChatScreen = (props: ChatScreenProps) => {
       <ConversationHistoryView
         subject={subject}
         subjectName={subjectName}
-        currentModel={currentModel}
-        modelOptions={modelOptions}
+        currentModel={selectedModel}
+        modelOptions={displayModelOptions}
+        onModelChange={handleModelChange}
         onBackToList={handleBackToChat}
         onToggleSidebar={onToggleSidebar}
         isMobile={isMobile}
@@ -334,8 +372,8 @@ const ChatScreen = (props: ChatScreenProps) => {
     <ChatMainView
       subject={subject}
       subjectName={subjectName}
-      currentModel={currentModel}
-      modelOptions={modelOptions}
+      currentModel={selectedModel}
+      modelOptions={displayModelOptions}
       messages={messages}
       isLoading={isLoading}
       selectedImages={selectedImages}
@@ -356,3 +394,5 @@ const ChatScreen = (props: ChatScreenProps) => {
 };
 
 export default ChatScreen;
+
+// このファイルが長大化してきているので、今後リファクタをおすすめします。

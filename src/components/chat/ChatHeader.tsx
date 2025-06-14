@@ -4,20 +4,20 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, History, Menu, Cpu } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
-// 教科色マップ
+// 柔らかい色味に修正した教科色マップ
 const subjectColorMap: { [key: string]: string } = {
-  math: 'from-blue-500 to-indigo-500',
-  chemistry: 'from-purple-500 to-pink-500',
-  biology: 'from-green-500 to-emerald-400',
-  english: 'from-indigo-600 to-blue-400',
-  japanese: 'from-rose-500 to-red-400',
-  physics: 'from-orange-500 to-yellow-400',
-  earth_science: 'from-cyan-500 to-blue-300',
-  world_history: 'from-yellow-500 to-amber-400',
-  japanese_history: 'from-pink-500 to-red-400',
-  geography: 'from-teal-500 to-green-300',
-  information: 'from-gray-600 to-slate-400',
-  other: 'from-orange-600 to-pink-500',
+  math: 'from-sky-200 to-indigo-100',
+  chemistry: 'from-purple-100 to-pink-100',
+  biology: 'from-green-200 to-emerald-100',
+  english: 'from-indigo-100 to-blue-100',
+  japanese: 'from-rose-100 to-red-100',
+  physics: 'from-orange-100 to-yellow-100',
+  earth_science: 'from-cyan-100 to-blue-100',
+  world_history: 'from-yellow-100 to-amber-50',
+  japanese_history: 'from-pink-100 to-red-100',
+  geography: 'from-teal-100 to-green-100',
+  information: 'from-gray-100 to-slate-100',
+  other: 'from-orange-100 to-pink-50',
 };
 
 interface ChatHeaderProps {
@@ -51,12 +51,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   showHistoryButton = false,
   isMobile = false
 }) => {
-
-  const colorGradient = subjectColorMap[currentSubjectId] || 'from-blue-600 to-purple-600';
-  const colorBorder = colorGradient.split(' ')[0].replace('from-', 'border-') || 'border-blue-600';
+  const colorGradient = subjectColorMap[currentSubjectId] || 'from-sky-100 to-indigo-100';
+  const colorBorder = colorGradient.split(' ')[0].replace('from-', 'border-') || 'border-sky-100';
 
   return (
-    <div className={`bg-white border-b border-gray-200 shadow-sm flex-shrink-0`}>
+    <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           {isMobile && onToggleSidebar && (
@@ -121,6 +120,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               <SelectTrigger className={`text-xs font-mono h-8 bg-white border ${colorBorder} rounded-md focus:ring-2 focus:ring-blue-300`}>
                 <SelectValue />
               </SelectTrigger>
+              {/* 設定で選択済みのモデルリストのみ描画 */}
               <SelectContent align="end" className="z-40 bg-white">
                 {modelOptions.map(({ label, value }) => (
                   <SelectItem key={value} value={value} className="text-xs">
