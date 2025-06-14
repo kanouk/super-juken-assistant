@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, subject, imageUrl } = await req.json();
+    const { message, subject, imageUrl, conversationHistory } = await req.json();
     
     // Get user's API keys and settings from Supabase
     const supabaseClient = createClient(
@@ -44,25 +44,50 @@ serve(async (req) => {
     }
 
     // Prepare system message with instructions
-    let systemMessage = settings.common_instruction || 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。';
+    let systemMessage = settings.common_instruction || 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。数学や化学の問題ではLaTeX記法を使って数式を表現してください。LaTeX記法を使用する際は、インライン数式は$...$、ブロック数式は$$...$$で囲んでください。';
     
     if (settings.subject_instructions && settings.subject_instructions[subject]) {
       systemMessage += '\n\n' + settings.subject_instructions[subject];
     }
 
-    // Prepare messages for OpenAI
+    // Prepare messages for OpenAI with conversation history
     const messages = [
-      { role: 'system', content: systemMessage },
-      { 
-        role: 'user', 
-        content: imageUrl 
-          ? [
-              { type: 'text', text: message },
-              { type: 'image_url', image_url: { url: imageUrl } }
-            ]
-          : message 
-      }
+      { role: 'system', content: systemMessage }
     ];
+
+    // Add conversation history (limit to last 10 messages to avoid token limits)
+    if (conversationHistory && Array.isArray(conversationHistory)) {
+      const recentHistory = conversationHistory.slice(-10);
+      for (const historyMessage of recentHistory) {
+        if (historyMessage.role === 'user') {
+          messages.push({
+            role: 'user',
+            content: historyMessage.image_url 
+              ? [
+                  { type: 'text', text: historyMessage.content },
+                  { type: 'image_url', image_url: { url: historyMessage.image_url } }
+                ]
+              : historyMessage.content
+          });
+        } else if (historyMessage.role === 'assistant') {
+          messages.push({
+            role: 'assistant',
+            content: historyMessage.content
+          });
+        }
+      }
+    }
+
+    // Add current message
+    messages.push({ 
+      role: 'user', 
+      content: imageUrl 
+        ? [
+            { type: 'text', text: message },
+            { type: 'image_url', image_url: { url: imageUrl } }
+          ]
+        : message 
+    });
 
     console.log('Sending request to OpenAI with model:', settings.models?.openai || 'gpt-4o');
 

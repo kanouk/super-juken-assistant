@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -79,6 +80,13 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
       return;
     }
 
+    const currentInputText = inputText;
+    const currentImagePreview = imagePreview;
+    const currentSelectedImage = selectedImage;
+
+    // Clear input immediately after capturing values
+    setInputText('');
+    removeImage();
     setIsLoading(true);
 
     try {
@@ -86,8 +94,8 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
       const userMessage: Message = {
         id: Date.now().toString(),
         role: 'user',
-        content: inputText,
-        image_url: imagePreview || undefined,
+        content: currentInputText,
+        image_url: currentImagePreview || undefined,
         created_at: new Date().toISOString(),
       };
 
@@ -95,13 +103,13 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
 
       // Upload image to Supabase Storage if present
       let imageUrl = '';
-      if (selectedImage) {
-        const fileExt = selectedImage.name.split('.').pop();
+      if (currentSelectedImage) {
+        const fileExt = currentSelectedImage.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('images')
-          .upload(fileName, selectedImage);
+          .upload(fileName, currentSelectedImage);
 
         if (uploadError) {
           console.error('Image upload error:', uploadError);
@@ -113,12 +121,20 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
         }
       }
 
-      // Call ask-ai Edge Function
+      // Prepare conversation history for context
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        image_url: msg.image_url
+      }));
+
+      // Call ask-ai Edge Function with conversation history
       const { data, error } = await supabase.functions.invoke('ask-ai', {
         body: {
-          message: inputText,
+          message: currentInputText,
           subject: subject,
-          imageUrl: imageUrl || imagePreview
+          imageUrl: imageUrl || currentImagePreview,
+          conversationHistory: conversationHistory
         }
       });
 
@@ -142,10 +158,6 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
 
       setMessages(prev => [...prev, aiMessage]);
 
-      // Clear input
-      setInputText('');
-      removeImage();
-
       toast({
         title: "回答を生成しました",
         description: `コスト: ¥${data.cost.toFixed(4)}`,
@@ -158,6 +170,13 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
         description: error.message || "メッセージの送信に失敗しました。",
         variant: "destructive",
       });
+      
+      // Restore input on error
+      setInputText(currentInputText);
+      if (currentImagePreview) {
+        setImagePreview(currentImagePreview);
+        setSelectedImage(currentSelectedImage);
+      }
     } finally {
       setIsLoading(false);
     }
