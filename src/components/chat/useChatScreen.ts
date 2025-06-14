@@ -38,10 +38,15 @@ export interface UseChatScreenProps {
     google?: { label: string; value: string };
     anthropic?: { label: string; value: string };
   };
+  onModelChange?: (value: string) => void;
 }
 
 export function useChatScreen(props: UseChatScreenProps) {
-  const { subject, subjectName, currentModel, userId, onToggleSidebar, isMobile, availableModels } = props;
+  const { 
+    subject, subjectName, currentModel, userId, 
+    onToggleSidebar, isMobile, availableModels,
+    onModelChange 
+  } = props;
   // 🔽 選択中モデルは必ずprops.currentModelで初期化し、その後ローカルで管理
   const [selectedModel, setSelectedModel] = useState(currentModel);
   const [messages, setMessages] = useState<MessageType[]>([]);
@@ -102,8 +107,9 @@ export function useChatScreen(props: UseChatScreenProps) {
   // モデル変更
   const handleModelChange = (value: string) => {
     setSelectedModel(value);
-    // 外からcurrentModelをpropsで制御している場合、onSubjectChange的なcallbackも実装可能
-    // 例: props.onModelChange?.(value);
+    if (onModelChange) {
+      onModelChange(value); // プロップから来た場合は伝播する
+    }
   };
 
   // メッセージ送信

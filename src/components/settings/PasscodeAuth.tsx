@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -15,17 +14,16 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
   const [isShaking, setIsShaking] = useState(false);
   const otpGroupRef = useRef<HTMLDivElement>(null);
 
-  // ✅ [修正] passcodeInputにkeyを付与し、毎回InputOTPGroupが再生成されるようにする
-  // 毎回初回マウント時のみ1桁目にフォーカス
+  // パスコードリセット時も一番左に自動focus
   useEffect(() => {
     const timer = setTimeout(() => {
       if (otpGroupRef.current) {
         const firstInput = otpGroupRef.current.querySelector('input');
         firstInput?.focus();
       }
-    }, 10); // 最小限の遅延
+    }, 10);
     return () => clearTimeout(timer);
-  }, [passcodeInput]); // ← 入力リセット時もフォーカス
+  }, [passcodeInput]);
 
   const handlePasscodeChange = (value: string) => {
     setPasscodeInput(value);
@@ -36,11 +34,9 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
       } else {
         setIsShaking(true);
         setPasscodeInput('');
-
         if (navigator.vibrate) {
           navigator.vibrate([100, 50, 100]);
         }
-
         setTimeout(() => {
           setIsShaking(false);
         }, 500);
@@ -63,44 +59,23 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
             <h1 className="text-2xl font-bold text-white mb-2">設定へのアクセス</h1>
             <p className="text-white/70">6桁のパスコードを入力してください</p>
           </div>
-
           <div className="flex justify-center mb-8">
             <InputOTP
               maxLength={6}
               value={passcodeInput}
               onChange={handlePasscodeChange}
-              // 🔽 入力リセット・新規描画時に再生成(keyでリセット)
-              key={passcodeInput.length === 0 ? Math.random() : 'otp'}
+              key={passcodeInput.length === 0 ? Math.random() : "otp"}
             >
               <InputOTPGroup ref={otpGroupRef} className="gap-2">
-                <InputOTPSlot 
-                  index={0}
-                  className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
-                />
-                <InputOTPSlot 
-                  index={1}
-                  className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
-                />
-                <InputOTPSlot 
-                  index={2}
-                  className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
-                />
-                <InputOTPSlot 
-                  index={3}
-                  className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
-                />
-                <InputOTPSlot 
-                  index={4}
-                  className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
-                />
-                <InputOTPSlot 
-                  index={5}
-                  className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
-                />
+                <InputOTPSlot index={0} className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"/>
+                <InputOTPSlot index={1} className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"/>
+                <InputOTPSlot index={2} className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"/>
+                <InputOTPSlot index={3} className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"/>
+                <InputOTPSlot index={4} className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"/>
+                <InputOTPSlot index={5} className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"/>
               </InputOTPGroup>
             </InputOTP>
           </div>
-
           <div className="flex justify-center">
             <Button
               variant="outline"
