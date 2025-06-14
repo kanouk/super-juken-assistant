@@ -53,7 +53,7 @@ const Index = () => {
     setIsLoading(true);
     
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = window.location.origin;
       
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
@@ -102,7 +102,7 @@ const Index = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`
+          redirectTo: window.location.origin
         }
       });
       
