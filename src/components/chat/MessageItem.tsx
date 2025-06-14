@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { User, Bot, Copy } from 'lucide-react';
-import TypewriterEffect from '../TypewriterEffect'; // Assuming TypewriterEffect is in ../
+import TypewriterEffect from '../TypewriterEffect';
+import LaTeXRenderer from '../LaTeXRenderer';
 import QuickActions from './QuickActions';
 
 interface MessageItemProps {
@@ -55,7 +56,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
               {message.image_url && (
                 <img
                   src={message.image_url}
-                  alt="Attached image" // Changed alt text
+                  alt="Attached image"
                   className="max-w-xs rounded-lg mb-2"
                 />
               )}
@@ -67,24 +68,32 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   className="text-base"
                   speed={20}
                   onComplete={() => onTypewriterComplete(message.db_id)}
+                  renderer={(content) => (
+                    <LaTeXRenderer content={content} className="text-base" />
+                  )}
                 />
               )}
               {message.role === 'assistant' && (message.cost || message.model) && (
-                <div className="mt-2 pt-2">
+                <div className="mt-3">
                   <Separator className="my-2" />
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">{message.model || 'N/A'}</span>
-                    {message.cost && (
-                      <span className="text-xs text-gray-500">¥{message.cost.toFixed(4)}</span>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-gray-500 hover:text-gray-700"
-                      onClick={() => onCopyToClipboard(message.content)}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>{message.model || 'N/A'}</span>
+                      {message.cost && (
+                        <span>¥{message.cost.toFixed(4)}</span>
+                      )}
+                    </div>
+                    <div className="flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-gray-500 hover:text-gray-700"
+                        onClick={() => onCopyToClipboard(message.content)}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        コピー
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}

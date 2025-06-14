@@ -1,50 +1,55 @@
 
 import React, { useState, useEffect } from 'react';
-import LaTeXRenderer from "./LaTeXRenderer";
 
 interface TypewriterEffectProps {
   content: string;
-  speed?: number;
   className?: string;
+  speed?: number;
   onComplete?: () => void;
+  renderer?: (content: string) => React.ReactNode;
 }
 
-const TypewriterEffect: React.FC<TypewriterEffectProps> = ({ 
-  content, 
-  speed = 30, // 少し早めのデフォルト速度
-  className,
-  onComplete 
+const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
+  content,
+  className = '',
+  speed = 50,
+  onComplete,
+  renderer,
 }) => {
   const [displayedContent, setDisplayedContent] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
-    // contentが変更されたら、表示内容とインデックスをリセット
+    if (currentIndex < content.length) {
+      const timer = setTimeout(() => {
+        setDisplayedContent(content.slice(0, currentIndex + 1));
+        setCurrentIndex(currentIndex + 1);
+      }, speed);
+
+      return () => clearTimeout(timer);
+    } else if (!isComplete && content.length > 0) {
+      setIsComplete(true);
+      onComplete?.();
+    }
+  }, [currentIndex, content, speed, onComplete, isComplete]);
+
+  // Reset when content changes
+  useEffect(() => {
     setDisplayedContent('');
     setCurrentIndex(0);
+    setIsComplete(false);
   }, [content]);
 
-  useEffect(() => {
-    if (!content) {
-      if (onComplete) onComplete();
-      return;
-    }
+  if (renderer) {
+    return <div className={className}>{renderer(displayedContent)}</div>;
+  }
 
-    if (currentIndex < content.length) {
-      const timeoutId = setTimeout(() => {
-        setDisplayedContent((prev) => prev + content[currentIndex]);
-        setCurrentIndex((prev) => prev + 1);
-      }, speed);
-      return () => clearTimeout(timeoutId);
-    } else {
-      // タイプ完了
-      if (onComplete) {
-        onComplete();
-      }
-    }
-  }, [currentIndex, content, speed, onComplete]);
-
-  return <LaTeXRenderer content={displayedContent} className={className} />;
+  return (
+    <div className={`${className} whitespace-pre-wrap`}>
+      {displayedContent}
+    </div>
+  );
 };
 
 export default TypewriterEffect;
