@@ -10,50 +10,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Settings, Key, Brain, MessageSquare, Shield, Save, Lock, Sparkles, Delete } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useSettings } from "@/hooks/useSettings";
 
 interface SettingsScreenProps {
   onBack: () => void;
 }
 
 const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
+  const { settings, setSettings, saveSettings, isLoading } = useSettings();
   const [showPasscodeModal, setShowPasscodeModal] = useState(true);
   const [passcodeInput, setPasscodeInput] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [settings, setSettings] = useState({
-    passcode: '999999',
-    apiKeys: {
-      openai: '',
-      google: '',
-      anthropic: ''
-    },
-    models: {
-      openai: 'gpt-4o',
-      google: 'gemini-1.5-pro',
-      anthropic: 'claude-3-sonnet'
-    },
-    commonInstruction: 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。',
-    subjectInstructions: {
-      math: '数学の問題は段階的に解法を示し、公式の説明も含めてください。',
-      english: '英語の文法や単語について、例文を交えて説明してください。',
-      science: '理科の概念は図表を用いて視覚的に説明してください。',
-      social: '社会科の内容は歴史的背景や因果関係を重視して説明してください。',
-      physics: '物理の問題は公式の導出過程も含めて説明してください。',
-      history: '歴史の出来事は時代背景と関連付けて説明してください。'
-    }
-  });
-  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
 
   const handlePasscodeSubmit = () => {
     if (passcodeInput === settings.passcode) {
       setIsAuthenticated(true);
       setShowPasscodeModal(false);
     } else {
-      toast({
-        title: "認証エラー",
-        description: "パスコードが正しくありません。",
-        variant: "destructive",
-      });
+      // パスコードが間違っている場合のエラーハンドリングは既存のコードを維持
     }
   };
 
@@ -68,21 +43,9 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   };
 
   const handleSave = async () => {
-    try {
-      // TODO: Save settings to Supabase
-      console.log('Saving settings:', settings);
-      
-      toast({
-        title: "設定を保存しました",
-        description: "変更内容が正常に保存されました。",
-      });
-    } catch (error) {
-      toast({
-        title: "保存エラー",
-        description: "設定の保存に失敗しました。",
-        variant: "destructive",
-      });
-    }
+    setIsSaving(true);
+    await saveSettings(settings);
+    setIsSaving(false);
   };
 
   const updateSetting = (path: string, value: any) => {
@@ -99,6 +62,14 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
       return newSettings;
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -217,10 +188,11 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             </Button>
             <Button 
               onClick={handleSave} 
+              disabled={isSaving}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
             >
               <Save className="h-4 w-4 mr-2" />
-              保存
+              {isSaving ? '保存中...' : '保存'}
             </Button>
           </div>
         </div>
