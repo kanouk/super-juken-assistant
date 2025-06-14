@@ -4,12 +4,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Paperclip, Send, X, Bot, User, ThumbsUp, Brain, Sparkles, Copy } from "lucide-react";
+import { Paperclip, Send, X, Bot, User, ThumbsUp, Brain, Sparkles, Copy, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import TypewriterEffect from './TypewriterEffect';
 import ConfettiComponent from './Confetti';
 import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
+import { Message } from '@/integrations/supabase/types';
 
 interface Message {
   id: string; // This can be a local ID for optimistic updates, or Supabase UUID
@@ -347,7 +348,11 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
       setInputText(submittingText);
       if (submittingImagePreview) {
         setImagePreview(submittingImagePreview);
-        setSelectedImage(submittingImageFile);
+        // This line was causing an error because submittingImageFile could be null.
+        // Corrected to ensure it's only set if it exists.
+        if (submittingImageFile) {
+           setSelectedImage(submittingImageFile);
+        }
       }
       // Remove optimistic user message on error
       setAllMessages(prev => ({
