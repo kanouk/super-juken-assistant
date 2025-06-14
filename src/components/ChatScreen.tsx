@@ -33,6 +33,13 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Clear messages when subject changes
+  useEffect(() => {
+    setMessages([]);
+    setSelectedConversationId(null);
+    setShowConversations(false);
+  }, [subject]);
+
   const { data: conversations = [], refetch: refetchConversations } = useQuery({
     queryKey: ['conversations', userId, subject],
     queryFn: async () => {
@@ -177,6 +184,24 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
         )
       );
 
+      // Update the message in database to mark as understood
+      const message = messages.find(msg => msg.id === messageId);
+      if (message && selectedConversationId) {
+        const { error } = await supabase
+          .from('messages')
+          .update({ is_understood: true })
+          .eq('conversation_id', selectedConversationId)
+          .eq('content', message.content)
+          .eq('role', 'assistant');
+
+        if (error) {
+          console.error('Error updating understood status:', error);
+        } else {
+          // Invalidate and refetch chat stats to update sidebar
+          queryClient.invalidateQueries({ queryKey: ['chatStats', userId] });
+        }
+      }
+
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
 
@@ -225,7 +250,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
         isUser: msg.role === 'user',
         timestamp: new Date(msg.created_at),
         images: msg.image_url ? [{ url: msg.image_url }] : undefined,
-        isUnderstood: false,
+        isUnderstood: msg.is_understood || false,
       }));
 
       setMessages(formattedMessages);

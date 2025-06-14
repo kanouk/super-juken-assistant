@@ -49,7 +49,7 @@ export const useChatStats = (userId: string | undefined) => {
         return;
       }
 
-      // Get understood count - fix the query to properly count understood messages
+      // Get understood count - count assistant messages that are marked as understood
       const { count: understoodCount, error: understoodError } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
