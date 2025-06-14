@@ -1,14 +1,16 @@
+
 import { useState } from 'react';
 import Sidebar from './Sidebar';
 import ChatScreen from './ChatScreen';
 import SettingsScreen from './SettingsScreen';
+import ProfileScreen from './ProfileScreen';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
 const MainApp = () => {
   const [selectedSubject, setSelectedSubject] = useState('math');
-  const [currentView, setCurrentView] = useState<'chat' | 'settings'>('chat');
+  const [currentView, setCurrentView] = useState<'chat' | 'settings' | 'profile'>('chat');
   const [dailyQuestions] = useState(12);
   const [totalCost] = useState(2.45);
   const { toast } = useToast();
@@ -32,6 +34,10 @@ const MainApp = () => {
 
   const handleSettingsClick = () => {
     setCurrentView('settings');
+  };
+
+  const handleProfileClick = () => {
+    setCurrentView('profile');
   };
 
   const handleBackToChat = () => {
@@ -65,6 +71,7 @@ const MainApp = () => {
         selectedSubject={selectedSubject}
         onSubjectChange={handleSubjectChange}
         onSettingsClick={handleSettingsClick}
+        onProfileClick={handleProfileClick}
         onLogout={handleLogout}
         dailyQuestions={dailyQuestions}
         totalCost={totalCost}
@@ -77,8 +84,10 @@ const MainApp = () => {
             subjectName={subjectNames[selectedSubject]}
             currentModel="GPT-4o"
           />
-        ) : (
+        ) : currentView === 'settings' ? (
           <SettingsScreen onBack={handleBackToChat} />
+        ) : (
+          <ProfileScreen onBack={handleBackToChat} />
         )}
       </div>
     </div>
