@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +13,8 @@ import ExamSettingsCard from './profile/ExamSettingsCard';
 
 interface ProfileScreenProps {
   onBack: () => void;
+  onToggleSidebar: () => void;
+  isMobile: boolean;
 }
 
 const ProfileScreen = ({ onBack }: ProfileScreenProps) => {

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import ConfettiComponent from './Confetti';
@@ -19,6 +20,8 @@ interface ChatScreenProps {
   currentModel: string;
   userId: string | undefined;
   onSubjectChange?: (subject: string) => void;
+  onToggleSidebar: () => void;
+  isMobile: boolean;
 }
 
 const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChange }: ChatScreenProps) => {

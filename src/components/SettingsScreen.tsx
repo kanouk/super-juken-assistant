@@ -12,6 +12,8 @@ import { SubjectsTab } from './settings/SubjectsTab';
 
 interface SettingsScreenProps {
   onBack: () => void;
+  onToggleSidebar: () => void;
+  isMobile: boolean;
 }
 
 const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
