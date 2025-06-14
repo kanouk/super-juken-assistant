@@ -9,7 +9,126 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          subject: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          subject?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          cost: number | null
+          created_at: string
+          id: string
+          image_url: string | null
+          model: string | null
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          cost?: number | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          model?: string | null
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          cost?: number | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          model?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          passcode: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          passcode?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          passcode?: string
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          api_keys: Json | null
+          common_instruction: string | null
+          id: string
+          models: Json | null
+          subject_instructions: Json | null
+        }
+        Insert: {
+          api_keys?: Json | null
+          common_instruction?: string | null
+          id: string
+          models?: Json | null
+          subject_instructions?: Json | null
+        }
+        Update: {
+          api_keys?: Json | null
+          common_instruction?: string | null
+          id?: string
+          models?: Json | null
+          subject_instructions?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settings_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

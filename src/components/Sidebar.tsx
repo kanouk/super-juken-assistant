@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { BookOpen, Calculator, Globe, FlaskConical, Atom, Languages, History, Settings, GraduationCap } from "lucide-react";
+import { BookOpen, Calculator, Globe, FlaskConical, Atom, Languages, History, Settings, GraduationCap, LogOut } from "lucide-react";
 
 interface SidebarProps {
   selectedSubject: string;
   onSubjectChange: (subject: string) => void;
   onSettingsClick: () => void;
+  onLogout: () => void;
   dailyQuestions: number;
   totalCost: number;
 }
@@ -23,7 +24,7 @@ const subjects = [
   { id: 'history', name: '歴史', icon: History, color: 'bg-amber-100 text-amber-700' },
 ];
 
-const Sidebar = ({ selectedSubject, onSubjectChange, onSettingsClick, dailyQuestions, totalCost }: SidebarProps) => {
+const Sidebar = ({ selectedSubject, onSubjectChange, onSettingsClick, onLogout, dailyQuestions, totalCost }: SidebarProps) => {
   const [examDates] = useState({
     kyotsu: new Date('2026-01-17'),
     todai: new Date('2026-02-25')
@@ -124,8 +125,8 @@ const Sidebar = ({ selectedSubject, onSubjectChange, onSettingsClick, dailyQuest
 
       <Separator />
 
-      {/* Settings */}
-      <div className="p-4">
+      {/* Settings and Logout */}
+      <div className="p-4 space-y-2">
         <Button
           variant="outline"
           className="w-full justify-start"
@@ -133,6 +134,14 @@ const Sidebar = ({ selectedSubject, onSubjectChange, onSettingsClick, dailyQuest
         >
           <Settings className="h-4 w-4 mr-2" />
           設定
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={onLogout}
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          ログアウト
         </Button>
       </div>
     </div>
