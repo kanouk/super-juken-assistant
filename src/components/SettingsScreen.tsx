@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Key, Brain, MessageSquare, Shield, Save, Lock, Sparkles, Calculator, Languages, FlaskConical, Globe, Zap, BookOpen } from "lucide-react";
+import { Settings, Key, Brain, MessageSquare, Shield, Save, Lock, Sparkles, Calculator, Languages, FlaskConical, Globe, Zap, BookOpen, Atom, MapPin, Monitor, Plus } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useToast } from "@/hooks/use-toast";
 
@@ -113,27 +113,27 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
               >
                 <InputOTPGroup>
                   <InputOTPSlot 
-                    index={0} 
+                    index={0}
                     className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
                   />
                   <InputOTPSlot 
-                    index={1} 
+                    index={1}
                     className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
                   />
                   <InputOTPSlot 
-                    index={2} 
+                    index={2}
                     className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
                   />
                   <InputOTPSlot 
-                    index={3} 
+                    index={3}
                     className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
                   />
                   <InputOTPSlot 
-                    index={4} 
+                    index={4}
                     className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
                   />
                   <InputOTPSlot 
-                    index={5} 
+                    index={5}
                     className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
                   />
                 </InputOTPGroup>
@@ -384,11 +384,13 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
                   {Object.entries(settings.subjectInstructions).map(([subject, instruction]) => {
                     const subjectInfo: { [key: string]: { name: string; icon: any; color: string } } = {
                       math: { name: '数学', icon: Calculator, color: 'text-blue-600' },
-                      english: { name: '英語', icon: Languages, color: 'text-green-600' },
-                      science: { name: '理科', icon: FlaskConical, color: 'text-purple-600' },
-                      social: { name: '社会', icon: Globe, color: 'text-orange-600' },
-                      physics: { name: '物理', icon: Zap, color: 'text-yellow-600' },
-                      history: { name: '歴史', icon: BookOpen, color: 'text-red-600' }
+                      chemistry: { name: '化学', icon: FlaskConical, color: 'text-purple-600' },
+                      biology: { name: '生物', icon: Atom, color: 'text-green-600' },
+                      english: { name: '英語', icon: Languages, color: 'text-indigo-600' },
+                      japanese: { name: '国語', icon: BookOpen, color: 'text-red-600' },
+                      geography: { name: '地理', icon: MapPin, color: 'text-teal-600' },
+                      information: { name: '情報', icon: Monitor, color: 'text-gray-600' },
+                      other: { name: 'その他', icon: Plus, color: 'text-orange-600' }
                     };
 
                     const subjectData = subjectInfo[subject];

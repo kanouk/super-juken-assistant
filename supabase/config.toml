@@ -1,1 +1,22 @@
-project_id = "huyumzlevlcxsnvbtcsd"
+
+# A string used to distinguish different Supabase projects on the same host. Defaults to the
+# working directory name when running `supabase init`.
+project_id = "super-exam-assistant"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = []
+jwt_expiry = 3600
+enable_signup = true
+enable_anonymous_sign_ins = false
+
+[functions.ask-ai]
+verify_jwt = true

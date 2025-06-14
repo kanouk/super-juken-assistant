@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -54,14 +53,16 @@ export const useSettings = () => {
       google: 'gemini-1.5-pro',
       anthropic: 'claude-3-sonnet'
     },
-    commonInstruction: 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。',
+    commonInstruction: 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。数学や化学の問題ではLaTeX記法を使って数式を表現してください。',
     subjectInstructions: {
-      math: '数学の問題は段階的に解法を示し、公式の説明も含めてください。',
-      english: '英語の文法や単語について、例文を交えて説明してください。',
-      science: '理科の概念は図表を用いて視覚的に説明してください。',
-      social: '社会科の内容は歴史的背景や因果関係を重視して説明してください。',
-      physics: '物理の問題は公式の導出過程も含めて説明してください。',
-      history: '歴史の出来事は時代背景と関連付けて説明してください。'
+      math: '数学の問題は段階的に解法を示し、公式の説明も含めてください。LaTeX記法を使って数式を美しく表示してください。',
+      chemistry: '化学の概念は化学式や反応式を含めて説明してください。LaTeX記法を使って化学式を正確に表示してください。',
+      biology: '生物の概念は図表を用いて視覚的に説明してください。専門用語は分かりやすく解説してください。',
+      english: '英語の文法や単語について、例文を交えて説明してください。発音記号も適宜使用してください。',
+      japanese: '国語の内容は古文・漢文も含めて丁寧に説明してください。語彙や文法事項を重視してください。',
+      geography: '地理の内容は地図や統計データを参考に説明してください。地域性や環境要因も考慮してください。',
+      information: '情報の内容はプログラミングやデータ処理について具体例を交えて説明してください。',
+      other: 'その他の教科についても基礎から応用まで幅広く対応します。具体例を交えて分かりやすく説明してください。'
     }
   });
   const [isLoading, setIsLoading] = useState(true);

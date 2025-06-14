@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Paperclip, Send, X, Bot, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import LaTeXRenderer from "./LaTeXRenderer";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -93,25 +93,50 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
 
       setMessages(prev => [...prev, userMessage]);
 
-      // TODO: Upload image to Supabase Storage if present
-      // TODO: Call ask-ai Edge Function
-      
-      // Simulate AI response with LaTeX examples
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      let responseContent = `${subjectName}に関するご質問ありがとうございます。${inputText ? `「${inputText}」について` : '画像について'}詳しく説明いたします。\n\nこちらは模擬応答です。`;
-      
-      // Add LaTeX examples for math and science subjects
-      if (subject === 'math' || subject === 'physics') {
-        responseContent += `\n\n数式の例：\n$$f(x) = \\frac{1}{\\sqrt{2\\pi\\sigma^2}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}$$\n\nインライン数式の例: $E = mc^2$ は有名な物理法則です。\n\n二次方程式の解の公式:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$`;
+      // Upload image to Supabase Storage if present
+      let imageUrl = '';
+      if (selectedImage) {
+        const fileExt = selectedImage.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('images')
+          .upload(fileName, selectedImage);
+
+        if (uploadError) {
+          console.error('Image upload error:', uploadError);
+        } else {
+          const { data } = supabase.storage
+            .from('images')
+            .getPublicUrl(fileName);
+          imageUrl = data.publicUrl;
+        }
       }
-      
+
+      // Call ask-ai Edge Function
+      const { data, error } = await supabase.functions.invoke('ask-ai', {
+        body: {
+          message: inputText,
+          subject: subject,
+          imageUrl: imageUrl || imagePreview
+        }
+      });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'AI応答でエラーが発生しました');
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: responseContent,
-        cost: 0.02,
-        model: currentModel,
+        content: data.response,
+        cost: data.cost,
+        model: data.model,
         created_at: new Date().toISOString(),
       };
 
@@ -121,10 +146,16 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
       setInputText('');
       removeImage();
 
-    } catch (error) {
+      toast({
+        title: "回答を生成しました",
+        description: `コスト: ¥${data.cost.toFixed(4)}`,
+      });
+
+    } catch (error: any) {
+      console.error('Chat error:', error);
       toast({
         title: "エラー",
-        description: "メッセージの送信に失敗しました。",
+        description: error.message || "メッセージの送信に失敗しました。",
         variant: "destructive",
       });
     } finally {
