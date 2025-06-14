@@ -10,14 +10,21 @@ interface LaTeXRendererProps {
 
 const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
   const processedContent = useMemo(() => {
-    // More precise regex to match LaTeX expressions
-    // This will match $$...$$, $...$ but avoid conflicts with regular text
-    const parts = content.split(/(\$\$[^$]*?\$\$|\$[^$]+?\$)/);
+    // より正確なLaTeX検出のための改良された正規表現
+    // \( ... \) をインライン数式として、\[ ... \] をブロック数式として扱う
+    const parts = content.split(/(\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\$\$[\s\S]*?\$\$|\$[^$\n]+?\$)/);
     
     return parts.map((part, index) => {
-      // Block math ($$...$$)
-      if (part.startsWith('$$') && part.endsWith('$$') && part.length > 4) {
-        const math = part.slice(2, -2).trim();
+      // ブロック数式 \[ ... \] または $$ ... $$
+      if ((part.startsWith('\\[') && part.endsWith('\\]')) || 
+          (part.startsWith('$$') && part.endsWith('$$') && part.length > 4)) {
+        let math = '';
+        if (part.startsWith('\\[')) {
+          math = part.slice(2, -2).trim();
+        } else {
+          math = part.slice(2, -2).trim();
+        }
+        
         if (math) {
           try {
             return (
@@ -27,15 +34,22 @@ const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
             );
           } catch (error) {
             console.error('LaTeX Block Math Error:', error);
-            return <span key={index} className="text-red-500">LaTeX Error: {part}</span>;
+            return <span key={index} className="text-red-500 bg-red-50 px-2 py-1 rounded">LaTeX Error: {part}</span>;
           }
         }
       }
       
-      // Inline math ($...$) - make sure it's not just a single $ or empty
-      if (part.startsWith('$') && part.endsWith('$') && part.length > 2) {
-        const math = part.slice(1, -1).trim();
-        if (math && !math.includes('\n')) { // Inline math shouldn't contain newlines
+      // インライン数式 \( ... \) または $ ... $
+      if ((part.startsWith('\\(') && part.endsWith('\\)')) ||
+          (part.startsWith('$') && part.endsWith('$') && part.length > 2 && !part.includes('\n'))) {
+        let math = '';
+        if (part.startsWith('\\(')) {
+          math = part.slice(2, -2).trim();
+        } else {
+          math = part.slice(1, -1).trim();
+        }
+        
+        if (math) {
           try {
             return (
               <span key={index}>
@@ -44,12 +58,12 @@ const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
             );
           } catch (error) {
             console.error('LaTeX Inline Math Error:', error);
-            return <span key={index} className="text-red-500">LaTeX Error: {part}</span>;
+            return <span key={index} className="text-red-500 bg-red-50 px-1 rounded">LaTeX Error: {part}</span>;
           }
         }
       }
       
-      // Regular text - preserve line breaks and handle Japanese properly
+      // 通常のテキスト - 改行を保持し、日本語を適切に処理
       return (
         <span key={index} className="whitespace-pre-wrap">
           {part}

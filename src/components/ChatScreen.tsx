@@ -18,6 +18,7 @@ interface Message {
   cost?: number;
   model?: string;
   created_at: string;
+  subject: string; // 科目を追加
 }
 
 interface ChatScreenProps {
@@ -27,7 +28,8 @@ interface ChatScreenProps {
 }
 
 const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  // 科目ごとに分離されたメッセージ状態
+  const [allMessages, setAllMessages] = useState<{[key: string]: Message[]}>({});
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -35,6 +37,9 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // 現在の科目のメッセージを取得
+  const messages = allMessages[subject] || [];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -90,16 +95,21 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
     setIsLoading(true);
 
     try {
-      // Create user message
+      // Create user message with subject
       const userMessage: Message = {
         id: Date.now().toString(),
         role: 'user',
         content: currentInputText,
         image_url: currentImagePreview || undefined,
         created_at: new Date().toISOString(),
+        subject: subject,
       };
 
-      setMessages(prev => [...prev, userMessage]);
+      // 科目ごとにメッセージを更新
+      setAllMessages(prev => ({
+        ...prev,
+        [subject]: [...(prev[subject] || []), userMessage]
+      }));
 
       // Upload image to Supabase Storage if present
       let imageUrl = '';
@@ -121,8 +131,9 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
         }
       }
 
-      // Prepare conversation history for context
-      const conversationHistory = messages.map(msg => ({
+      // 現在の科目のメッセージ履歴のみを送信
+      const currentSubjectMessages = allMessages[subject] || [];
+      const conversationHistory = currentSubjectMessages.map(msg => ({
         role: msg.role,
         content: msg.content,
         image_url: msg.image_url
@@ -154,9 +165,14 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
         cost: data.cost,
         model: data.model,
         created_at: new Date().toISOString(),
+        subject: subject,
       };
 
-      setMessages(prev => [...prev, aiMessage]);
+      // 科目ごとにAIメッセージを追加
+      setAllMessages(prev => ({
+        ...prev,
+        [subject]: [...(prev[subject] || []), userMessage, aiMessage]
+      }));
 
       toast({
         title: "回答を生成しました",
