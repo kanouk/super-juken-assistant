@@ -4,11 +4,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Paperclip, Send, X, Bot, User, ThumbsUp, Brain, Sparkles } from "lucide-react";
+import { Paperclip, Send, X, Bot, User, ThumbsUp, Brain, Sparkles, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import TypewriterEffect from './TypewriterEffect';
 import ConfettiComponent from './Confetti';
 import { supabase } from "@/integrations/supabase/client";
+import { Separator } from "@/components/ui/separator";
 
 interface Message {
   id: string;
@@ -18,7 +19,7 @@ interface Message {
   cost?: number;
   model?: string;
   created_at: string;
-  subject: string; // 科目を追加
+  subject: string;
 }
 
 interface ChatScreenProps {
@@ -222,6 +223,22 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
     // For example: console.log("User understood the explanation for message ID:", latestAIMessageIdForActions);
   };
 
+  const handleCopyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast({
+        title: "コピーしました",
+        description: "回答内容をクリップボードにコピーしました。",
+      });
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+      toast({
+        title: "コピー失敗",
+        description: "クリップボードへのコピーに失敗しました。",
+        variant: "destructive",
+      });
+    });
+  };
+
   const [latestAIMessageIdForActions, setLatestAIMessageIdForActions] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -292,7 +309,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
                       ) : (
                         <TypewriterEffect
                           content={message.content} 
-                          className="text-sm" // This className is passed to LaTeXRenderer
+                          className="text-base" // フォントサイズをtext-baseに変更して少し大きく
                           speed={20}
                           onComplete={() => {
                             const currentMessagesForSubject = allMessages[subject] || [];
@@ -303,10 +320,23 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
                           }}
                         />
                       )}
-                      {message.role === 'assistant' && message.cost && (
-                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-                          <span className="text-xs text-gray-500">{message.model}</span>
-                          <span className="text-xs text-gray-500">¥{message.cost.toFixed(4)}</span>
+                      {message.role === 'assistant' && (message.cost || message.model) && ( // 条件を cost または model が存在する場合に変更
+                        <div className="mt-2 pt-2"> {/* Separatorが自身のmarginを持つため、親要素からborder-tを削除 */}
+                          <Separator className="my-2" /> {/* Separatorを追加 */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">{message.model || 'N/A'}</span> {/* モデルがない場合は N/A */}
+                            {message.cost && ( /* cost がある場合のみ表示 */
+                              <span className="text-xs text-gray-500">¥{message.cost.toFixed(4)}</span>
+                            )}
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6 text-gray-500 hover:text-gray-700"
+                              onClick={() => handleCopyToClipboard(message.content)}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </CardContent>
@@ -387,7 +417,6 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
               placeholder={`${subjectName}について質問してください...`}
               className="min-h-[60px] resize-none"
               onKeyDown={(e) => {
-                // IME変換確定時のEnterキーでは送信しないようにする
                 if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
                   e.preventDefault();
                   if (inputText.trim() || selectedImage) {

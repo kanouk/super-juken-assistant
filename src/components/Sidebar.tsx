@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   BookOpen, Calculator, FlaskConical, Atom, Languages, 
   Settings, GraduationCap, LogOut, MapPin, Monitor, Plus,
-  User, Clock, TrendingUp, Sparkles
+  User, Clock, TrendingUp, Sparkles, ChevronDown, ChevronUp, CheckCircle
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface SidebarProps {
   selectedSubject: string;
@@ -18,8 +18,9 @@ interface SidebarProps {
   onSettingsClick: () => void;
   onProfileClick: () => void;
   onLogout: () => void;
-  dailyQuestions: number;
-  totalCost: number;
+  dailyQuestions: number; // これはMainAppから渡される想定
+  totalCost: number; // これもMainAppから渡される想定
+  // understoodCount: number; // MainAppから渡される想定 (今回は表示枠のみ)
 }
 
 const subjects = [
@@ -33,8 +34,18 @@ const subjects = [
   { id: 'other', name: 'その他', icon: Plus, color: 'bg-orange-100 text-orange-700 hover:bg-orange-200', gradient: 'from-orange-400 to-orange-600' },
 ];
 
-const Sidebar = ({ selectedSubject, onSubjectChange, onSettingsClick, onProfileClick, onLogout, dailyQuestions, totalCost }: SidebarProps) => {
+const Sidebar = ({ 
+  selectedSubject, 
+  onSubjectChange, 
+  onSettingsClick, 
+  onProfileClick, 
+  onLogout, 
+  dailyQuestions, 
+  totalCost,
+  // understoodCount = 0 // デフォルト値、将来的にはpropsから
+}: SidebarProps) => {
   const { profile, isLoading } = useProfile();
+  const [openCollapsible, setOpenCollapsible] = useState<string | null>('subjects'); // subjectsをデフォルトで開く
 
   const calculateDaysLeft = (targetDate: string) => {
     const today = new Date();
@@ -43,6 +54,27 @@ const Sidebar = ({ selectedSubject, onSubjectChange, onSettingsClick, onProfileC
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
+
+  const understoodCount = 0; // 仮の値。将来的にはpropsから渡す
+
+  const toggleCollapsible = (id: string) => {
+    setOpenCollapsible(prev => prev === id ? null : id);
+  };
+
+  const CollapsibleSectionHeader = ({ id, title, icon: IconComponent, iconBgColor }: { id: string, title: string, icon: React.ElementType, iconBgColor: string }) => (
+    <CollapsibleTrigger 
+      className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-gray-100 transition-colors"
+      onClick={() => toggleCollapsible(id)}
+    >
+      <div className="flex items-center space-x-2">
+        <div className={`p-1 ${iconBgColor} rounded-lg`}>
+          <IconComponent className="h-4 w-4 text-white" />
+        </div>
+        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+      </div>
+      {openCollapsible === id ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
+    </CollapsibleTrigger>
+  );
 
   return (
     <div className="w-80 bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col h-screen shadow-lg">
@@ -90,117 +122,112 @@ const Sidebar = ({ selectedSubject, onSubjectChange, onSettingsClick, onProfileC
         </div>
       </div>
 
-      {/* Subjects */}
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="flex items-center space-x-2 mb-4">
-          <div className="p-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg">
-            <BookOpen className="h-4 w-4 text-white" />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-800">教科選択</h3>
-        </div>
-        <div className="space-y-2">
-          {subjects.map((subject) => {
-            const Icon = subject.icon;
-            const isSelected = selectedSubject === subject.id;
-            return (
-              <Button
-                key={subject.id}
-                variant="ghost"
-                className={`w-full justify-start h-auto p-4 transition-all duration-200 ${
-                  isSelected 
-                    ? `bg-gradient-to-r ${subject.gradient} text-white shadow-lg transform scale-105` 
-                    : `${subject.color} border border-transparent hover:border-gray-300 hover:shadow-md`
-                }`}
-                onClick={() => onSubjectChange(subject.id)}
-              >
-                <div className={`p-2 rounded-lg mr-3 transition-all duration-200 ${
-                  isSelected ? "bg-white/20" : "bg-white shadow-sm"
-                }`}>
-                  <Icon className={`h-5 w-5 ${
-                    isSelected ? "text-white" : ""
-                  }`} />
-                </div>
-                <span className="font-medium text-sm">{subject.name}</span>
-                {isSelected && (
-                  <div className="ml-auto">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+      {/* Content Sections */}
+      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+        {/* Subjects Section */}
+        <Collapsible open={openCollapsible === 'subjects'} onOpenChange={() => toggleCollapsible('subjects')}>
+          <CollapsibleSectionHeader id="subjects" title="教科選択" icon={BookOpen} iconBgColor="bg-gradient-to-r from-blue-500 to-indigo-600" />
+          <CollapsibleContent className="pt-2 space-y-2">
+            {subjects.map((subject) => {
+              const Icon = subject.icon;
+              const isSelected = selectedSubject === subject.id;
+              return (
+                <Button
+                  key={subject.id}
+                  variant="ghost"
+                  className={`w-full justify-start h-auto p-4 transition-all duration-200 ${
+                    isSelected 
+                      ? `bg-gradient-to-r ${subject.gradient} text-white shadow-lg transform scale-105` 
+                      : `${subject.color} border border-transparent hover:border-gray-300 hover:shadow-md`
+                  }`}
+                  onClick={() => onSubjectChange(subject.id)}
+                >
+                  <div className={`p-2 rounded-lg mr-3 transition-all duration-200 ${
+                    isSelected ? "bg-white/20" : "bg-white shadow-sm"
+                  }`}>
+                    <Icon className={`h-5 w-5 ${
+                      isSelected ? "text-white" : ""
+                    }`} />
                   </div>
-                )}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
+                  <span className="font-medium text-sm">{subject.name}</span>
+                  {isSelected && (
+                    <div className="ml-auto">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    </div>
+                  )}
+                </Button>
+              );
+            })}
+          </CollapsibleContent>
+        </Collapsible>
 
-      {/* Countdown - Only show if enabled in profile */}
-      {(!isLoading && profile?.show_countdown) && (
-        <>
-          <Separator />
-          <div className="p-4 space-y-3">
-            <div className="flex items-center space-x-2 mb-3">
-              <div className="p-1 bg-gradient-to-r from-red-500 to-pink-600 rounded-lg">
-                <Clock className="h-4 w-4 text-white" />
+        {/* Countdown Section */}
+        {(!isLoading && profile?.show_countdown) && (
+          <Collapsible open={openCollapsible === 'countdown'} onOpenChange={() => toggleCollapsible('countdown')}>
+            <CollapsibleSectionHeader id="countdown" title="入試カウントダウン" icon={Clock} iconBgColor="bg-gradient-to-r from-red-500 to-pink-600" />
+            <CollapsibleContent className="pt-2 space-y-3">
+              <Card className="bg-gradient-to-r from-red-50 to-pink-50 border-red-200 shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-red-700 flex items-center space-x-2">
+                    <span>{profile?.exam_settings?.kyotsu?.name || '共通テスト'}まで</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="text-2xl font-bold text-red-800">
+                    {calculateDaysLeft(profile?.exam_settings?.kyotsu?.date || '2026-01-17')}日
+                  </div>
+                  <div className="text-xs text-red-600 mt-1">
+                    {profile?.exam_settings?.kyotsu?.date || '2026年1月17日'}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-blue-700 flex items-center space-x-2">
+                    <span>{profile?.exam_settings?.todai?.name || '東大二次試験'}まで</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="text-2xl font-bold text-blue-800">
+                    {calculateDaysLeft(profile?.exam_settings?.todai?.date || '2026-02-25')}日
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    {profile?.exam_settings?.todai?.date || '2026年2月25日'}
+                  </div>
+                </CardContent>
+              </Card>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+
+        {/* Stats Section */}
+        <Collapsible open={openCollapsible === 'stats'} onOpenChange={() => toggleCollapsible('stats')}>
+          <CollapsibleSectionHeader id="stats" title="学習統計" icon={TrendingUp} iconBgColor="bg-gradient-to-r from-green-500 to-emerald-600" />
+          <CollapsibleContent className="pt-2 space-y-3">
+            <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span className="text-sm text-gray-700 font-medium">完全に理解した数</span>
               </div>
-              <h3 className="text-sm font-semibold text-gray-800">入試カウントダウン</h3>
+              <Badge variant="secondary" className="bg-green-100 text-green-700 font-semibold">
+                {understoodCount} {/* 表示枠のみ */}
+              </Badge>
             </div>
-            
-            <Card className="bg-gradient-to-r from-red-50 to-pink-50 border-red-200 shadow-sm hover:shadow-md transition-shadow">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-red-700 flex items-center space-x-2">
-                  <span>{profile?.exam_settings?.kyotsu?.name || '共通テスト'}まで</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-red-800">
-                  {calculateDaysLeft(profile?.exam_settings?.kyotsu?.date || '2026-01-17')}日
-                </div>
-                <div className="text-xs text-red-600 mt-1">
-                  {profile?.exam_settings?.kyotsu?.date || '2026年1月17日'}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm hover:shadow-md transition-shadow">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-blue-700 flex items-center space-x-2">
-                  <span>{profile?.exam_settings?.todai?.name || '東大二次試験'}まで</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-blue-800">
-                  {calculateDaysLeft(profile?.exam_settings?.todai?.date || '2026-02-25')}日
-                </div>
-                <div className="text-xs text-blue-600 mt-1">
-                  {profile?.exam_settings?.todai?.date || '2026年2月25日'}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </>
-      )}
-
-      <Separator />
-
-      {/* Stats */}
-      <div className="p-4 space-y-3">
-        <div className="flex items-center space-x-2 mb-3">
-          <div className="p-1 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg">
-            <TrendingUp className="h-4 w-4 text-white" />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-800">学習統計</h3>
-        </div>
-        <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-          <span className="text-sm text-gray-700 font-medium">本日の質問数</span>
-          <Badge variant="secondary" className="bg-green-100 text-green-700 font-semibold">
-            {dailyQuestions}
-          </Badge>
-        </div>
-        <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <span className="text-sm text-gray-700 font-medium">累計コスト</span>
-          <Badge variant="outline" className="border-blue-300 text-blue-700 font-semibold">
-            ¥{totalCost.toFixed(2)}
-          </Badge>
-        </div>
+            <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+              <span className="text-sm text-gray-700 font-medium">本日の質問数</span>
+              <Badge variant="secondary" className="bg-green-100 text-green-700 font-semibold">
+                {dailyQuestions}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm text-gray-700 font-medium">累計コスト</span>
+              <Badge variant="outline" className="border-blue-300 text-blue-700 font-semibold">
+                ¥{totalCost.toFixed(2)}
+              </Badge>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
 
       <Separator />

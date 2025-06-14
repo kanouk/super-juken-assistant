@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import 'katex/dist/katex.min.css';
 import { InlineMath, BlockMath } from 'react-katex';
@@ -26,7 +27,7 @@ const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
         if (math) {
           try {
             return (
-              <div key={index} className="my-2 flex justify-center"> {/* Reduced margin for tighter layout */}
+              <div key={index} className="my-2 flex justify-center">
                 <BlockMath math={math} />
               </div>
             );
@@ -60,7 +61,8 @@ const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
       
       if (part.trim()) { 
         return (
-          <div key={index} className="prose prose-sm max-w-none dark:prose-invert">
+          // prose-smからprose-baseに変更し、行間を調整するために leading-relaxed を追加
+          <div key={index} className="prose prose-base max-w-none dark:prose-invert leading-relaxed">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
             >
@@ -74,6 +76,7 @@ const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
   }, [content]);
 
   return (
+    // classNameに渡される text-sm や text-base を優先しつつ、全体の行間を調整
     <div className={`${className} leading-relaxed`}>
       {processedContent.filter(Boolean)}
     </div>
@@ -81,3 +84,4 @@ const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
 };
 
 export default LaTeXRenderer;
+
