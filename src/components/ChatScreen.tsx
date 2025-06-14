@@ -313,10 +313,6 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col">
             <ChatEmptyState subjectName={subjectName} />
-            <QuickActions 
-              onQuickAction={handleSendMessage}
-              onUnderstood={() => {}}
-            />
           </div>
         ) : (
           <MessageList 
