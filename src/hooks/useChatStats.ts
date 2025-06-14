@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -100,41 +99,21 @@ export const useChatStats = (userId: string | undefined) => {
 
   // 2. Realtime購読部分の厳密化
   useEffect(() => {
-    // userId無し時はクリーンアップ
-    if (!userId) {
-      if (channelRef.current) {
-        try {
-          channelRef.current.unsubscribe && channelRef.current.unsubscribe();
-        } catch (e) {
-          console.warn('unsubscribe error', e);
-        }
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-        channelNameRef.current = null;
-        isSubscribedRef.current = false;
-      }
-      return;
-    }
-    const channelName = 'chat-stats-changes-' + userId;
-
-    // 既存チャンネル名と同じ場合はスキップ（二重購読ガード）
-    if (channelNameRef.current === channelName && channelRef.current && isSubscribedRef.current) {
-      console.debug('Already subscribed:', channelName);
-      return;
-    }
-
-    // 旧チャンネル解除・停止
+    // クリーンアップ: 既存チャンネルを確実に解除
     if (channelRef.current) {
       try {
         channelRef.current.unsubscribe && channelRef.current.unsubscribe();
       } catch (e) {
-        console.warn('unsubscribe error on switch', e);
+        console.warn('unsubscribe error', e);
       }
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
-      isSubscribedRef.current = false;
       channelNameRef.current = null;
+      isSubscribedRef.current = false;
     }
+    if (!userId) return;
+
+    const channelName = 'chat-stats-changes-' + userId;
 
     // 新チャンネル生成&購読
     const channel = supabase
@@ -152,18 +131,19 @@ export const useChatStats = (userId: string | undefined) => {
       );
 
     let cleaned = false;
-    // サブスクライブ
+    let subscribed = false;
     channel.subscribe((status: string) => {
-      if (cleaned) return;
+      if (cleaned || subscribed) return;
       if (status === 'SUBSCRIBED') {
         channelRef.current = channel;
         channelNameRef.current = channelName;
         isSubscribedRef.current = true;
+        subscribed = true;
         console.debug('[useChatStats] SUBSCRIBED channel:', channelName);
       }
     });
 
-    // アンマウント時/依存変化時の確実なクリーンナップ
+    // アンマウント時/依存変化時の確実なクリーンアップ
     return () => {
       cleaned = true;
       if (channelRef.current) {
@@ -179,7 +159,6 @@ export const useChatStats = (userId: string | undefined) => {
         console.debug('[useChatStats] CLEANED:', channelName);
       }
     };
-    // userId のみ依存
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
