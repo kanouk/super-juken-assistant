@@ -1,16 +1,17 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Settings, Key, Brain, MessageSquare, Shield, Save, Lock, Sparkles, Delete } from "lucide-react";
+import { Settings, Key, Brain, MessageSquare, Shield, Save, Lock, Sparkles, Calculator, Languages, FlaskConical, Globe, Zap, BookOpen } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
+import { useToast } from "@/hooks/use-toast";
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -22,24 +23,32 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const [passcodeInput, setPasscodeInput] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
+  const { toast } = useToast();
 
-  const handlePasscodeSubmit = () => {
-    if (passcodeInput === settings.passcode) {
-      setIsAuthenticated(true);
-      setShowPasscodeModal(false);
-    } else {
-      // パスコードが間違っている場合のエラーハンドリングは既存のコードを維持
+  const handlePasscodeChange = (value: string) => {
+    setPasscodeInput(value);
+    
+    // Auto-authenticate when 6 digits are entered
+    if (value.length === 6) {
+      if (value === settings.passcode) {
+        setIsAuthenticated(true);
+        setShowPasscodeModal(false);
+      } else {
+        // Wrong passcode - shake animation
+        setIsShaking(true);
+        setPasscodeInput('');
+        
+        // Add vibration for mobile devices
+        if (navigator.vibrate) {
+          navigator.vibrate([100, 50, 100]);
+        }
+        
+        setTimeout(() => {
+          setIsShaking(false);
+        }, 500);
+      }
     }
-  };
-
-  const handleNumberClick = (num: string) => {
-    if (passcodeInput.length < 6) {
-      setPasscodeInput(prev => prev + num);
-    }
-  };
-
-  const handleDelete = () => {
-    setPasscodeInput(prev => prev.slice(0, -1));
   };
 
   const handleSave = async () => {
@@ -84,7 +93,7 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
 
         {/* Main Card */}
         <div className="relative w-full max-w-sm mx-auto">
-          <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl p-8">
+          <div className={`bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl p-8 transition-transform duration-200 ${isShaking ? 'animate-bounce' : ''}`}>
             {/* Header */}
             <div className="text-center mb-8">
               <div className="mx-auto w-20 h-20 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center mb-6 shadow-lg border border-white/30">
@@ -94,66 +103,51 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
               <p className="text-white/70">6桁のパスコードを入力してください</p>
             </div>
 
-            {/* Passcode Display */}
-            <div className="flex justify-center space-x-4 mb-8">
-              {[...Array(6)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                    i < passcodeInput.length 
-                      ? "bg-white shadow-lg shadow-white/50" 
-                      : "bg-white/20 border border-white/30"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Number Pad */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                <button
-                  key={num}
-                  onClick={() => handleNumberClick(num.toString())}
-                  className="w-16 h-16 mx-auto bg-white/10 backdrop-blur-xl border border-white/20 rounded-full text-white text-xl font-semibold hover:bg-white/20 active:bg-white/30 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                >
-                  {num}
-                </button>
-              ))}
-            </div>
-
-            {/* Bottom Row */}
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div></div>
-              <button
-                onClick={() => handleNumberClick('0')}
-                className="w-16 h-16 mx-auto bg-white/10 backdrop-blur-xl border border-white/20 rounded-full text-white text-xl font-semibold hover:bg-white/20 active:bg-white/30 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+            {/* Passcode Input */}
+            <div className="flex justify-center mb-8">
+              <InputOTP
+                maxLength={6}
+                value={passcodeInput}
+                onChange={handlePasscodeChange}
+                className="gap-2"
               >
-                0
-              </button>
-              <button
-                onClick={handleDelete}
-                className="w-16 h-16 mx-auto bg-white/10 backdrop-blur-xl border border-white/20 rounded-full text-white hover:bg-white/20 active:bg-white/30 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center"
-              >
-                <Delete className="h-5 w-5" />
-              </button>
+                <InputOTPGroup>
+                  <InputOTPSlot 
+                    index={0} 
+                    className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
+                  />
+                  <InputOTPSlot 
+                    index={1} 
+                    className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
+                  />
+                  <InputOTPSlot 
+                    index={2} 
+                    className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
+                  />
+                  <InputOTPSlot 
+                    index={3} 
+                    className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
+                  />
+                  <InputOTPSlot 
+                    index={4} 
+                    className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
+                  />
+                  <InputOTPSlot 
+                    index={5} 
+                    className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
+                  />
+                </InputOTPGroup>
+              </InputOTP>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex space-x-3">
+            {/* Back Button */}
+            <div className="flex justify-center">
               <Button
                 variant="outline"
-                className="flex-1 h-12 bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 hover:text-white"
+                className="bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 hover:text-white"
                 onClick={onBack}
               >
                 キャンセル
-              </Button>
-              <Button
-                className="flex-1 h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handlePasscodeSubmit}
-                disabled={passcodeInput.length !== 6}
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                認証する
               </Button>
             </div>
           </div>
@@ -388,27 +382,33 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
                   {Object.entries(settings.subjectInstructions).map(([subject, instruction]) => {
-                    const subjectNames: { [key: string]: string } = {
-                      math: '数学',
-                      english: '英語',
-                      science: '理科',
-                      social: '社会',
-                      physics: '物理',
-                      history: '歴史'
+                    const subjectInfo: { [key: string]: { name: string; icon: any; color: string } } = {
+                      math: { name: '数学', icon: Calculator, color: 'text-blue-600' },
+                      english: { name: '英語', icon: Languages, color: 'text-green-600' },
+                      science: { name: '理科', icon: FlaskConical, color: 'text-purple-600' },
+                      social: { name: '社会', icon: Globe, color: 'text-orange-600' },
+                      physics: { name: '物理', icon: Zap, color: 'text-yellow-600' },
+                      history: { name: '歴史', icon: BookOpen, color: 'text-red-600' }
                     };
 
+                    const subjectData = subjectInfo[subject];
+                    if (!subjectData) return null;
+
+                    const IconComponent = subjectData.icon;
+
                     return (
-                      <div key={subject}>
-                        <Label htmlFor={`${subject}-instruction`} className="text-sm font-medium text-gray-700">
-                          {subjectNames[subject]}
+                      <div key={subject} className="space-y-3">
+                        <Label htmlFor={`${subject}-instruction`} className="flex items-center text-sm font-medium text-gray-700">
+                          <IconComponent className={`h-5 w-5 mr-2 ${subjectData.color}`} />
+                          {subjectData.name}
                         </Label>
                         <Textarea
                           id={`${subject}-instruction`}
                           value={instruction}
                           onChange={(e) => updateSetting(`subjectInstructions.${subject}`, e.target.value)}
                           rows={3}
-                          placeholder={`${subjectNames[subject]}に関する指示を入力してください...`}
-                          className="mt-2 border-2 border-gray-200 focus:border-orange-500"
+                          placeholder={`${subjectData.name}に関する指示を入力してください...`}
+                          className="border-2 border-gray-200 focus:border-orange-500"
                         />
                       </div>
                     );

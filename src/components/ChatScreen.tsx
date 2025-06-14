@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Paperclip, Send, X, Bot, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import LaTeXRenderer from "./LaTeXRenderer";
 
 interface Message {
   id: string;
@@ -95,13 +96,20 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
       // TODO: Upload image to Supabase Storage if present
       // TODO: Call ask-ai Edge Function
       
-      // Simulate AI response
+      // Simulate AI response with LaTeX examples
       await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      let responseContent = `${subjectName}に関するご質問ありがとうございます。${inputText ? `「${inputText}」について` : '画像について'}詳しく説明いたします。\n\nこちらは模擬応答です。`;
+      
+      // Add LaTeX examples for math and science subjects
+      if (subject === 'math' || subject === 'physics') {
+        responseContent += `\n\n数式の例：\n$$f(x) = \\frac{1}{\\sqrt{2\\pi\\sigma^2}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}$$\n\nインライン数式の例: $E = mc^2$ は有名な物理法則です。\n\n二次方程式の解の公式:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$`;
+      }
       
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `${subjectName}に関するご質問ありがとうございます。${inputText ? `「${inputText}」について` : '画像について'}詳しく説明いたします。\n\nこちらは模擬応答です。実際のアプリケーションでは、AIが適切な回答を生成します。`,
+        content: responseContent,
         cost: 0.02,
         model: currentModel,
         created_at: new Date().toISOString(),
@@ -183,7 +191,14 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
                         className="max-w-xs rounded-lg mb-2"
                       />
                     )}
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    {message.role === 'user' ? (
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    ) : (
+                      <LaTeXRenderer 
+                        content={message.content} 
+                        className="text-sm text-gray-900"
+                      />
+                    )}
                     {message.role === 'assistant' && message.cost && (
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
                         <span className="text-xs text-gray-500">{message.model}</span>
