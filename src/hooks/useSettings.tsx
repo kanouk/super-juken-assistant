@@ -1,6 +1,15 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+interface SubjectConfig {
+  id: string;
+  name: string;
+  visible: boolean;
+  order: number;
+  instruction: string;
+}
 
 interface Settings {
   passcode: string;
@@ -18,6 +27,7 @@ interface Settings {
   subjectInstructions: {
     [key: string]: string;
   };
+  subjectConfigs: SubjectConfig[];
 }
 
 // 型ガード関数
@@ -39,6 +49,28 @@ const isSubjectInstructions = (obj: any): obj is { [key: string]: string } => {
   return obj && typeof obj === 'object' && 
          Object.values(obj).every(val => typeof val === 'string');
 };
+
+const isSubjectConfigs = (obj: any): obj is SubjectConfig[] => {
+  return Array.isArray(obj) && obj.every(config => 
+    config && typeof config === 'object' &&
+    typeof config.id === 'string' &&
+    typeof config.name === 'string' &&
+    typeof config.visible === 'boolean' &&
+    typeof config.order === 'number' &&
+    typeof config.instruction === 'string'
+  );
+};
+
+const defaultSubjectConfigs: SubjectConfig[] = [
+  { id: 'math', name: '数学', visible: true, order: 1, instruction: '数学の問題は段階的に解法を示し、公式の説明も含めてください。LaTeX記法を使って数式を美しく表示してください。' },
+  { id: 'chemistry', name: '化学', visible: true, order: 2, instruction: '化学の概念は化学式や反応式を含めて説明してください。LaTeX記法を使って化学式を正確に表示してください。' },
+  { id: 'biology', name: '生物', visible: true, order: 3, instruction: '生物の概念は図表を用いて視覚的に説明してください。専門用語は分かりやすく解説してください。' },
+  { id: 'english', name: '英語', visible: true, order: 4, instruction: '英語の文法や単語について、例文を交えて説明してください。発音記号も適宜使用してください。' },
+  { id: 'japanese', name: '国語', visible: true, order: 5, instruction: '国語の内容は古文・漢文も含めて丁寧に説明してください。語彙や文法事項を重視してください。' },
+  { id: 'geography', name: '地理', visible: true, order: 6, instruction: '地理の内容は地図や統計データを参考に説明してください。地域性や環境要因も考慮してください。' },
+  { id: 'information', name: '情報', visible: true, order: 7, instruction: '情報の内容はプログラミングやデータ処理について具体例を交えて説明してください。' },
+  { id: 'other', name: '全般', visible: true, order: 8, instruction: 'その他の教科についても基礎から応用まで幅広く対応します。具体例を交えて分かりやすく説明してください。' }
+];
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<Settings>({
@@ -63,7 +95,8 @@ export const useSettings = () => {
       geography: '地理の内容は地図や統計データを参考に説明してください。地域性や環境要因も考慮してください。',
       information: '情報の内容はプログラミングやデータ処理について具体例を交えて説明してください。',
       other: 'その他の教科についても基礎から応用まで幅広く対応します。具体例を交えて分かりやすく説明してください。'
-    }
+    },
+    subjectConfigs: defaultSubjectConfigs
   });
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -101,7 +134,10 @@ export const useSettings = () => {
             : prev.commonInstruction,
           subjectInstructions: isSubjectInstructions(settingsData.subject_instructions) 
             ? settingsData.subject_instructions 
-            : prev.subjectInstructions
+            : prev.subjectInstructions,
+          subjectConfigs: isSubjectConfigs(settingsData.subject_configs) 
+            ? settingsData.subject_configs 
+            : prev.subjectConfigs
         }));
       }
     } catch (error) {
@@ -131,7 +167,8 @@ export const useSettings = () => {
           api_keys: newSettings.apiKeys,
           models: newSettings.models,
           common_instruction: newSettings.commonInstruction,
-          subject_instructions: newSettings.subjectInstructions
+          subject_instructions: newSettings.subjectInstructions,
+          subject_configs: newSettings.subjectConfigs
         })
         .eq('id', user.id);
 

@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +12,7 @@ import {
 import { useProfile } from "@/hooks/useProfile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSettings } from "@/hooks/useSettings";
 
 interface SidebarProps {
   selectedSubject: string;
@@ -51,10 +51,40 @@ const Sidebar = ({
   isLoadingStats
 }: SidebarProps) => {
   const { profile, isLoading: isLoadingProfile } = useProfile();
+  const { settings } = useSettings();
   const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({
     subjects: true, // Default to open
     countdown: true,
     stats: true,
+  });
+
+  // Get visible and sorted subjects from settings
+  const visibleSubjects = settings.subjectConfigs
+    .filter(config => config.visible)
+    .sort((a, b) => a.order - b.order);
+
+  // Legacy subject data for backward compatibility
+  const legacySubjects = [
+    { id: 'math', name: '数学', icon: Calculator, color: 'bg-blue-100 text-blue-700 hover:bg-blue-200', gradient: 'from-blue-400 to-blue-600' },
+    { id: 'chemistry', name: '化学', icon: FlaskConical, color: 'bg-purple-100 text-purple-700 hover:bg-purple-200', gradient: 'from-purple-400 to-purple-600' },
+    { id: 'biology', name: '生物', icon: Atom, color: 'bg-green-100 text-green-700 hover:bg-green-200', gradient: 'from-green-400 to-green-600' },
+    { id: 'english', name: '英語', icon: Languages, color: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200', gradient: 'from-indigo-400 to-indigo-600' },
+    { id: 'japanese', name: '国語', icon: BookOpen, color: 'bg-red-100 text-red-700 hover:bg-red-200', gradient: 'from-red-400 to-red-600' },
+    { id: 'geography', name: '地理', icon: MapPin, color: 'bg-teal-100 text-teal-700 hover:bg-teal-200', gradient: 'from-teal-400 to-teal-600' },
+    { id: 'information', name: '情報', icon: Monitor, color: 'bg-gray-100 text-gray-700 hover:bg-gray-200', gradient: 'from-gray-400 to-gray-600' },
+    { id: 'other', name: '全般', icon: Plus, color: 'bg-orange-100 text-orange-700 hover:bg-orange-200', gradient: 'from-orange-400 to-orange-600' },
+  ];
+
+  // Map visible subjects to display format
+  const displaySubjects = visibleSubjects.map(config => {
+    const legacyData = legacySubjects.find(s => s.id === config.id);
+    return {
+      id: config.id,
+      name: config.name,
+      icon: legacyData?.icon || Plus,
+      color: legacyData?.color || 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+      gradient: legacyData?.gradient || 'from-gray-400 to-gray-600'
+    };
   });
 
   const calculateDaysLeft = (targetDate: string) => {
@@ -160,7 +190,7 @@ const Sidebar = ({
             <CollapsibleSectionHeader title="教科選択" icon={BookOpen} iconBgColor="bg-gradient-to-r from-blue-500 to-indigo-600" isOpen={openCollapsibles['subjects']} />
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-2 space-y-2">
-            {subjects.map((subjectItem) => {
+            {displaySubjects.map((subjectItem) => {
               const Icon = subjectItem.icon;
               const isSelected = selectedSubject === subjectItem.id;
               return (
