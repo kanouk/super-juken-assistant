@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Paperclip, Send, X, Bot, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import LaTeXRenderer from "./LaTeXRenderer";
+import TypewriterEffect from './TypewriterEffect'; // TypewriterEffectをインポート
 import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
@@ -90,7 +91,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
 
     // Clear input immediately after capturing values
     setInputText('');
-    removeImage();
+    removeImage(); // 画像もクリア
     setIsLoading(true);
 
     try {
@@ -124,6 +125,8 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
 
         if (uploadError) {
           console.error('Image upload error:', uploadError);
+          // エラーが発生しても処理を続行し、画像なしでAIに問い合わせることも考えられる
+          // ここではトースト表示などはせず、コンソールエラーに留める
         } else {
           const { data } = supabase.storage
             .from('images')
@@ -231,7 +234,9 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
           messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} ${
+                message.role === 'assistant' ? 'animate-fade-in' : '' // アシスタントのメッセージコンテナにフェードインアニメーション
+              }`}
             >
               <div className={`flex items-start space-x-3 max-w-2xl ${
                 message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
@@ -262,9 +267,10 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
                     {message.role === 'user' ? (
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                     ) : (
-                      <LaTeXRenderer 
+                      <TypewriterEffect // LaTeXRendererの代わりにTypewriterEffectを使用
                         content={message.content} 
                         className="text-sm"
+                        speed={20} // 表示速度を調整 (ミリ秒)
                       />
                     )}
                     {message.role === 'assistant' && message.cost && (
