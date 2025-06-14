@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,7 +16,23 @@ interface MessageItemProps {
   showQuickActions: boolean;
   onQuickAction: (prompt: string) => void;
   onUnderstood: () => void;
+  subjectId?: string;
 }
+
+const subjectColorMap: { [key: string]: string } = {
+  math: 'from-blue-500 to-indigo-500',
+  chemistry: 'from-purple-500 to-pink-500',
+  biology: 'from-green-500 to-emerald-400',
+  english: 'from-indigo-600 to-blue-400',
+  japanese: 'from-rose-500 to-red-400',
+  physics: 'from-orange-500 to-yellow-400',
+  earth_science: 'from-cyan-500 to-blue-300',
+  world_history: 'from-yellow-500 to-amber-400',
+  japanese_history: 'from-pink-500 to-red-400',
+  geography: 'from-teal-500 to-green-300',
+  information: 'from-gray-600 to-slate-400',
+  other: 'from-orange-600 to-pink-500',
+};
 
 const MessageItem: React.FC<MessageItemProps> = ({
   message,
@@ -26,6 +41,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   showQuickActions,
   onQuickAction,
   onUnderstood,
+  subjectId = 'other',
 }) => {
   const { profile } = useProfile();
 
@@ -35,6 +51,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
       onTypewriterComplete(message.db_id);
     }
   }, [message.role, message.db_id, onTypewriterComplete]);
+
+  const gradient = subjectColorMap[subjectId] || 'from-blue-600 to-purple-600';
+  const borderClass = message.role === 'assistant'
+    ? `border-l-4 border-transparent bg-gradient-to-br ${gradient} bg-clip-border`
+    : '';
 
   return (
     <div className="w-full group">
@@ -62,7 +83,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
           <Card className={`flex-1 min-w-0 shadow-sm border-0 ${
             message.role === 'user'
               ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
-              : 'bg-white border border-gray-200 text-gray-900'
+              : `bg-white border border-gray-200 text-gray-900 ${borderClass}`
           }`}>
             <CardContent className="p-4">
               {message.image_url && (

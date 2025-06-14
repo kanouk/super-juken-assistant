@@ -1,4 +1,3 @@
-
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,22 +39,23 @@ export const SubjectsTab = ({ subjectConfigs, updateSubjectConfig, moveSubject }
     return iconMap[subjectId] || Plus;
   };
 
+  // 新しい多色バリエーション
   const getSubjectColor = (subjectId: string) => {
     const colorMap: { [key: string]: string } = {
-      math: 'text-blue-600',
-      chemistry: 'text-purple-600',
-      biology: 'text-green-600',
+      math: 'text-sky-700',
+      chemistry: 'text-fuchsia-700',
+      biology: 'text-emerald-600',
       english: 'text-indigo-600',
-      japanese: 'text-red-600',
+      japanese: 'text-rose-700',
       physics: 'text-orange-600',
       earth_science: 'text-cyan-700',
-      world_history: 'text-yellow-700',
+      world_history: 'text-amber-700',
       japanese_history: 'text-pink-600',
-      geography: 'text-teal-600',
-      information: 'text-gray-600',
-      other: 'text-orange-600'
+      geography: 'text-teal-700',
+      information: 'text-gray-700',
+      other: 'text-yellow-700'
     };
-    return colorMap[subjectId] || 'text-orange-600';
+    return colorMap[subjectId] || 'text-yellow-700';
   };
 
   return (
