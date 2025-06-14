@@ -1,37 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-
-interface ExamSettings {
-  kyotsu: {
-    name: string;
-    date: string;
-  };
-  todai: {
-    name: string;
-    date: string;
-  };
-}
-
-interface UserProfile {
-  display_name: string | null;
-  email: string | null;
-  avatar_url: string | null;
-  show_countdown: boolean;
-  exam_settings: ExamSettings;
-  mbti: string | null; // MBTIを追加
-}
-
-// 型ガード関数を追加
-const isValidExamSettings = (obj: any): obj is ExamSettings => {
-  return obj && 
-    typeof obj === 'object' &&
-    obj.kyotsu && 
-    obj.todai &&
-    typeof obj.kyotsu.name === 'string' &&
-    typeof obj.kyotsu.date === 'string' &&
-    typeof obj.todai.name === 'string' &&
-    typeof obj.todai.date === 'string';
-};
+import { UserProfile, ExamSettings, isValidExamSettings } from '@/types/profile';
 
 export const useProfile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -63,7 +33,7 @@ export const useProfile = () => {
         // exam_settingsの型安全な処理
         let examSettings = defaultExamSettings;
         if (data.exam_settings && isValidExamSettings(data.exam_settings)) {
-          examSettings = data.exam_settings;
+          examSettings = data.exam_settings as ExamSettings; // Cast after validation
         }
 
         setProfile({
@@ -72,7 +42,7 @@ export const useProfile = () => {
           avatar_url: data.avatar_url,
           show_countdown: data.show_countdown ?? true,
           exam_settings: examSettings,
-          mbti: data.mbti || null, // MBTIをセット
+          mbti: data.mbti || null,
         });
       }
     } catch (error) {
