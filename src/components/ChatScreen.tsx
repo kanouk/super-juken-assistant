@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import ConfettiComponent from './Confetti';
@@ -11,6 +10,7 @@ import ChatEmptyState from './chat/ChatEmptyState';
 import ChatLoadingIndicator from './chat/ChatLoadingIndicator';
 import ImagePreviewDisplay from './chat/ImagePreviewDisplay';
 import MessageInput from './chat/MessageInput';
+import ConversationList from './chat/ConversationList';
 import { Message } from './chat/types'; // Import Message type
 
 interface ChatScreenProps {
@@ -21,19 +21,18 @@ interface ChatScreenProps {
 }
 
 const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenProps) => {
-  const [allMessages, setAllMessages] = useState<{[key: string]: Message[]}>({});
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  // fileInputRef is now inside MessageInput.tsx
+  const [showConversationList, setShowConversationList] = useState(true);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const [latestAIMessageIdForActions, setLatestAIMessageIdForActions] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
-
-  const messages = allMessages[subject] || [];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -45,11 +44,90 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     setSelectedImage(null);
     setImagePreview(null);
     setLatestAIMessageIdForActions(null);
+    setCurrentConversationId(null);
+    setMessages([]);
+    setShowConversationList(true);
   }, [subject]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // 新規チャット開始時のタイトル生成
+  const generateConversationTitle = (firstMessage: string, subject: string): string => {
+    const subjectNames: { [key: string]: string } = {
+      math: '数学',
+      chemistry: '化学',
+      biology: '生物',
+      english: '英語',
+      japanese: '国語',
+      geography: '地理',
+      information: '情報',
+      other: 'その他'
+    };
+    
+    const truncatedMessage = firstMessage.length > 20 
+      ? firstMessage.substring(0, 20) + '...' 
+      : firstMessage;
+    
+    return `${subjectNames[subject] || 'その他'}: ${truncatedMessage}`;
+  };
+
+  const handleSelectConversation = async (conversationId: string | null) => {
+    if (conversationId === null) {
+      // 新規チャット
+      setCurrentConversationId(null);
+      setMessages([]);
+      setInputText('');
+      setSelectedImage(null);
+      setImagePreview(null);
+      setLatestAIMessageIdForActions(null);
+      setShowConversationList(false);
+    } else {
+      // 既存の会話を読み込み
+      setCurrentConversationId(conversationId);
+      setShowConversationList(false);
+      await loadConversationMessages(conversationId);
+    }
+  };
+
+  const loadConversationMessages = async (conversationId: string) => {
+    if (!userId) return;
+    setIsLoading(true);
+    
+    try {
+      const { data: dbMessages, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      
+      const fetchedMessages: Message[] = dbMessages.map(msg => ({
+        id: msg.id, 
+        db_id: msg.id,
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+        image_url: msg.image_url || undefined,
+        cost: msg.cost || undefined,
+        model: msg.model || undefined,
+        created_at: msg.created_at,
+        subject: subject, 
+        is_understood: msg.is_understood || false,
+      }));
+
+      setMessages(fetchedMessages);
+    } catch (error: any) {
+      toast({
+        title: "エラー",
+        description: "メッセージの読み込みに失敗しました: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -64,7 +142,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
       }
       setSelectedImage(file);
       const reader = new FileReader();
-      reader.onload = (e_reader) => { // Renamed e to e_reader to avoid conflict
+      reader.onload = (e_reader) => {
         setImagePreview(e_reader.target?.result as string);
       };
       reader.readAsDataURL(file);
@@ -74,81 +152,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
   const removeImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
-    // No need to clear fileInputRef.current.value as it's managed by MessageInput
   };
-
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!userId || !subject) return;
-      setIsLoading(true);
-      
-      // メッセージ読み込み時に入力をクリア
-      setInputText('');
-      setSelectedImage(null);
-      setImagePreview(null);
-      setLatestAIMessageIdForActions(null);
-      
-      try {
-        // 1. Find or create conversation
-        let { data: conversation, error: convError } = await supabase
-          .from('conversations')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('subject', subject)
-          .single();
-
-        if (convError && convError.code !== 'PGRST116') { // PGRST116: no rows found
-          console.error('Error fetching conversation:', convError);
-          throw convError;
-        }
-
-        if (!conversation) {
-          setAllMessages(prev => ({ ...prev, [subject]: [] }));
-          setIsLoading(false);
-          return;
-        }
-        
-        const { data: dbMessages, error: messagesError } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('conversation_id', conversation.id)
-          .order('created_at', { ascending: true });
-
-        if (messagesError) {
-          console.error('Error fetching messages:', messagesError);
-          throw messagesError;
-        }
-        
-        const fetchedMessages: Message[] = dbMessages.map(msg => ({
-          id: msg.id, 
-          db_id: msg.id,
-          role: msg.role as 'user' | 'assistant',
-          content: msg.content,
-          image_url: msg.image_url || undefined,
-          cost: msg.cost || undefined,
-          model: msg.model || undefined,
-          created_at: msg.created_at,
-          subject: subject, 
-          is_understood: msg.is_understood || false,
-        }));
-
-        setAllMessages(prev => ({
-          ...prev,
-          [subject]: fetchedMessages
-        }));
-      } catch (error: any) {
-        toast({
-          title: "エラー",
-          description: "メッセージの読み込みに失敗しました: " + error.message,
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchMessages();
-  }, [subject, userId, toast]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement | HTMLTextAreaElement>, explicitText?: string) => {
     e.preventDefault();
@@ -172,7 +176,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     const submittingImagePreview = imagePreviewForSubmission;
 
     setInputText('');
-    removeImage(); // This will clear selectedImage and imagePreview
+    removeImage();
     setIsLoading(true);
 
     const localUserMessageId = `local-${Date.now()}`;
@@ -185,38 +189,32 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
       subject: subject,
     };
 
-    const updatedMessagesForSubject = [...(allMessages[subject] || []), userMessage];
-    setAllMessages(prev => ({ ...prev, [subject]: updatedMessagesForSubject }));
+    setMessages(prev => [...prev, userMessage]);
 
     try {
-      // 1. Find or create conversation
-      let { data: conversation, error: convError } = await supabase
-        .from('conversations')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('subject', subject)
-        .single();
-
-      if (convError && convError.code !== 'PGRST116') { // PGRST116: no rows found
-        console.error('Error finding conversation:', convError);
-        throw convError;
-      }
-
-      if (!conversation) {
+      let conversationId = currentConversationId;
+      
+      // 新規チャットの場合、会話を作成
+      if (!conversationId) {
+        const conversationTitle = generateConversationTitle(submittingText, subject);
         const { data: newConversation, error: newConvError } = await supabase
           .from('conversations')
-          .insert({ user_id: userId, subject: subject })
+          .insert({ 
+            user_id: userId, 
+            subject: subject,
+            title: conversationTitle
+          })
           .select('id')
           .single();
+        
         if (newConvError || !newConversation) {
-          console.error('Error creating conversation:', newConvError);
           throw newConvError || new Error("Failed to create conversation");
         }
-        conversation = newConversation;
+        conversationId = newConversation.id;
+        setCurrentConversationId(conversationId);
       }
-      const conversationId = conversation.id;
 
-      // 2. Upload image if exists
+      // 画像アップロード処理
       let imageUrlSupabase = '';
       if (submittingImageFile) {
         const fileExt = submittingImageFile.name.split('.').pop();
@@ -236,7 +234,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
         }
       }
 
-      // 3. Save user message to DB
+      // ユーザーメッセージをDBに保存
       const { data: dbUserMessage, error: userMsgError } = await supabase
         .from('messages')
         .insert({
@@ -250,42 +248,35 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
         .single();
 
       if (userMsgError || !dbUserMessage) {
-        console.error('Error saving user message:', userMsgError);
         throw userMsgError || new Error("Failed to save user message");
       }
       
-      setAllMessages(prev => ({
-        ...prev,
-        [subject]: prev[subject]?.map(msg => 
-          msg.id === localUserMessageId ? { ...msg, db_id: dbUserMessage.id, id: dbUserMessage.id } : msg
-        ) || []
-      }));
+      // ローカルメッセージを更新
+      setMessages(prev => prev.map(msg => 
+        msg.id === localUserMessageId ? { ...msg, db_id: dbUserMessage.id, id: dbUserMessage.id } : msg
+      ));
       
-      // 4. Call AI function
-      const conversationHistoryForAI = (allMessages[subject] || [])
-        .filter(msg => msg.id !== localUserMessageId || msg.db_id) // Ensure only messages with db_id or not the current local one are sent
-        .map(msg => ({ // Reconstruct user message with db_id if available
-          ...msg,
-          id: msg.db_id || msg.id,
-        }))
-        .slice(-11) 
+      // AI関数を呼び出し
+      const conversationHistory = messages
+        .slice(-10) 
         .map(msg => ({
           role: msg.role,
           content: msg.content,
           image_url: msg.image_url
         }));
-      // Ensure the just-saved user message is part of history if it got db_id
-      const finalUserMessageForHistory = {role: 'user', content: submittingText, image_url: imageUrlSupabase || undefined};
-      const historyWithoutOptimistic = conversationHistoryForAI.filter(m => m.role !== 'user' || m.content !== submittingText); // crude way to remove temp user message
-      const finalHistory = [...historyWithoutOptimistic, finalUserMessageForHistory].slice(-11);
-
+      
+      const finalHistory = [...conversationHistory, {
+        role: 'user' as const, 
+        content: submittingText, 
+        image_url: imageUrlSupabase || undefined
+      }];
 
       const { data: functionData, error: functionError } = await supabase.functions.invoke('ask-ai', {
         body: {
           message: submittingText,
           subject: subject,
           imageUrl: imageUrlSupabase || undefined,
-          conversationHistory: finalHistory, // Use finalHistory
+          conversationHistory: finalHistory,
           currentModel: currentModel,
         }
       });
@@ -293,7 +284,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
       if (functionError) throw new Error(functionError.message || 'AI応答でエラーが発生しました');
       if (functionData.error) throw new Error(functionData.error);
 
-      // 5. Save AI message to DB
+      // AIメッセージをDBに保存
       const aiMessageContent = functionData.response;
       const { data: dbAiMessage, error: aiMsgError } = await supabase
         .from('messages')
@@ -310,7 +301,6 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
         .single();
 
       if (aiMsgError || !dbAiMessage) {
-        console.error('Error saving AI message:', aiMsgError);
         throw aiMsgError || new Error("Failed to save AI message");
       }
       
@@ -326,22 +316,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
         is_understood: dbAiMessage.is_understood || false,
       };
 
-      setAllMessages(prev => {
-        const currentSubjectMessages = prev[subject] || [];
-        const updatedUserMessageInPlace = currentSubjectMessages.map(msg => 
-            msg.id === localUserMessageId ? { ...msg, db_id: dbUserMessage.id, id: dbUserMessage.id } : msg
-        );
-        // Filter out the local user message if it was by local ID and now we have the DB version, to avoid duplicates if map didn't catch it
-        const withoutLocalUser = updatedUserMessageInPlace.filter(msg => msg.id !== localUserMessageId || msg.id === dbUserMessage.id);
-        
-        return {
-          ...prev,
-          [subject]: [...withoutLocalUser, aiMessage]
-                       .sort((a,b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-        };
-      });
-
-      // クイックアクションのIDを即座に設定
+      setMessages(prev => [...prev, aiMessage]);
       setLatestAIMessageIdForActions(dbAiMessage.id);
 
       toast({
@@ -363,10 +338,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
            setSelectedImage(submittingImageFile);
         }
       }
-      setAllMessages(prev => ({
-        ...prev,
-        [subject]: prev[subject]?.filter(msg => msg.id !== localUserMessageId) || []
-      }));
+      setMessages(prev => prev.filter(msg => msg.id !== localUserMessageId));
     } finally {
       setIsLoading(false);
     }
@@ -384,17 +356,12 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     const messageIdToUpdate = latestAIMessageIdForActions;
     setLatestAIMessageIdForActions(null);
 
-    // 現在のスクロール位置を保存
     const scrollContainer = scrollContainerRef.current;
     const currentScrollTop = scrollContainer?.scrollTop || 0;
 
-    // Update the message state optimistically
-    setAllMessages(prev => {
-      const updatedSubjectMessages = (prev[subject] || []).map(msg =>
-        msg.db_id === messageIdToUpdate ? { ...msg, is_understood: true } : msg
-      );
-      return { ...prev, [subject]: updatedSubjectMessages };
-    });
+    setMessages(prev => prev.map(msg =>
+      msg.db_id === messageIdToUpdate ? { ...msg, is_understood: true } : msg
+    ));
 
     setShowConfetti(true);
     toast({
@@ -411,19 +378,15 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
 
       if (error) {
         console.error('Error updating message "is_understood":', error);
-        setAllMessages(prev => {
-          const revertedSubjectMessages = (prev[subject] || []).map(msg =>
-            msg.db_id === messageIdToUpdate ? { ...msg, is_understood: false } : msg
-          );
-          return { ...prev, [subject]: revertedSubjectMessages };
-        });
+        setMessages(prev => prev.map(msg =>
+          msg.db_id === messageIdToUpdate ? { ...msg, is_understood: false } : msg
+        ));
         toast({
           title: "エラー",
           description: "「理解した」状態の保存に失敗しました。",
           variant: "destructive",
         });
       } else {
-        // スクロール位置を元に戻す
         setTimeout(() => {
           if (scrollContainer) {
             scrollContainer.scrollTop = currentScrollTop;
@@ -432,12 +395,9 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
       }
     } catch (error: any) {
       console.error('Failed to mark message as understood:', error);
-       setAllMessages(prev => {
-          const revertedSubjectMessages = (prev[subject] || []).map(msg =>
-            msg.db_id === messageIdToUpdate ? { ...msg, is_understood: false } : msg
-          );
-          return { ...prev, [subject]: revertedSubjectMessages };
-        });
+      setMessages(prev => prev.map(msg =>
+        msg.db_id === messageIdToUpdate ? { ...msg, is_understood: false } : msg
+      ));
       toast({
         title: "エラー",
         description: "「理解した」状態の保存中に予期せぬエラーが発生しました。",
@@ -473,10 +433,32 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     }
   };
 
+  if (showConversationList) {
+    return (
+      <div className="flex flex-col h-full bg-gray-50">
+        <ChatHeader subjectName={subjectName} currentModel={currentModel} />
+        <div className="flex-1 p-4">
+          <ConversationList
+            subject={subject}
+            subjectName={subjectName}
+            userId={userId}
+            onSelectConversation={handleSelectConversation}
+            currentConversationId={currentConversationId}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-gray-50">
       <ConfettiComponent trigger={showConfetti} onComplete={() => setShowConfetti(false)} />
-      <ChatHeader subjectName={subjectName} currentModel={currentModel} />
+      <ChatHeader 
+        subjectName={subjectName} 
+        currentModel={currentModel}
+        onBackToList={() => setShowConversationList(true)}
+        showBackButton={true}
+      />
 
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && !isLoading ? (
@@ -492,7 +474,6 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
           />
         )}
         
-        {/* Show loading indicator if isLoading AND (either no messages yet OR it's not just the empty state loading) */}
         {isLoading && (messages.length > 0 || (messages.length === 0 && inputText)) && <ChatLoadingIndicator />}
         
         <div ref={messagesEndRef} />

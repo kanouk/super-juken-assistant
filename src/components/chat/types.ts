@@ -11,3 +11,11 @@ export interface Message {
   subject: string;
   is_understood?: boolean;
 }
+
+export interface Conversation {
+  id: string;
+  title: string;
+  created_at: string;
+  subject: string;
+  user_id: string;
+}
