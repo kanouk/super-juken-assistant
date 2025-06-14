@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -8,7 +9,17 @@ interface ChatStats {
   dailyQuestions: number;
 }
 
+// グローバルなインスタンスカウンタ（デバッグ用）
+let chatStatsInstanceId = 0;
+
 export const useChatStats = (userId: string | undefined) => {
+  // インスタンス固有IDでトラッキング
+  const instanceIdRef = useRef<number>(0);
+  if (instanceIdRef.current === 0) {
+    chatStatsInstanceId++;
+    instanceIdRef.current = chatStatsInstanceId;
+  }
+
   const [stats, setStats] = useState<ChatStats>({
     understoodCount: 0,
     dailyCost: 0,
@@ -18,7 +29,6 @@ export const useChatStats = (userId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // 現在のチャンネル名を追跡する
   const channelRef = useRef<any>(null);
   const channelNameRef = useRef<string | null>(null);
   const isSubscribedRef = useRef(false);
@@ -84,27 +94,29 @@ export const useChatStats = (userId: string | undefined) => {
         dailyQuestions,
       });
     } catch (err) {
-      console.error('Error fetching chat stats:', err);
+      console.error('[ChatStats] Error fetching chat stats:', err);
       setError(err as Error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 1. userIdが変わるたびfetch
+  // userIdが変わるたびfetch
   useEffect(() => {
     fetchStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  // 2. Realtime購読部分の厳密化
+  // Realtime購読部分
   useEffect(() => {
+    const instanceId = instanceIdRef.current;
     // クリーンアップ: 既存チャンネルを確実に解除
     if (channelRef.current) {
       try {
         channelRef.current.unsubscribe && channelRef.current.unsubscribe();
+        console.info(`[useChatStats][${instanceId}] Unsubscribed previous channel:`, channelNameRef.current);
       } catch (e) {
-        console.warn('unsubscribe error', e);
+        console.warn(`[useChatStats][${instanceId}] unsubscribe error`, e);
       }
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
@@ -114,6 +126,7 @@ export const useChatStats = (userId: string | undefined) => {
     if (!userId) return;
 
     const channelName = 'chat-stats-changes-' + userId;
+    console.info(`[useChatStats][${instanceId}] Creating new channel:`, channelName);
 
     // 新チャンネル生成&購読
     const channel = supabase
@@ -126,6 +139,7 @@ export const useChatStats = (userId: string | undefined) => {
           table: 'messages',
         },
         () => {
+          console.info(`[useChatStats][${instanceId}] Detected messages change → refetch stats`);
           fetchStats();
         }
       );
@@ -139,24 +153,25 @@ export const useChatStats = (userId: string | undefined) => {
         channelNameRef.current = channelName;
         isSubscribedRef.current = true;
         subscribed = true;
-        console.debug('[useChatStats] SUBSCRIBED channel:', channelName);
+        console.info(`[useChatStats][${instanceId}] SUBSCRIBED channel:`, channelName);
       }
     });
 
-    // アンマウント時/依存変化時の確実なクリーンアップ
+    // アンマウント時/依存変化時のクリーンアップ
     return () => {
       cleaned = true;
       if (channelRef.current) {
         try {
           channelRef.current.unsubscribe && channelRef.current.unsubscribe();
+          console.info(`[useChatStats][${instanceId}] Cleanup: unsubscribed channel:`, channelName);
         } catch (e) {
-          console.warn('unsubscribe error during cleanup', e);
+          console.warn(`[useChatStats][${instanceId}] unsubscribe error during cleanup`, e);
         }
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
         isSubscribedRef.current = false;
         channelNameRef.current = null;
-        console.debug('[useChatStats] CLEANED:', channelName);
+        console.info(`[useChatStats][${instanceId}] CLEANED:`, channelName);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -167,5 +182,7 @@ export const useChatStats = (userId: string | undefined) => {
     isLoading,
     error,
     refetch: fetchStats,
+    instanceId: instanceIdRef.current, // デバッグ用
   };
 };
+
