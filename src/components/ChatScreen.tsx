@@ -273,6 +273,10 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
     }
   };
 
+  const handleQuickAction = (prompt: string) => {
+    handleSendMessage(prompt);
+  };
+
   if (showConversations) {
     return (
       <div className="flex-1 flex flex-col bg-white">
@@ -295,7 +299,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white">
+    <div className="flex-1 flex flex-col bg-white h-screen">
       {showConfetti && <ConfettiComponent trigger={showConfetti} />}
       
       <ChatHeader 
@@ -309,9 +313,9 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
         isMobile={isMobile}
       />
       
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {messages.length === 0 ? (
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col overflow-hidden">
             <ChatEmptyState subjectName={subjectName} />
           </div>
         ) : (
@@ -319,6 +323,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
             messages={messages}
             isLoading={isLoading}
             onUnderstood={handleUnderstood}
+            onQuickAction={handleQuickAction}
             messagesEndRef={messagesEndRef}
           />
         )}

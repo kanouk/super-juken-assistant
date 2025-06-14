@@ -7,6 +7,7 @@ interface MessageListProps {
   messages: MessageType[];
   isLoading: boolean;
   onUnderstood: (messageId: string) => void;
+  onQuickAction: (prompt: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -14,6 +15,7 @@ const MessageList: React.FC<MessageListProps> = ({
   messages,
   isLoading,
   onUnderstood,
+  onQuickAction,
   messagesEndRef,
 }) => {
   // Convert MessageType to Message format for MessageItem
@@ -28,7 +30,7 @@ const MessageList: React.FC<MessageListProps> = ({
   });
 
   return (
-    <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-4">
+    <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-4 min-h-0">
       {messages.map((message, index) => (
         <MessageItem
           key={message.id}
@@ -36,7 +38,7 @@ const MessageList: React.FC<MessageListProps> = ({
           onCopyToClipboard={() => {}}
           onTypewriterComplete={() => {}}
           showQuickActions={!message.isUser && index === messages.length - 1}
-          onQuickAction={() => {}}
+          onQuickAction={onQuickAction}
           onUnderstood={() => onUnderstood(message.id)}
         />
       ))}
