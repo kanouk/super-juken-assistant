@@ -11,7 +11,14 @@ const ConfettiComponent: React.FC<ConfettiProps> = ({ trigger, onComplete }) => 
   const fireConfetti = useCallback(() => {
     const duration = 2 * 1000; // 2 seconds
     const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 25, spread: 360, ticks: 50, zIndex: 1000, scalar: 0.8 };
+    const defaults = { 
+      startVelocity: 25, 
+      spread: 360, 
+      ticks: 50, 
+      zIndex: 9999, // より高いz-indexに設定
+      scalar: 0.8,
+      disableForReducedMotion: true // アクセシビリティ向上
+    };
 
     function randomInRange(min: number, max: number) {
       return Math.random() * (max - min) + min;
@@ -27,25 +34,40 @@ const ConfettiComponent: React.FC<ConfettiProps> = ({ trigger, onComplete }) => 
       }
 
       const particleCount = 40 * (timeLeft / duration);
-      // since particles fall down, start a bit higher than random
-      confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-      confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-    }, 200); // Fire less frequently for a shorter, more subtle burst
+      // より控えめな位置に調整してスクロールを防ぐ
+      confetti(Object.assign({}, defaults, { 
+        particleCount, 
+        origin: { x: randomInRange(0.2, 0.4), y: 0.6 } 
+      }));
+      confetti(Object.assign({}, defaults, { 
+        particleCount, 
+        origin: { x: randomInRange(0.6, 0.8), y: 0.6 } 
+      }));
+    }, 200);
 
-    // Single burst for immediate effect
+    // 初回の爆発エフェクトも位置を調整
     confetti({
       particleCount: 70,
       spread: 70,
-      origin: { y: 0.6 },
+      origin: { x: 0.5, y: 0.6 }, // 中央に固定
       scalar: 1,
-      zIndex: 1000
+      zIndex: 9999,
+      disableForReducedMotion: true
     });
 
   }, [onComplete]);
 
   useEffect(() => {
     if (trigger) {
+      // スクロール位置を保存
+      const scrollY = window.scrollY;
+      
       fireConfetti();
+      
+      // confetti発火後にスクロール位置を復元
+      setTimeout(() => {
+        window.scrollTo(0, scrollY);
+      }, 50);
     }
   }, [trigger, fireConfetti]);
 
