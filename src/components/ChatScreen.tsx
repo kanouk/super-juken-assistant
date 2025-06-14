@@ -35,7 +35,9 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
   const [showConfetti, setShowConfetti] = useState(false);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
 
   // Clean up input when subject changes
@@ -50,7 +52,9 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
   }, [subject]);
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   // 新規チャット開始時のタイトル生成
@@ -356,9 +360,6 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     const messageIdToUpdate = latestAIMessageIdForActions;
     setLatestAIMessageIdForActions(null);
 
-    const scrollContainer = scrollContainerRef.current;
-    const currentScrollTop = scrollContainer?.scrollTop || 0;
-
     setMessages(prev => prev.map(msg =>
       msg.db_id === messageIdToUpdate ? { ...msg, is_understood: true } : msg
     ));
@@ -386,12 +387,6 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
           description: "「理解した」状態の保存に失敗しました。",
           variant: "destructive",
         });
-      } else {
-        setTimeout(() => {
-          if (scrollContainer) {
-            scrollContainer.scrollTop = currentScrollTop;
-          }
-        }, 100);
       }
     } catch (error: any) {
       console.error('Failed to mark message as understood:', error);
@@ -457,7 +452,9 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
         subjectName={subjectName} 
         currentModel={currentModel}
         onBackToList={() => setShowConversationList(true)}
+        onNewChat={() => handleSelectConversation(null)}
         showBackButton={true}
+        showNewChatButton={currentConversationId !== null}
       />
 
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">

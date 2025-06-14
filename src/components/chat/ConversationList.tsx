@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Plus, Edit2, Check, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
@@ -155,11 +156,11 @@ const ConversationList: React.FC<ConversationListProps> = ({
             <p className="text-sm">新規チャットを開始してください</p>
           </div>
         ) : (
-          <div className="max-h-96 overflow-y-auto">
+          <ScrollArea className="h-96">
             {conversations.map((conversation) => (
               <div
                 key={conversation.id}
-                className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
+                className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group ${
                   currentConversationId === conversation.id ? 'bg-blue-50 border-blue-200' : ''
                 }`}
                 onClick={() => onSelectConversation(conversation.id)}
@@ -207,13 +208,13 @@ const ConversationList: React.FC<ConversationListProps> = ({
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-sm truncate">
+                        <h3 className="font-medium text-sm truncate flex-1">
                           {conversation.title}
                         </h3>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:opacity-100 shrink-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleStartEdit(conversation);
@@ -230,7 +231,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                 </div>
               </div>
             ))}
-          </div>
+          </ScrollArea>
         )}
       </CardContent>
     </Card>
