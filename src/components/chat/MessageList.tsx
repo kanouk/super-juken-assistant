@@ -1,39 +1,43 @@
 
 import React from 'react';
-import { Message } from './types';
+import { MessageType } from './types';
 import MessageItem from './MessageItem';
 
 interface MessageListProps {
-  messages: Message[];
-  latestAIMessageIdForActions: string | null;
-  onCopyToClipboard: (text: string) => void;
-  onTypewriterComplete: (messageDbId?: string) => void; // Renamed from onAIMessageTyped for clarity
-  onQuickAction: (prompt: string) => void;
-  onUnderstood: () => void;
+  messages: MessageType[];
+  isLoading: boolean;
+  onUnderstood: (messageId: string) => void;
+  messagesEndRef: React.RefObject<HTMLDivElement>;
 }
 
 const MessageList: React.FC<MessageListProps> = ({
   messages,
-  latestAIMessageIdForActions,
-  onCopyToClipboard,
-  onTypewriterComplete,
-  onQuickAction,
+  isLoading,
   onUnderstood,
+  messagesEndRef,
 }) => {
   return (
-    <>
+    <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-4">
       {messages.map((message) => (
         <MessageItem
           key={message.id}
           message={message}
-          onCopyToClipboard={onCopyToClipboard}
-          onTypewriterComplete={onTypewriterComplete}
-          showQuickActions={message.role === 'assistant' && message.db_id === latestAIMessageIdForActions}
-          onQuickAction={onQuickAction}
-          onUnderstood={onUnderstood}
+          onUnderstood={() => onUnderstood(message.id)}
         />
       ))}
-    </>
+      {isLoading && (
+        <div className="flex justify-start">
+          <div className="bg-gray-100 rounded-lg p-3 max-w-xs lg:max-w-md">
+            <div className="flex space-x-2">
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
+          </div>
+        </div>
+      )}
+      <div ref={messagesEndRef} />
+    </div>
   );
 };
 

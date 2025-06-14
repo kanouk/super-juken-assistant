@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import ConfettiComponent from './Confetti';
@@ -297,7 +296,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
 
   return (
     <div className="flex-1 flex flex-col bg-white">
-      {showConfetti && <ConfettiComponent />}
+      {showConfetti && <ConfettiComponent trigger={showConfetti} />}
       
       <ChatHeader 
         subjectName={subjectName}
@@ -316,7 +315,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
             <ChatEmptyState subjectName={subjectName} />
             <QuickActions 
               onQuickAction={handleSendMessage}
-              subject={subject}
+              onUnderstood={() => {}}
             />
           </div>
         ) : (

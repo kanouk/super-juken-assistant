@@ -19,57 +19,22 @@ interface Conversation {
 }
 
 interface ConversationListProps {
-  subject: string;
-  subjectName: string;
-  userId: string | undefined;
-  onSelectConversation: (conversationId: string | null) => void;
-  currentConversationId: string | null;
+  conversations: Conversation[];
+  onSelectConversation: (conversationId: string) => void;
+  onDeleteConversation: (conversationId: string) => void;
+  onNewChat: () => void;
 }
 
 const ConversationList: React.FC<ConversationListProps> = ({
-  subject,
-  subjectName,
-  userId,
+  conversations,
   onSelectConversation,
-  currentConversationId,
+  onDeleteConversation,
+  onNewChat,
 }) => {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (userId && subject) {
-      fetchConversations();
-    }
-  }, [userId, subject]);
-
-  const fetchConversations = async () => {
-    if (!userId) return;
-    setIsLoading(true);
-    
-    try {
-      const { data, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('subject', subject)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setConversations(data || []);
-    } catch (error: any) {
-      toast({
-        title: "エラー",
-        description: "会話履歴の読み込みに失敗しました: " + error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleStartEdit = (conversation: Conversation) => {
     setEditingId(conversation.id);
@@ -86,14 +51,6 @@ const ConversationList: React.FC<ConversationListProps> = ({
         .eq('id', conversationId);
 
       if (error) throw error;
-
-      setConversations(prev => 
-        prev.map(conv => 
-          conv.id === conversationId 
-            ? { ...conv, title: editingTitle.trim() }
-            : conv
-        )
-      );
       
       setEditingId(null);
       setEditingTitle('');
@@ -120,29 +77,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
     setDeletingId(conversationId);
     
     try {
-      // まず関連するメッセージを削除
-      const { error: messagesError } = await supabase
-        .from('messages')
-        .delete()
-        .eq('conversation_id', conversationId);
-
-      if (messagesError) throw messagesError;
-
-      // 次に会話を削除
-      const { error: conversationError } = await supabase
-        .from('conversations')
-        .delete()
-        .eq('id', conversationId);
-
-      if (conversationError) throw conversationError;
-
-      // ローカル状態を更新
-      setConversations(prev => prev.filter(conv => conv.id !== conversationId));
-      
-      toast({
-        title: "削除完了",
-        description: "会話が正常に削除されました。",
-      });
+      onDeleteConversation(conversationId);
     } catch (error: any) {
       toast({
         title: "エラー",
@@ -169,11 +104,11 @@ const ConversationList: React.FC<ConversationListProps> = ({
     <Card className="h-full">
       <CardHeader className="pb-3 px-3 lg:px-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base lg:text-lg truncate">{subjectName}の履歴</CardTitle>
+          <CardTitle className="text-base lg:text-lg truncate">会話履歴</CardTitle>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onSelectConversation(null)}
+            onClick={onNewChat}
             className="gap-1 lg:gap-2 flex-shrink-0"
           >
             <Plus className="h-4 w-4" />
@@ -184,11 +119,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
       </CardHeader>
       <Separator />
       <CardContent className="p-0">
-        {isLoading ? (
-          <div className="p-4 text-center text-gray-500">
-            読み込み中...
-          </div>
-        ) : conversations.length === 0 ? (
+        {conversations.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
             <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm lg:text-base">まだ会話がありません</p>
@@ -199,9 +130,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
             {conversations.map((conversation) => (
               <div
                 key={conversation.id}
-                className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group ${
-                  currentConversationId === conversation.id ? 'bg-blue-50 border-blue-200' : ''
-                }`}
+                className="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group"
                 onClick={() => onSelectConversation(conversation.id)}
               >
                 <div className="flex items-start justify-between gap-2">

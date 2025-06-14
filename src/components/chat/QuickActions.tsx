@@ -6,7 +6,7 @@ import { Brain, Sparkles, ThumbsUp, CheckCircle } from 'lucide-react';
 interface QuickActionsProps {
   onQuickAction: (prompt: string) => void;
   onUnderstood: () => void;
-  isUnderstood: boolean | undefined;
+  isUnderstood?: boolean;
 }
 
 const QuickActions: React.FC<QuickActionsProps> = ({ onQuickAction, onUnderstood, isUnderstood }) => {
