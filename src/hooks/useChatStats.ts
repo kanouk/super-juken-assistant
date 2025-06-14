@@ -28,18 +28,34 @@ export const useChatStats = (userId: string | undefined) => {
     try {
       setError(null);
       
+      // First, get all conversation IDs for this user
+      const { data: conversations, error: conversationsError } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_id', userId);
+
+      if (conversationsError) throw conversationsError;
+
+      const conversationIds = conversations?.map(conv => conv.id) || [];
+      
+      if (conversationIds.length === 0) {
+        setStats({
+          understoodCount: 0,
+          dailyCost: 0,
+          totalCost: 0,
+          dailyQuestions: 0,
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // Get understood count
       const { data: understoodData, error: understoodError } = await supabase
         .from('messages')
         .select('id', { count: 'exact' })
         .eq('role', 'assistant')
         .eq('is_understood', true)
-        .in('conversation_id', 
-          supabase
-            .from('conversations')
-            .select('id')
-            .eq('user_id', userId)
-        );
+        .in('conversation_id', conversationIds);
 
       if (understoodError) throw understoodError;
 
@@ -47,12 +63,7 @@ export const useChatStats = (userId: string | undefined) => {
       const { data: totalCostData, error: totalCostError } = await supabase
         .from('messages')
         .select('cost')
-        .in('conversation_id', 
-          supabase
-            .from('conversations')
-            .select('id')
-            .eq('user_id', userId)
-        );
+        .in('conversation_id', conversationIds);
 
       if (totalCostError) throw totalCostError;
 
@@ -63,12 +74,7 @@ export const useChatStats = (userId: string | undefined) => {
         .select('cost, role')
         .gte('created_at', `${today}T00:00:00.000Z`)
         .lt('created_at', `${today}T23:59:59.999Z`)
-        .in('conversation_id', 
-          supabase
-            .from('conversations')
-            .select('id')
-            .eq('user_id', userId)
-        );
+        .in('conversation_id', conversationIds);
 
       if (todayError) throw todayError;
 
