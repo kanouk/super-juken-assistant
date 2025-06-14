@@ -1,13 +1,13 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile, ExamSettings, isValidExamSettings } from '@/types/profile';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useProfile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -50,11 +50,60 @@ export const useProfile = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [loadProfile]);
 
-  return { profile, isLoading, refetchProfile: loadProfile };
+  const uploadAvatar = async (file: File): Promise<string | null> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found for avatar upload');
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true }); // Use upsert to overwrite if file exists (e.g. re-upload)
+
+      if (uploadError) {
+        console.error('Avatar upload error:', uploadError);
+        throw uploadError;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData) {
+        throw new Error('Could not get public URL for avatar');
+      }
+      
+      // Update profile in DB with new avatar_url
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrlData.publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Profile update error after avatar upload:', updateError);
+        // Optionally, try to remove the uploaded avatar if profile update fails
+        // await supabase.storage.from('avatars').remove([filePath]);
+        throw updateError;
+      }
+      
+      // Update local profile state
+      setProfile(prevProfile => prevProfile ? { ...prevProfile, avatar_url: publicUrlData.publicUrl } : null);
+
+      return publicUrlData.publicUrl;
+    } catch (error) {
+      console.error('Error in uploadAvatar:', error);
+      return null;
+    }
+  };
+
+  return { profile, isLoading, refetchProfile: loadProfile, uploadAvatar };
 };

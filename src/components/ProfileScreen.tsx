@@ -1,8 +1,8 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UserProfile, ExamSettings, isValidExamSettings } from '@/types/profile';
+import { useProfile } from '@/hooks/useProfile'; // Import the hook
 
 import ProfileHeader from './profile/ProfileHeader';
 import BasicInfoCard from './profile/BasicInfoCard';
@@ -15,7 +15,10 @@ interface ProfileScreenProps {
 }
 
 const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
-  const [profile, setProfile] = useState<UserProfile>({
+  // Use the hook for profile data and loading state
+  const { profile: loadedProfile, isLoading: isProfileLoading, refetchProfile, uploadAvatar } = useProfile();
+  
+  const [profileData, setProfileData] = useState<UserProfile>({
     display_name: '',
     email: '',
     avatar_url: '',
@@ -26,59 +29,17 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     },
     mbti: null,
   });
-  const [isLoading, setIsLoading] = useState(true);
+  
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
-    setIsLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        const defaultExamSettings: ExamSettings = {
-          kyotsu: { name: '共通テスト', date: '2026-01-17' },
-          todai: { name: '東大二次試験', date: '2026-02-25' }
-        };
-
-        let examSettings = defaultExamSettings;
-        if (data.exam_settings && isValidExamSettings(data.exam_settings)) {
-          examSettings = data.exam_settings as ExamSettings;
-        }
-
-        setProfile({
-          display_name: data.display_name || '',
-          email: data.email || user.email || '',
-          avatar_url: data.avatar_url || '',
-          show_countdown: data.show_countdown ?? true,
-          exam_settings: examSettings,
-          mbti: data.mbti || null,
-        });
-      }
-    } catch (error: any) {
-      console.error('Profile loading error:', error);
-      toast({
-        title: "エラー",
-        description: "プロフィールの読み込みに失敗しました。",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    if (loadedProfile) {
+      setProfileData(loadedProfile);
     }
-  };
+  }, [loadedProfile]);
+
+  // Removed manual loadProfile, as useProfile handles it.
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -86,18 +47,22 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found');
 
-      const examSettingsJson = JSON.parse(JSON.stringify(profile.exam_settings));
+      // Ensure exam_settings is stringified correctly if it's complex or could be null/undefined by mistake
+      // The current UserProfile type ensures exam_settings is always present, but good practice for looser types.
+      const examSettingsJson = JSON.parse(JSON.stringify(profileData.exam_settings));
+
+      const updates = {
+        display_name: profileData.display_name || null,
+        email: profileData.email || null, // Email update might be restricted by Supabase policies / email change flow
+        avatar_url: profileData.avatar_url || null,
+        show_countdown: profileData.show_countdown,
+        exam_settings: examSettingsJson,
+        mbti: profileData.mbti === "不明" ? null : profileData.mbti,
+      };
 
       const { error } = await supabase
         .from('profiles')
-        .update({
-          display_name: profile.display_name || null,
-          email: profile.email || null,
-          avatar_url: profile.avatar_url || null,
-          show_countdown: profile.show_countdown,
-          exam_settings: examSettingsJson,
-          mbti: profile.mbti === "不明" ? null : profile.mbti,
-        })
+        .update(updates)
         .eq('id', user.id);
 
       if (error) throw error;
@@ -106,13 +71,13 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
         title: "保存完了",
         description: "プロフィールが更新されました。",
       });
-
+      await refetchProfile(); // Refetch profile to ensure UI consistency, especially if other tabs use useProfile
       onBack(); // Navigate back after successful save
     } catch (error: any) {
       console.error('Profile save error:', error);
       toast({
         title: "エラー",
-        description: "プロフィールの保存に失敗しました。",
+        description: `プロフィールの保存に失敗しました: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -121,19 +86,31 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
   };
   
   const handleProfileChange = (field: keyof UserProfile, value: any) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
+    setProfileData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAvatarUpload = async (file: File): Promise<string | null> => {
+    if (!uploadAvatar) return null; // uploadAvatar might not be available if useProfile hasn't initialized fully (edge case)
+    
+    const newAvatarUrl = await uploadAvatar(file);
+    if (newAvatarUrl) {
+      // The useProfile hook already updates its internal state and DB.
+      // We also update local component state for immediate reflection if not relying solely on hook's propagation.
+      setProfileData(prev => ({ ...prev, avatar_url: newAvatarUrl }));
+    }
+    return newAvatarUrl;
   };
 
   const handleMbtiChange = (value: string | null) => {
-    setProfile(prev => ({ ...prev, mbti: value }));
+    setProfileData(prev => ({ ...prev, mbti: value }));
   };
 
   const handleShowCountdownChange = (checked: boolean) => {
-    setProfile(prev => ({ ...prev, show_countdown: checked }));
+    setProfileData(prev => ({ ...prev, show_countdown: checked }));
   };
 
   const updateExamSetting = (exam: 'kyotsu' | 'todai', field: 'name' | 'date', value: string) => {
-    setProfile(prev => ({
+    setProfileData(prev => ({
       ...prev,
       exam_settings: {
         ...prev.exam_settings,
@@ -145,7 +122,7 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     }));
   };
 
-  if (isLoading) {
+  if (isProfileLoading && !loadedProfile) { // Show loading indicator if profile is loading for the first time
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -158,14 +135,18 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
       <ProfileHeader onBack={onBack} onSave={handleSave} isSaving={isSaving} />
       
       <div className="p-6 max-w-4xl mx-auto space-y-6">
-        <BasicInfoCard profile={profile} onProfileChange={handleProfileChange} />
-        <MbtiCard mbti={profile.mbti} onMbtiChange={handleMbtiChange} />
+        <BasicInfoCard 
+          profile={profileData} 
+          onProfileChange={handleProfileChange}
+          onAvatarUpload={handleAvatarUpload} 
+        />
+        <MbtiCard mbti={profileData.mbti} onMbtiChange={handleMbtiChange} />
         <DisplaySettingsCard 
-          showCountdown={profile.show_countdown} 
+          showCountdown={profileData.show_countdown} 
           onShowCountdownChange={handleShowCountdownChange} 
         />
         <ExamSettingsCard 
-          examSettings={profile.exam_settings} 
+          examSettings={profileData.exam_settings} 
           onExamSettingChange={updateExamSetting} 
         />
       </div>

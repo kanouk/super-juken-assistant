@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +50,11 @@ const Sidebar = ({
   isLoadingStats
 }: SidebarProps) => {
   const { profile, isLoading: isLoadingProfile } = useProfile();
-  const [openCollapsible, setOpenCollapsible] = useState<string | null>('subjects');
+  const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({
+    subjects: true, // Default to open
+    countdown: true,
+    stats: true,
+  });
 
   const calculateDaysLeft = (targetDate: string) => {
     const today = new Date();
@@ -60,23 +64,20 @@ const Sidebar = ({
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const toggleCollapsible = (id: string) => {
-    setOpenCollapsible(prev => prev === id ? null : id);
-  };
-
-  const CollapsibleSectionHeader = ({ id, title, icon: IconComponent, iconBgColor }: { id: string, title: string, icon: React.ElementType, iconBgColor: string }) => (
-    <CollapsibleTrigger 
-      className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-gray-100 transition-colors"
-      onClick={() => toggleCollapsible(id)}
-    >
+  const handleOpenChange = useCallback((id: string, isOpen: boolean) => {
+    setOpenCollapsibles(prev => ({ ...prev, [id]: isOpen }));
+  }, []);
+  
+  const CollapsibleSectionHeader = ({ title, icon: IconComponent, iconBgColor, isOpen }: { title: string, icon: React.ElementType, iconBgColor: string, isOpen: boolean }) => (
+    <div className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-gray-100 transition-colors">
       <div className="flex items-center space-x-2">
         <div className={`p-1 ${iconBgColor} rounded-lg`}>
           <IconComponent className="h-4 w-4 text-white" />
         </div>
         <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
       </div>
-      {openCollapsible === id ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
-    </CollapsibleTrigger>
+      {isOpen ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
+    </div>
   );
 
   const StatItem = ({ label, value, unit, isLoading, icon: Icon, iconColor }: { label: string, value: number | string, unit?: string, isLoading: boolean, icon: React.ElementType, iconColor: string }) => (
@@ -153,8 +154,10 @@ const Sidebar = ({
       {/* Content Sections */}
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {/* Subjects Section */}
-        <Collapsible open={openCollapsible === 'subjects'} onOpenChange={() => toggleCollapsible('subjects')}>
-          <CollapsibleSectionHeader id="subjects" title="教科選択" icon={BookOpen} iconBgColor="bg-gradient-to-r from-blue-500 to-indigo-600" />
+        <Collapsible open={openCollapsibles['subjects']} onOpenChange={(isOpen) => handleOpenChange('subjects', isOpen)}>
+          <CollapsibleTrigger className="w-full">
+            <CollapsibleSectionHeader title="教科選択" icon={BookOpen} iconBgColor="bg-gradient-to-r from-blue-500 to-indigo-600" isOpen={openCollapsibles['subjects']} />
+          </CollapsibleTrigger>
           <CollapsibleContent className="pt-2 space-y-2">
             {subjects.map((subjectItem) => {
               const Icon = subjectItem.icon;
@@ -191,8 +194,10 @@ const Sidebar = ({
 
         {/* Countdown Section */}
         {(!isLoadingProfile && profile?.show_countdown) && (
-          <Collapsible open={openCollapsible === 'countdown'} onOpenChange={() => toggleCollapsible('countdown')}>
-            <CollapsibleSectionHeader id="countdown" title="入試カウントダウン" icon={Clock} iconBgColor="bg-gradient-to-r from-red-500 to-pink-600" />
+          <Collapsible open={openCollapsibles['countdown']} onOpenChange={(isOpen) => handleOpenChange('countdown', isOpen)}>
+            <CollapsibleTrigger className="w-full">
+              <CollapsibleSectionHeader title="入試カウントダウン" icon={Clock} iconBgColor="bg-gradient-to-r from-red-500 to-pink-600" isOpen={openCollapsibles['countdown']} />
+            </CollapsibleTrigger>
             <CollapsibleContent className="pt-2 space-y-3">
               <Card className="bg-gradient-to-r from-red-50 to-pink-50 border-red-200 shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
@@ -230,8 +235,10 @@ const Sidebar = ({
         )}
 
         {/* Stats Section */}
-        <Collapsible open={openCollapsible === 'stats'} onOpenChange={() => toggleCollapsible('stats')}>
-          <CollapsibleSectionHeader id="stats" title="学習統計" icon={TrendingUp} iconBgColor="bg-gradient-to-r from-green-500 to-emerald-600" />
+        <Collapsible open={openCollapsibles['stats']} onOpenChange={(isOpen) => handleOpenChange('stats', isOpen)}>
+          <CollapsibleTrigger className="w-full">
+            <CollapsibleSectionHeader title="学習統計" icon={TrendingUp} iconBgColor="bg-gradient-to-r from-green-500 to-emerald-600" isOpen={openCollapsibles['stats']} />
+          </CollapsibleTrigger>
           <CollapsibleContent className="pt-2 space-y-3">
             <StatItem 
               label="完全に理解した数" 
