@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Brain, Sparkles, ThumbsUp, CheckCircle } from 'lucide-react';
+import { Brain, Lightbulb, ThumbsUp, CheckCircle, Sparkles } from 'lucide-react';
 
 interface QuickActionsProps {
   onQuickAction: (prompt: string) => void;
@@ -11,14 +11,14 @@ interface QuickActionsProps {
 
 const QuickActions: React.FC<QuickActionsProps> = ({ onQuickAction, onUnderstood, isUnderstood }) => {
   return (
-    <div className="mt-2 flex flex-wrap gap-1 lg:gap-2 justify-start pl-9 lg:pl-11 pb-2 px-3 lg:px-4">
+    <div className="flex flex-wrap gap-2 justify-start pl-11 pb-2 px-4">
       <Button 
         variant="outline" 
         size="sm" 
         onClick={() => onQuickAction('もっとわかりやすく教えてください')} 
-        className="text-xs h-7 px-2 lg:px-3"
+        className="h-8 px-3 text-xs bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 shadow-sm"
       >
-        <Brain className="mr-1 h-3 w-3" /> 
+        <Brain className="mr-1.5 h-3 w-3" /> 
         <span className="hidden sm:inline">もっとわかりやすく</span>
         <span className="sm:hidden">簡単に</span>
       </Button>
@@ -26,9 +26,9 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onQuickAction, onUnderstood
         variant="outline" 
         size="sm" 
         onClick={() => onQuickAction('具体例をあげてください')} 
-        className="text-xs h-7 px-2 lg:px-3"
+        className="h-8 px-3 text-xs bg-white border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all duration-200 shadow-sm"
       >
-        <Sparkles className="mr-1 h-3 w-3" /> 
+        <Lightbulb className="mr-1.5 h-3 w-3" /> 
         <span className="hidden sm:inline">具体例を教えて</span>
         <span className="sm:hidden">具体例</span>
       </Button>
@@ -36,12 +36,26 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onQuickAction, onUnderstood
         variant="outline" 
         size="sm" 
         onClick={onUnderstood} 
-        className="text-xs h-7 px-2 lg:px-3"
+        className={`h-8 px-3 text-xs transition-all duration-200 shadow-sm ${
+          isUnderstood 
+            ? 'bg-green-50 border-green-300 text-green-700' 
+            : 'bg-white border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300'
+        }`}
+        disabled={isUnderstood}
       >
-        <ThumbsUp className="mr-1 h-3 w-3" /> 
-        <span className="hidden sm:inline">完全に理解した！</span>
-        <span className="sm:hidden">理解！</span>
-        {isUnderstood && <CheckCircle className="ml-1 h-3 w-3 text-green-500" />}
+        {isUnderstood ? (
+          <>
+            <CheckCircle className="mr-1.5 h-3 w-3" />
+            <span className="hidden sm:inline">理解済み！</span>
+            <span className="sm:hidden">済み</span>
+          </>
+        ) : (
+          <>
+            <ThumbsUp className="mr-1.5 h-3 w-3" /> 
+            <span className="hidden sm:inline">完全に理解した！</span>
+            <span className="sm:hidden">理解！</span>
+          </>
+        )}
       </Button>
     </div>
   );
