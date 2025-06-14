@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -82,6 +81,7 @@ export function useChatScreen(props: UseChatScreenProps) {
   });
 
   // サイドバー用: ChatStats取得
+  // 会話リストの統計管理はMainAppが担うためここでinvalidateは不要
   const { understoodCount, dailyCost, totalCost, dailyQuestions, isLoading: isLoadingStats, error: chatStatsError, refetch: refetchChatStats } = useChatStats(userId);
 
   useEffect(() => {
@@ -214,42 +214,41 @@ export function useChatScreen(props: UseChatScreenProps) {
 
   // 理解した！ハンドラ
   const handleUnderstood = async (messageId: string) => {
-    if (!userId) return;
-    try {
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, isUnderstood: true }
-            : msg
-        )
-      );
-      const message = messages.find(msg => msg.id === messageId);
-      if (message && selectedConversationId) {
-        const { error } = await supabase
-          .from('messages')
-          .update({ is_understood: true })
-          .eq('conversation_id', selectedConversationId)
-          .eq('content', message.content)
-          .eq('role', 'assistant');
-        if (!error) {
-          refetchChatStats();
-          queryClient.invalidateQueries({ queryKey: ['chatStats', userId] });
-        }
-      }
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3000);
-      toast({
-        title: "完全に理解！",
-        description: "理解度がカウントされました！",
-      });
-    } catch (error: any) {
-      toast({
-        title: "エラー",
-        description: "理解度の更新に失敗しました。",
-        variant: "destructive",
-      });
-    }
-  };
+     if (!userId) return;
+     try {
+       setMessages(prev => 
+         prev.map(msg => 
+           msg.id === messageId 
+             ? { ...msg, isUnderstood: true }
+             : msg
+         )
+       );
+       const message = messages.find(msg => msg.id === messageId);
+       if (message && selectedConversationId) {
+         const { error } = await supabase
+           .from('messages')
+           .update({ is_understood: true })
+           .eq('conversation_id', selectedConversationId)
+           .eq('content', message.content)
+           .eq('role', 'assistant');
+         if (!error) {
+           // サイドバー用の統計管理はMainAppが担うためここでinvalidateは不要
+         }
+       }
+       setShowConfetti(true);
+       setTimeout(() => setShowConfetti(false), 3000);
+       toast({
+         title: "完全に理解！",
+         description: "理解度がカウントされました！",
+       });
+     } catch (error: any) {
+       toast({
+         title: "エラー",
+         description: "理解度の更新に失敗しました。",
+         variant: "destructive",
+       });
+     }
+   };
 
   const handleNewChat = () => {
     setMessages([]);
