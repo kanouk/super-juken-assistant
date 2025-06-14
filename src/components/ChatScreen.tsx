@@ -39,7 +39,8 @@ const modelOptions = [
   { label: "3 Opus（旧モデル）", value: "claude-3-opus" },
 ];
 
-const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChange, onToggleSidebar, isMobile }: ChatScreenProps) => {
+const ChatScreen = (props: ChatScreenProps) => {
+  const { subject, subjectName, currentModel, userId, onSubjectChange, onToggleSidebar, isMobile } = props;
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImages, setSelectedImages] = useState<ImageData[]>([]);
@@ -321,67 +322,44 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
 
   if (showConversations) {
     return (
-      <div className="flex-1 flex flex-col bg-white">
-        <ChatHeader 
-          subjectName={`${subjectName} - 会話履歴`}
-          currentModel={currentModel}
-          modelOptions={modelOptions}
-          currentSubjectId={subject}
-          onBackToList={handleBackToChat}
-          showBackButton={true}
-          onToggleSidebar={onToggleSidebar}
-          isMobile={isMobile}
-        />
-        <ConversationList 
-          conversations={conversations}
-          onSelectConversation={handleSelectConversation}
-          onDeleteConversation={handleDeleteConversation}
-          onNewChat={handleNewChat}
-        />
-      </div>
+      <ConversationHistoryView
+        subject={subject}
+        subjectName={subjectName}
+        currentModel={currentModel}
+        modelOptions={modelOptions}
+        onBackToList={handleBackToChat}
+        onToggleSidebar={onToggleSidebar}
+        isMobile={isMobile}
+        conversations={conversations}
+        onSelectConversation={handleSelectConversation}
+        onDeleteConversation={handleDeleteConversation}
+        onNewChat={handleNewChat}
+      />
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white h-screen">
-      {showConfetti && <ConfettiComponent trigger={showConfetti} />}
-      
-      <ChatHeader 
-        subjectName={subjectName}
-        currentModel={currentModel}
-        modelOptions={modelOptions}
-        currentSubjectId={subject}
-        onNewChat={handleNewChat}
-        onShowHistory={handleShowHistory}
-        showNewChatButton={messages.length > 0}
-        showHistoryButton={conversations.length > 0}
-        onToggleSidebar={onToggleSidebar}
-        isMobile={isMobile}
-      />
-      
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {messages.length === 0 ? (
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <ChatEmptyState subjectName={subjectName} />
-          </div>
-        ) : (
-          <MessageList 
-            messages={messages}
-            isLoading={isLoading}
-            onUnderstood={handleUnderstood}
-            onQuickAction={handleQuickAction}
-            messagesEndRef={messagesEndRef}
-          />
-        )}
-        
-        <MessageInput 
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          selectedImages={selectedImages}
-          onImagesChange={setSelectedImages}
-        />
-      </div>
-    </div>
+    <ChatMainView
+      subject={subject}
+      subjectName={subjectName}
+      currentModel={currentModel}
+      modelOptions={modelOptions}
+      messages={messages}
+      isLoading={isLoading}
+      selectedImages={selectedImages}
+      setSelectedImages={setSelectedImages}
+      onSendMessage={handleSendMessage}
+      onUnderstood={handleUnderstood}
+      onQuickAction={handleQuickAction}
+      showConfetti={showConfetti}
+      onNewChat={handleNewChat}
+      onShowHistory={handleShowHistory}
+      showNewChatButton={messages.length > 0}
+      showHistoryButton={conversations.length > 0}
+      onToggleSidebar={onToggleSidebar}
+      isMobile={isMobile}
+      messagesEndRef={messagesEndRef}
+    />
   );
 };
 
