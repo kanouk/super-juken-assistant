@@ -19,3 +19,18 @@ export interface Conversation {
   subject: string;
   user_id: string;
 }
+
+// Legacy type aliases for backward compatibility
+export type MessageType = {
+  id: string;
+  content: string;
+  isUser: boolean;
+  timestamp: Date;
+  images?: ImageData[];
+  isUnderstood?: boolean;
+};
+
+export interface ImageData {
+  url: string;
+  alt?: string;
+}

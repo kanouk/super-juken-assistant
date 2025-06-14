@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import ConfettiComponent from './Confetti';
@@ -43,7 +44,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
         .select('*')
         .eq('user_id', userId)
         .eq('subject', subject)
-        .order('updated_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data;
@@ -93,8 +94,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
             user_id: userId,
             subject: subject,
             title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            created_at: new Date().toISOString()
           })
           .select()
           .single();
@@ -110,8 +110,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
         .insert({
           conversation_id: conversationId,
           content: content,
-          is_user: true,
-          images: images.length > 0 ? images : null,
+          role: 'user',
           created_at: new Date().toISOString()
         })
         .select()
@@ -149,14 +148,9 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
         .insert({
           conversation_id: conversationId,
           content: data.response,
-          is_user: false,
+          role: 'assistant',
           created_at: new Date().toISOString()
         });
-
-      await supabase
-        .from('conversations')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', conversationId);
 
       refetchConversations();
 
@@ -183,36 +177,6 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
             : msg
         )
       );
-
-      const { error } = await supabase
-        .from('user_stats')
-        .upsert({
-          user_id: userId,
-          date: new Date().toISOString().split('T')[0],
-          understood_count: 1
-        }, {
-          onConflict: 'user_id,date',
-          ignoreDuplicates: false
-        });
-
-      if (error) {
-        const { data: existingStats } = await supabase
-          .from('user_stats')
-          .select('understood_count')
-          .eq('user_id', userId)
-          .eq('date', new Date().toISOString().split('T')[0])
-          .single();
-
-        if (existingStats) {
-          await supabase
-            .from('user_stats')
-            .update({ 
-              understood_count: (existingStats.understood_count || 0) + 1 
-            })
-            .eq('user_id', userId)
-            .eq('date', new Date().toISOString().split('T')[0]);
-        }
-      }
 
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
@@ -259,9 +223,9 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
       const formattedMessages: MessageType[] = messagesData.map(msg => ({
         id: msg.id.toString(),
         content: msg.content,
-        isUser: msg.is_user,
+        isUser: msg.role === 'user',
         timestamp: new Date(msg.created_at),
-        images: msg.images || undefined,
+        images: msg.image_url ? [{ url: msg.image_url }] : undefined,
         isUnderstood: false,
       }));
 
