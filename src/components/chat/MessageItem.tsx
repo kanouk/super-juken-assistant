@@ -37,13 +37,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
   }, [message.role, message.db_id, onTypewriterComplete]);
 
   return (
-    <div key={message.id} data-message-id={message.db_id || message.id} className="px-3 lg:px-4">
+    <div className="w-full">
       <div
         className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} ${
           message.role === 'assistant' ? 'animate-fade-in' : ''
         }`}
       >
-        <div className={`flex items-start space-x-2 lg:space-x-3 max-w-full sm:max-w-2xl ${
+        <div className={`flex items-start space-x-2 lg:space-x-3 w-full max-w-4xl ${
           message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
         }`}>
           <Avatar className="w-7 h-7 lg:w-8 lg:h-8 shrink-0 mt-1">
@@ -59,7 +59,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
             </AvatarFallback>
           </Avatar>
 
-          <Card className={`max-w-full ${
+          <Card className={`flex-1 min-w-0 ${
             message.role === 'user'
               ? 'bg-blue-600 text-white border-blue-600'
               : 'bg-gray-100 border-gray-200 text-gray-900'
@@ -73,11 +73,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 />
               )}
               {message.role === 'user' ? (
-                <div className="text-sm whitespace-pre-wrap prose prose-sm max-w-none prose-headings:text-white prose-strong:text-white prose-ul:text-white prose-ol:text-white prose-li:text-white">
+                <div className="text-sm whitespace-pre-wrap break-words prose prose-sm max-w-none prose-headings:text-white prose-strong:text-white prose-ul:text-white prose-ol:text-white prose-li:text-white">
                   <LaTeXRenderer content={message.content} className="text-sm" />
                 </div>
               ) : (
-                <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700">
+                <div className="prose prose-sm max-w-none break-words prose-headings:text-gray-900 prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700">
                   <LaTeXRenderer content={message.content} className="text-sm lg:text-base" />
                 </div>
               )}

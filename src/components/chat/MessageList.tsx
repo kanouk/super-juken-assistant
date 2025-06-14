@@ -29,13 +29,13 @@ const MessageList: React.FC<MessageListProps> = ({
 
   return (
     <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-4">
-      {messages.map((message) => (
+      {messages.map((message, index) => (
         <MessageItem
           key={message.id}
           message={convertToMessage(message)}
           onCopyToClipboard={() => {}}
           onTypewriterComplete={() => {}}
-          showQuickActions={false}
+          showQuickActions={!message.isUser && index === messages.length - 1}
           onQuickAction={() => {}}
           onUnderstood={() => onUnderstood(message.id)}
         />
