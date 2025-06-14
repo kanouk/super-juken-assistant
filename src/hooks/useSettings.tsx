@@ -21,6 +21,26 @@ interface Settings {
   };
 }
 
+// 型ガード関数
+const isApiKeys = (obj: any): obj is { openai: string; google: string; anthropic: string } => {
+  return obj && typeof obj === 'object' && 
+         typeof obj.openai === 'string' && 
+         typeof obj.google === 'string' && 
+         typeof obj.anthropic === 'string';
+};
+
+const isModels = (obj: any): obj is { openai: string; google: string; anthropic: string } => {
+  return obj && typeof obj === 'object' && 
+         typeof obj.openai === 'string' && 
+         typeof obj.google === 'string' && 
+         typeof obj.anthropic === 'string';
+};
+
+const isSubjectInstructions = (obj: any): obj is { [key: string]: string } => {
+  return obj && typeof obj === 'object' && 
+         Object.values(obj).every(val => typeof val === 'string');
+};
+
 export const useSettings = () => {
   const [settings, setSettings] = useState<Settings>({
     passcode: '999999',
@@ -73,10 +93,14 @@ export const useSettings = () => {
         setSettings(prev => ({
           ...prev,
           passcode: profileData?.passcode || prev.passcode,
-          apiKeys: settingsData.api_keys || prev.apiKeys,
-          models: settingsData.models || prev.models,
-          commonInstruction: settingsData.common_instruction || prev.commonInstruction,
-          subjectInstructions: settingsData.subject_instructions || prev.subjectInstructions
+          apiKeys: isApiKeys(settingsData.api_keys) ? settingsData.api_keys : prev.apiKeys,
+          models: isModels(settingsData.models) ? settingsData.models : prev.models,
+          commonInstruction: typeof settingsData.common_instruction === 'string' 
+            ? settingsData.common_instruction 
+            : prev.commonInstruction,
+          subjectInstructions: isSubjectInstructions(settingsData.subject_instructions) 
+            ? settingsData.subject_instructions 
+            : prev.subjectInstructions
         }));
       }
     } catch (error) {
