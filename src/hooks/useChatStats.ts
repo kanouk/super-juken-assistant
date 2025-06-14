@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
 interface ChatStats {
@@ -18,6 +17,9 @@ export const useChatStats = (userId: string | undefined) => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  // Realtime channelインスタンスをuseRefで保持（常に1つ）
+  const channelRef = useRef<any>(null);
 
   const fetchStats = async () => {
     if (!userId) {
@@ -100,10 +102,16 @@ export const useChatStats = (userId: string | undefined) => {
     fetchStats();
   }, [userId]);
 
-  // Set up real-time subscription for messages table changes
   useEffect(() => {
     if (!userId) return;
 
+    // 既存チャンネルがあればクリーンアップ
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    // チャンネル生成&サブスクライブ
     const channel = supabase
       .channel('chat-stats-changes')
       .on(
@@ -117,11 +125,17 @@ export const useChatStats = (userId: string | undefined) => {
           // Refetch stats when messages table changes
           fetchStats();
         }
-      )
-      .subscribe();
+      );
+
+    channel.subscribe();
+    channelRef.current = channel;
 
     return () => {
-      supabase.removeChannel(channel);
+      // クリーンアップ: チャンネル解除
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [userId]);
 
