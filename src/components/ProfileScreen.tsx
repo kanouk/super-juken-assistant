@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, User, Calendar, Settings2, Save, Camera } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, User, Calendar, Settings2, Save, Camera, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -31,6 +32,7 @@ interface UserProfile {
   avatar_url: string | null;
   show_countdown: boolean;
   exam_settings: ExamSettings;
+  mbti: string | null;
 }
 
 // 型ガード関数
@@ -45,6 +47,14 @@ const isValidExamSettings = (obj: any): obj is ExamSettings => {
     typeof obj.todai.date === 'string';
 };
 
+const MBTI_TYPES = [
+  "ISTJ", "ISFJ", "INFJ", "INTJ",
+  "ISTP", "ISFP", "INFP", "INTP",
+  "ESTP", "ESFP", "ENFP", "ENTP",
+  "ESTJ", "ESFJ", "ENFJ", "ENTJ",
+  "不明"
+];
+
 const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
   const [profile, setProfile] = useState<UserProfile>({
     display_name: '',
@@ -54,7 +64,8 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     exam_settings: {
       kyotsu: { name: '共通テスト', date: '2026-01-17' },
       todai: { name: '東大二次試験', date: '2026-02-25' }
-    }
+    },
+    mbti: null,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -95,7 +106,8 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
           email: data.email || user.email || '',
           avatar_url: data.avatar_url || '',
           show_countdown: data.show_countdown ?? true,
-          exam_settings: examSettings
+          exam_settings: examSettings,
+          mbti: data.mbti || null,
         });
       }
     } catch (error: any) {
@@ -116,7 +128,6 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found');
 
-      // exam_settingsをJSONBとして適切に保存
       const examSettingsJson = JSON.parse(JSON.stringify(profile.exam_settings));
 
       const { error } = await supabase
@@ -126,7 +137,8 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
           email: profile.email || null,
           avatar_url: profile.avatar_url || null,
           show_countdown: profile.show_countdown,
-          exam_settings: examSettingsJson
+          exam_settings: examSettingsJson,
+          mbti: profile.mbti === "不明" ? null : profile.mbti,
         })
         .eq('id', user.id);
 
@@ -257,6 +269,39 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* MBTI Settings */}
+        <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg">
+            <CardTitle className="flex items-center space-x-2">
+              <Brain className="h-5 w-5 text-purple-600" />
+              <span>MBTIタイプ</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-2">
+            <Label htmlFor="mbti_type" className="text-sm font-medium text-gray-700">
+              あなたのMBTIタイプを選択してください
+            </Label>
+            <Select
+              value={profile.mbti || "不明"}
+              onValueChange={(value) => setProfile(prev => ({ ...prev, mbti: value === "不明" ? null : value }))}
+            >
+              <SelectTrigger id="mbti_type" className="w-full bg-white/80">
+                <SelectValue placeholder="MBTIタイプを選択" />
+              </SelectTrigger>
+              <SelectContent>
+                {MBTI_TYPES.map(type => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500">
+              今後のAIアシスタントとの対話で、よりパーソナライズされた応答を提供するために使用されます。
+            </p>
           </CardContent>
         </Card>
 

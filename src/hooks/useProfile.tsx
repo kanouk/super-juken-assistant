@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,6 +18,7 @@ interface UserProfile {
   avatar_url: string | null;
   show_countdown: boolean;
   exam_settings: ExamSettings;
+  mbti: string | null; // MBTIを追加
 }
 
 // 型ガード関数を追加
@@ -71,7 +71,8 @@ export const useProfile = () => {
           email: data.email || user.email,
           avatar_url: data.avatar_url,
           show_countdown: data.show_countdown ?? true,
-          exam_settings: examSettings
+          exam_settings: examSettings,
+          mbti: data.mbti || null, // MBTIをセット
         });
       }
     } catch (error) {

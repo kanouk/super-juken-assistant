@@ -90,6 +90,7 @@ export type Database = {
           email: string | null
           exam_settings: Json | null
           id: string
+          mbti: string | null
           passcode: string
           show_countdown: boolean | null
         }
@@ -100,6 +101,7 @@ export type Database = {
           email?: string | null
           exam_settings?: Json | null
           id: string
+          mbti?: string | null
           passcode?: string
           show_countdown?: boolean | null
         }
@@ -110,6 +112,7 @@ export type Database = {
           email?: string | null
           exam_settings?: Json | null
           id?: string
+          mbti?: string | null
           passcode?: string
           show_countdown?: boolean | null
         }
