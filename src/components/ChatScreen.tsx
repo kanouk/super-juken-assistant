@@ -26,7 +26,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showConversationList, setShowConversationList] = useState(false); // Changed to false
+  const [showConversationList, setShowConversationList] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -35,9 +35,19 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
   const [showConfetti, setShowConfetti] = useState(false);
 
   const scrollToBottom = () => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
+    // Use requestAnimationFrame to ensure DOM updates are complete
+    requestAnimationFrame(() => {
+      if (messagesEndRef.current && scrollContainerRef.current) {
+        const container = scrollContainerRef.current;
+        const scrollHeight = container.scrollHeight;
+        const clientHeight = container.clientHeight;
+        
+        // Only scroll if there's content that requires scrolling
+        if (scrollHeight > clientHeight) {
+          container.scrollTop = scrollHeight - clientHeight;
+        }
+      }
+    });
   };
 
   // Clean up input when subject changes
@@ -48,7 +58,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     setLatestAIMessageIdForActions(null);
     setCurrentConversationId(null);
     setMessages([]);
-    setShowConversationList(false); // Changed to false
+    setShowConversationList(false);
   }, [subject]);
 
   useEffect(() => {
@@ -421,7 +431,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     return (
       <div className="flex flex-col h-full bg-gray-50">
         <ChatHeader subjectName={subjectName} currentModel={currentModel} />
-        <div className="flex-1 p-4">
+        <div className="flex-1 p-4 overflow-hidden">
           <ConversationList
             subject={subject}
             subjectName={subjectName}
@@ -442,12 +452,17 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
         currentModel={currentModel}
         onBackToList={() => setShowConversationList(true)}
         onNewChat={() => handleSelectConversation(null)}
-        showBackButton={false} // Changed to false since we start with new chat
-        showNewChatButton={false} // Changed to false since we start with new chat
-        showHistoryButton={true} // Add history button
+        onShowHistory={() => setShowConversationList(true)}
+        showBackButton={false}
+        showNewChatButton={false}
+        showHistoryButton={true}
       />
 
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div 
+        ref={scrollContainerRef} 
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+        style={{ maxHeight: 'calc(100vh - 200px)' }}
+      >
         {messages.length === 0 && !isLoading ? (
           <ChatEmptyState subjectName={subjectName} />
         ) : (
@@ -466,7 +481,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="bg-white border-t border-gray-200 p-4">
+      <div className="bg-white border-t border-gray-200 p-4 flex-shrink-0">
         {imagePreview && (
           <ImagePreviewDisplay imagePreview={imagePreview} onRemoveImage={removeImage} />
         )}
