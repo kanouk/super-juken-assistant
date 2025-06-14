@@ -12,7 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
 
 interface Message {
-  id: string;
+  id: string; // This can be a local ID for optimistic updates, or Supabase UUID
+  db_id?: string; // Store Supabase message ID here if available
   role: 'user' | 'assistant';
   content: string;
   image_url?: string;
@@ -20,15 +21,17 @@ interface Message {
   model?: string;
   created_at: string;
   subject: string;
+  is_understood?: boolean; // Added for "fully understood" tracking
 }
 
 interface ChatScreenProps {
   subject: string;
   subjectName: string;
   currentModel: string;
+  userId: string | undefined; // Add userId prop
 }
 
-const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => {
+const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenProps) => {
   // 科目ごとに分離されたメッセージ状態
   const [allMessages, setAllMessages] = useState<{[key: string]: Message[]}>({});
   const [inputText, setInputText] = useState('');
@@ -38,6 +41,8 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const [latestAIMessageIdForActions, setLatestAIMessageIdForActions] = useState<string | null>(null); // This should store the db_id of the AI message
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // 現在の科目のメッセージを取得
   const messages = allMessages[subject] || [];
@@ -79,9 +84,84 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
     }
   };
 
+  useEffect(() => {
+    // Fetch initial messages for the current subject and user
+    const fetchMessages = async () => {
+      if (!userId || !subject) return;
+      setIsLoading(true);
+      try {
+        // 1. Find or create conversation
+        let { data: conversation, error: convError } = await supabase
+          .from('conversations')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('subject', subject)
+          .single();
+
+        if (convError && convError.code !== 'PGRST116') { // PGRST116: no rows found
+          console.error('Error fetching conversation:', convError);
+          throw convError;
+        }
+
+        if (!conversation) {
+          // No conversation exists, so no messages to fetch yet
+          setAllMessages(prev => ({ ...prev, [subject]: [] }));
+          setIsLoading(false);
+          return;
+        }
+        
+        // 2. Fetch messages for the conversation
+        const { data: dbMessages, error: messagesError } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', conversation.id)
+          .order('created_at', { ascending: true });
+
+        if (messagesError) {
+          console.error('Error fetching messages:', messagesError);
+          throw messagesError;
+        }
+        
+        const fetchedMessages: Message[] = dbMessages.map(msg => ({
+          id: msg.id, // Use Supabase ID as the primary ID
+          db_id: msg.id,
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          image_url: msg.image_url || undefined,
+          cost: msg.cost || undefined,
+          model: msg.model || undefined,
+          created_at: msg.created_at,
+          subject: subject, // Assuming subject is consistent for this conversation
+          is_understood: msg.is_understood || false,
+        }));
+
+        setAllMessages(prev => ({
+          ...prev,
+          [subject]: fetchedMessages
+        }));
+
+      } catch (error: any) {
+        toast({
+          title: "エラー",
+          description: "メッセージの読み込みに失敗しました: " + error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMessages();
+  }, [subject, userId, toast]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement | HTMLTextAreaElement>, explicitText?: string) => {
     e.preventDefault();
-    setLatestAIMessageIdForActions(null); // Always clear actions on new submission
+    setLatestAIMessageIdForActions(null);
+
+    if (!userId) {
+      toast({ title: "エラー", description: "ユーザー情報が取得できません。", variant: "destructive" });
+      return;
+    }
 
     const textForSubmission = explicitText !== undefined ? explicitText : inputText;
     const imageForSubmission = selectedImage;
@@ -91,93 +171,164 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
       return;
     }
 
-    const currentInputTextForUserMessage = textForSubmission;
-    const currentImagePreviewForUserMessage = imagePreviewForSubmission;
-    // Storing values to be used for sending the message and for potential restoration on error
-    const submittingText = textForSubmission; 
+    const submittingText = textForSubmission;
     const submittingImageFile = imageForSubmission;
     const submittingImagePreview = imagePreviewForSubmission;
 
-    setInputText(''); 
-    removeImage();    
+    setInputText('');
+    removeImage();
     setIsLoading(true);
 
+    const localUserMessageId = `local-${Date.now()}`;
+    const userMessage: Message = {
+      id: localUserMessageId,
+      role: 'user',
+      content: submittingText,
+      image_url: submittingImagePreview || undefined,
+      created_at: new Date().toISOString(),
+      subject: subject,
+    };
+
+    // Optimistic update
+    const updatedMessagesForSubject = [...(allMessages[subject] || []), userMessage];
+    setAllMessages(prev => ({ ...prev, [subject]: updatedMessagesForSubject }));
+
     try {
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        role: 'user',
-        content: currentInputTextForUserMessage, // Use the captured text for the user message
-        image_url: currentImagePreviewForUserMessage || undefined, // Use captured image preview
-        created_at: new Date().toISOString(),
-        subject: subject,
-      };
+      // 1. Find or create conversation
+      let { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('subject', subject)
+        .single();
 
-      const updatedMessagesForSubject = [...(allMessages[subject] || []), userMessage];
-      
-      setAllMessages(prev => ({
-        ...prev,
-        [subject]: updatedMessagesForSubject
-      }));
+      if (convError && convError.code !== 'PGRST116') { // PGRST116: no rows found
+        console.error('Error finding conversation:', convError);
+        throw convError;
+      }
 
+      if (!conversation) {
+        const { data: newConversation, error: newConvError } = await supabase
+          .from('conversations')
+          .insert({ user_id: userId, subject: subject })
+          .select('id')
+          .single();
+        if (newConvError || !newConversation) {
+          console.error('Error creating conversation:', newConvError);
+          throw newConvError || new Error("Failed to create conversation");
+        }
+        conversation = newConversation;
+      }
+      const conversationId = conversation.id;
+
+      // 2. Upload image if exists
       let imageUrlSupabase = '';
-      if (submittingImageFile) { // Use submittingImageFile for upload
+      if (submittingImageFile) {
         const fileExt = submittingImageFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
+        const fileName = `${userId}/${Date.now()}.${fileExt}`; // User-specific path
         
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('images')
+          .from('message-images') // Ensure this bucket exists and has correct policies
           .upload(fileName, submittingImageFile);
 
         if (uploadError) {
           console.error('Image upload error:', uploadError);
+          // Continue without image if upload fails, or handle more gracefully
         } else {
           const { data } = supabase.storage
-            .from('images')
+            .from('message-images')
             .getPublicUrl(fileName);
           imageUrlSupabase = data.publicUrl;
         }
       }
 
-      const conversationHistory = updatedMessagesForSubject
-        .slice(-11, -1) 
+      // 3. Save user message to DB
+      const { data: dbUserMessage, error: userMsgError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          role: 'user',
+          content: submittingText,
+          image_url: imageUrlSupabase || null,
+          created_at: userMessage.created_at,
+        })
+        .select()
+        .single();
+
+      if (userMsgError || !dbUserMessage) {
+        console.error('Error saving user message:', userMsgError);
+        throw userMsgError || new Error("Failed to save user message");
+      }
+      
+      // Update local user message with DB ID
+      setAllMessages(prev => ({
+        ...prev,
+        [subject]: prev[subject]?.map(msg => 
+          msg.id === localUserMessageId ? { ...msg, db_id: dbUserMessage.id, id: dbUserMessage.id } : msg
+        ) || []
+      }));
+      
+      // 4. Call AI function
+      const conversationHistoryForAI = (allMessages[subject] || [])
+        .slice(-11) // Include the latest user message for context
         .map(msg => ({
           role: msg.role,
           content: msg.content,
-          image_url: msg.image_url 
+          image_url: msg.image_url
         }));
-      
+
       const { data: functionData, error: functionError } = await supabase.functions.invoke('ask-ai', {
         body: {
-          message: submittingText, // Use submittingText for AI
+          message: submittingText,
           subject: subject,
-          imageUrl: imageUrlSupabase || undefined, 
-          conversationHistory: conversationHistory,
+          imageUrl: imageUrlSupabase || undefined,
+          conversationHistory: conversationHistoryForAI,
           currentModel: currentModel,
         }
       });
 
-      if (functionError) {
-        console.error('Edge function error:', functionError);
-        throw new Error(functionError.message || 'AI応答でエラーが発生しました');
-      }
+      if (functionError) throw new Error(functionError.message || 'AI応答でエラーが発生しました');
+      if (functionData.error) throw new Error(functionData.error);
 
-      if (functionData.error) {
-        throw new Error(functionData.error);
-      }
+      // 5. Save AI message to DB
+      const aiMessageContent = functionData.response;
+      const { data: dbAiMessage, error: aiMsgError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          role: 'assistant',
+          content: aiMessageContent,
+          cost: functionData.cost,
+          model: functionData.model,
+          created_at: new Date().toISOString(),
+          is_understood: false,
+        })
+        .select()
+        .single();
 
+      if (aiMsgError || !dbAiMessage) {
+        console.error('Error saving AI message:', aiMsgError);
+        throw aiMsgError || new Error("Failed to save AI message");
+      }
+      
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: dbAiMessage.id, // Use Supabase ID
+        db_id: dbAiMessage.id,
         role: 'assistant',
-        content: functionData.response,
+        content: aiMessageContent,
         cost: functionData.cost,
         model: functionData.model,
-        created_at: new Date().toISOString(),
+        created_at: dbAiMessage.created_at,
         subject: subject,
+        is_understood: false,
       };
 
       setAllMessages(prev => ({
         ...prev,
-        [subject]: [...updatedMessagesForSubject, aiMessage]
+        [subject]: [...(prev[subject] || []).filter(m => m.id !== localUserMessageId), // Remove local user message if still present by local ID
+                     ...(prev[subject] || []).map(m => m.id === dbUserMessage.id ? { ...m, id: dbUserMessage.id, db_id: dbUserMessage.id } : m), // Ensure user message has db_id
+                     aiMessage] 
+                     .sort((a,b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) // Re-sort after adding AI message
       }));
 
       toast({
@@ -192,13 +343,17 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
         description: error.message || "メッセージの送信に失敗しました。",
         variant: "destructive",
       });
-      
-      // Restore input using the values captured at the start of submission
+      // Restore input
       setInputText(submittingText);
       if (submittingImagePreview) {
         setImagePreview(submittingImagePreview);
-        setSelectedImage(submittingImageFile); // Restore the actual file for potential re-submission
+        setSelectedImage(submittingImageFile);
       }
+      // Remove optimistic user message on error
+      setAllMessages(prev => ({
+        ...prev,
+        [subject]: prev[subject]?.filter(msg => msg.id !== localUserMessageId) || []
+      }));
     } finally {
       setIsLoading(false);
     }
@@ -211,16 +366,63 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
     await handleSubmit(dummyEvent, prompt);
   };
 
-  const handleUnderstood = () => {
+  const handleUnderstood = async () => {
+    if (!latestAIMessageIdForActions) return; // This should be the db_id of the AI message
+
+    const messageIdToUpdate = latestAIMessageIdForActions;
+    setLatestAIMessageIdForActions(null); // Clear after use
+
+    // Optimistic UI update
+    setAllMessages(prev => {
+      const updatedSubjectMessages = (prev[subject] || []).map(msg =>
+        msg.db_id === messageIdToUpdate ? { ...msg, is_understood: true } : msg
+      );
+      return { ...prev, [subject]: updatedSubjectMessages };
+    });
+
     setShowConfetti(true);
-    setLatestAIMessageIdForActions(null);
     toast({
       title: "完全に理解しました！ 🎉",
       description: "素晴らしいです！次のステップに進みましょう。",
       duration: 3000,
     });
-    // Optionally, send a silent message or log this event
-    // For example: console.log("User understood the explanation for message ID:", latestAIMessageIdForActions);
+
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .update({ is_understood: true })
+        .eq('id', messageIdToUpdate); // Use db_id for update
+
+      if (error) {
+        console.error('Error updating message "is_understood":', error);
+        // Revert optimistic update on error
+        setAllMessages(prev => {
+          const revertedSubjectMessages = (prev[subject] || []).map(msg =>
+            msg.db_id === messageIdToUpdate ? { ...msg, is_understood: false } : msg
+          );
+          return { ...prev, [subject]: revertedSubjectMessages };
+        });
+        toast({
+          title: "エラー",
+          description: "「理解した」状態の保存に失敗しました。",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to mark message as understood:', error);
+      // Revert optimistic update
+       setAllMessages(prev => {
+          const revertedSubjectMessages = (prev[subject] || []).map(msg =>
+            msg.db_id === messageIdToUpdate ? { ...msg, is_understood: false } : msg
+          );
+          return { ...prev, [subject]: revertedSubjectMessages };
+        });
+      toast({
+        title: "エラー",
+        description: "「理解した」状態の保存中に予期せぬエラーが発生しました。",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCopyToClipboard = (text: string) => {
@@ -238,9 +440,6 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
       });
     });
   };
-
-  const [latestAIMessageIdForActions, setLatestAIMessageIdForActions] = useState<string | null>(null);
-  const [showConfetti, setShowConfetti] = useState(false);
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
@@ -260,7 +459,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 ? (
+        {messages.length === 0 && !isLoading ? ( // Added !isLoading to prevent empty state during initial load
           <div className="text-center py-12">
             <Bot className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -272,7 +471,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
           </div>
         ) : (
           messages.map((message) => (
-            <div key={message.id}>
+            <div key={message.id}> {/* Using message.id (which could be local or db_id) as key */}
               <div
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} ${
                   message.role === 'assistant' ? 'animate-fade-in' : ''
@@ -312,20 +511,21 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
                           className="text-base" // フォントサイズをtext-baseに変更して少し大きく
                           speed={20}
                           onComplete={() => {
+                            // Only set if it's the last AI message and has a db_id
                             const currentMessagesForSubject = allMessages[subject] || [];
                             const lastMessageInSubject = currentMessagesForSubject[currentMessagesForSubject.length - 1];
-                            if (lastMessageInSubject && lastMessageInSubject.id === message.id && lastMessageInSubject.role === 'assistant') {
-                              setLatestAIMessageIdForActions(message.id);
+                            if (lastMessageInSubject && lastMessageInSubject.id === message.id && lastMessageInSubject.role === 'assistant' && lastMessageInSubject.db_id) {
+                              setLatestAIMessageIdForActions(lastMessageInSubject.db_id);
                             }
                           }}
                         />
                       )}
-                      {message.role === 'assistant' && (message.cost || message.model) && ( // 条件を cost または model が存在する場合に変更
-                        <div className="mt-2 pt-2"> {/* Separatorが自身のmarginを持つため、親要素からborder-tを削除 */}
-                          <Separator className="my-2" /> {/* Separatorを追加 */}
+                      {message.role === 'assistant' && (message.cost || message.model) && (
+                        <div className="mt-2 pt-2">
+                          <Separator className="my-2" />
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">{message.model || 'N/A'}</span> {/* モデルがない場合は N/A */}
-                            {message.cost && ( /* cost がある場合のみ表示 */
+                            <span className="text-xs text-gray-500">{message.model || 'N/A'}</span>
+                            {message.cost && (
                               <span className="text-xs text-gray-500">¥{message.cost.toFixed(4)}</span>
                             )}
                             <Button 
@@ -343,7 +543,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
                   </Card>
                 </div>
               </div>
-              {message.role === 'assistant' && message.id === latestAIMessageIdForActions && (
+              {message.role === 'assistant' && message.db_id === latestAIMessageIdForActions && ( // Check against db_id
                 <div className="mt-2 flex flex-wrap gap-2 justify-start pl-11 pb-2">
                   <Button variant="outline" size="sm" onClick={() => handleQuickAction('もっとわかりやすく教えてください')} className="text-xs">
                     <Brain className="mr-1 h-3 w-3" /> もっとわかりやすく
@@ -353,6 +553,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
                   </Button>
                   <Button variant="outline" size="sm" onClick={handleUnderstood} className="text-xs">
                     <ThumbsUp className="mr-1 h-3 w-3" /> 完全に理解した！
+                    {message.is_understood && <CheckCircle className="ml-1 h-3 w-3 text-green-500" />} {/* Show check if understood */}
                   </Button>
                 </div>
               )}
@@ -360,7 +561,7 @@ const ChatScreen = ({ subject, subjectName, currentModel }: ChatScreenProps) => 
           ))
         )}
         
-        {isLoading && (
+        {isLoading && messages.length > 0 && ( // Show loading indicator only if there are already messages, or adjust as needed
           <div className="flex justify-start">
             <div className="flex items-start space-x-3 max-w-2xl">
               <Avatar className="w-8 h-8 shrink-0">

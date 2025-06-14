@@ -46,6 +46,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          is_understood: boolean | null
           model: string | null
           role: string
         }
@@ -56,6 +57,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          is_understood?: boolean | null
           model?: string | null
           role: string
         }
@@ -66,6 +68,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          is_understood?: boolean | null
           model?: string | null
           role?: string
         }

@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import ChatScreen from './ChatScreen';
 import SettingsScreen from './SettingsScreen';
@@ -7,14 +6,42 @@ import ProfileScreen from './ProfileScreen';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useChatStats } from '@/hooks/useChatStats';
+import type { User } from '@supabase/supabase-js';
 
 const MainApp = () => {
   const [selectedSubject, setSelectedSubject] = useState('math');
   const [currentView, setCurrentView] = useState<'chat' | 'settings' | 'profile'>('chat');
-  const [dailyQuestions] = useState(12);
-  const [totalCost] = useState(2.45);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    getUser();
+  }, []);
+  
+  const { 
+    understoodCount, 
+    dailyCost, 
+    totalCost, 
+    dailyQuestions, 
+    isLoading: isLoadingStats, 
+    error: statsError 
+  } = useChatStats(currentUser?.id);
+
+  useEffect(() => {
+    if (statsError) {
+      toast({
+        title: "統計データの取得エラー",
+        description: "統計データの取得に失敗しました: " + statsError.message,
+        variant: "destructive",
+      });
+    }
+  }, [statsError, toast]);
 
   const subjectNames: { [key: string]: string } = {
     math: '数学',
@@ -75,6 +102,9 @@ const MainApp = () => {
         onLogout={handleLogout}
         dailyQuestions={dailyQuestions}
         totalCost={totalCost}
+        understoodCount={understoodCount}
+        dailyCostProp={dailyCost}
+        isLoadingStats={isLoadingStats}
       />
       
       <div className="flex-1">
@@ -83,6 +113,7 @@ const MainApp = () => {
             subject={selectedSubject}
             subjectName={subjectNames[selectedSubject]}
             currentModel="GPT-4o"
+            userId={currentUser?.id}
           />
         ) : currentView === 'settings' ? (
           <SettingsScreen onBack={handleBackToChat} />

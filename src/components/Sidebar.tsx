@@ -7,10 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   BookOpen, Calculator, FlaskConical, Atom, Languages, 
   Settings, GraduationCap, LogOut, MapPin, Monitor, Plus,
-  User, Clock, TrendingUp, Sparkles, ChevronDown, ChevronUp, CheckCircle
+  User, Clock, TrendingUp, Sparkles, ChevronDown, ChevronUp, CheckCircle, RefreshCw
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SidebarProps {
   selectedSubject: string;
@@ -18,9 +19,11 @@ interface SidebarProps {
   onSettingsClick: () => void;
   onProfileClick: () => void;
   onLogout: () => void;
-  dailyQuestions: number; // これはMainAppから渡される想定
-  totalCost: number; // これもMainAppから渡される想定
-  // understoodCount: number; // MainAppから渡される想定 (今回は表示枠のみ)
+  dailyQuestions: number;
+  totalCost: number;
+  understoodCount: number;
+  dailyCostProp: number;
+  isLoadingStats: boolean;
 }
 
 const subjects = [
@@ -42,10 +45,12 @@ const Sidebar = ({
   onLogout, 
   dailyQuestions, 
   totalCost,
-  // understoodCount = 0 // デフォルト値、将来的にはpropsから
+  understoodCount,
+  dailyCostProp,
+  isLoadingStats
 }: SidebarProps) => {
-  const { profile, isLoading } = useProfile();
-  const [openCollapsible, setOpenCollapsible] = useState<string | null>('subjects'); // subjectsをデフォルトで開く
+  const { profile, isLoading: isLoadingProfile } = useProfile();
+  const [openCollapsible, setOpenCollapsible] = useState<string | null>('subjects');
 
   const calculateDaysLeft = (targetDate: string) => {
     const today = new Date();
@@ -54,8 +59,6 @@ const Sidebar = ({
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
-
-  const understoodCount = 0; // 仮の値。将来的にはpropsから渡す
 
   const toggleCollapsible = (id: string) => {
     setOpenCollapsible(prev => prev === id ? null : id);
@@ -74,6 +77,22 @@ const Sidebar = ({
       </div>
       {openCollapsible === id ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
     </CollapsibleTrigger>
+  );
+
+  const StatItem = ({ label, value, unit, isLoading, icon: Icon, iconColor }: { label: string, value: number | string, unit?: string, isLoading: boolean, icon: React.ElementType, iconColor: string }) => (
+    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
+      <div className="flex items-center space-x-2">
+        <Icon className={`h-4 w-4 ${iconColor}`} />
+        <span className="text-sm text-gray-700 font-medium">{label}</span>
+      </div>
+      {isLoading ? (
+        <Skeleton className="h-5 w-12" />
+      ) : (
+        <Badge variant="secondary" className="font-semibold">
+          {value}{unit}
+        </Badge>
+      )}
+    </div>
   );
 
   return (
@@ -104,12 +123,21 @@ const Sidebar = ({
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {profile?.display_name || 'ユーザー'}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {profile?.email || 'メール未設定'}
-            </p>
+            {isLoadingProfile ? (
+              <>
+                <Skeleton className="h-4 w-24 mb-1" />
+                <Skeleton className="h-3 w-32" />
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {profile?.display_name || 'ユーザー'}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {profile?.email || 'メール未設定'}
+                </p>
+              </>
+            )}
           </div>
           <Button
             variant="ghost"
@@ -128,19 +156,19 @@ const Sidebar = ({
         <Collapsible open={openCollapsible === 'subjects'} onOpenChange={() => toggleCollapsible('subjects')}>
           <CollapsibleSectionHeader id="subjects" title="教科選択" icon={BookOpen} iconBgColor="bg-gradient-to-r from-blue-500 to-indigo-600" />
           <CollapsibleContent className="pt-2 space-y-2">
-            {subjects.map((subject) => {
-              const Icon = subject.icon;
-              const isSelected = selectedSubject === subject.id;
+            {subjects.map((subjectItem) => {
+              const Icon = subjectItem.icon;
+              const isSelected = selectedSubject === subjectItem.id;
               return (
                 <Button
-                  key={subject.id}
+                  key={subjectItem.id}
                   variant="ghost"
                   className={`w-full justify-start h-auto p-4 transition-all duration-200 ${
                     isSelected 
-                      ? `bg-gradient-to-r ${subject.gradient} text-white shadow-lg transform scale-105` 
-                      : `${subject.color} border border-transparent hover:border-gray-300 hover:shadow-md`
+                      ? `bg-gradient-to-r ${subjectItem.gradient} text-white shadow-lg transform scale-105` 
+                      : `${subjectItem.color} border border-transparent hover:border-gray-300 hover:shadow-md`
                   }`}
-                  onClick={() => onSubjectChange(subject.id)}
+                  onClick={() => onSubjectChange(subjectItem.id)}
                 >
                   <div className={`p-2 rounded-lg mr-3 transition-all duration-200 ${
                     isSelected ? "bg-white/20" : "bg-white shadow-sm"
@@ -149,7 +177,7 @@ const Sidebar = ({
                       isSelected ? "text-white" : ""
                     }`} />
                   </div>
-                  <span className="font-medium text-sm">{subject.name}</span>
+                  <span className="font-medium text-sm">{subjectItem.name}</span>
                   {isSelected && (
                     <div className="ml-auto">
                       <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -162,7 +190,7 @@ const Sidebar = ({
         </Collapsible>
 
         {/* Countdown Section */}
-        {(!isLoading && profile?.show_countdown) && (
+        {(!isLoadingProfile && profile?.show_countdown) && (
           <Collapsible open={openCollapsible === 'countdown'} onOpenChange={() => toggleCollapsible('countdown')}>
             <CollapsibleSectionHeader id="countdown" title="入試カウントダウン" icon={Clock} iconBgColor="bg-gradient-to-r from-red-500 to-pink-600" />
             <CollapsibleContent className="pt-2 space-y-3">
@@ -205,27 +233,34 @@ const Sidebar = ({
         <Collapsible open={openCollapsible === 'stats'} onOpenChange={() => toggleCollapsible('stats')}>
           <CollapsibleSectionHeader id="stats" title="学習統計" icon={TrendingUp} iconBgColor="bg-gradient-to-r from-green-500 to-emerald-600" />
           <CollapsibleContent className="pt-2 space-y-3">
-            <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span className="text-sm text-gray-700 font-medium">完全に理解した数</span>
-              </div>
-              <Badge variant="secondary" className="bg-green-100 text-green-700 font-semibold">
-                {understoodCount} {/* 表示枠のみ */}
-              </Badge>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-              <span className="text-sm text-gray-700 font-medium">本日の質問数</span>
-              <Badge variant="secondary" className="bg-green-100 text-green-700 font-semibold">
-                {dailyQuestions}
-              </Badge>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <span className="text-sm text-gray-700 font-medium">累計コスト</span>
-              <Badge variant="outline" className="border-blue-300 text-blue-700 font-semibold">
-                ¥{totalCost.toFixed(2)}
-              </Badge>
-            </div>
+            <StatItem 
+              label="完全に理解した数" 
+              value={understoodCount} 
+              isLoading={isLoadingStats}
+              icon={CheckCircle}
+              iconColor="text-green-600"
+            />
+            <StatItem 
+              label="本日の質問数" 
+              value={dailyQuestions} 
+              isLoading={isLoadingStats}
+              icon={User}
+              iconColor="text-blue-600"
+            />
+            <StatItem 
+              label="本日のコスト" 
+              value={`¥${dailyCostProp.toFixed(2)}`}
+              isLoading={isLoadingStats}
+              icon={Sparkles}
+              iconColor="text-purple-600"
+            />
+            <StatItem 
+              label="累計コスト" 
+              value={`¥${totalCost.toFixed(2)}`}
+              isLoading={isLoadingStats}
+              icon={RefreshCw}
+              iconColor="text-orange-600"
+            />
           </CollapsibleContent>
         </Collapsible>
       </div>
