@@ -1,115 +1,129 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
-import { startOfDay, isSameDay } from 'date-fns'; // For date comparisons
+import { supabase } from "@/integrations/supabase/client";
 
-interface MessageStat {
-  cost?: number | null;
-  created_at: string;
-  is_understood?: boolean | null;
-  role: string;
-}
-
-interface Stats {
+interface ChatStats {
   understoodCount: number;
   dailyCost: number;
   totalCost: number;
   dailyQuestions: number;
-  isLoading: boolean;
-  error: Error | null;
 }
 
-export const useChatStats = (userId: string | undefined): Stats => {
-  const fetchMessagesForStats = async (): Promise<MessageStat[]> => {
-    if (!userId) return [];
-
-    // 1. Get all conversation IDs for the user
-    const { data: conversations, error: convError } = await supabase
-      .from('conversations')
-      .select('id')
-      .eq('user_id', userId);
-
-    if (convError) {
-      console.error('Error fetching conversations for stats:', convError);
-      throw convError;
-    }
-    if (!conversations || conversations.length === 0) return [];
-
-    const conversationIds = conversations.map(c => c.id);
-
-    // 2. Get all messages for these conversation IDs
-    const { data: messages, error: msgError } = await supabase
-      .from('messages')
-      .select('cost, created_at, is_understood, role')
-      .in('conversation_id', conversationIds);
-
-    if (msgError) {
-      console.error('Error fetching messages for stats:', msgError);
-      throw msgError;
-    }
-    return (messages || []).map(m => ({
-        cost: m.cost,
-        created_at: m.created_at,
-        is_understood: m.is_understood,
-        role: m.role
-    }));
-  };
-
-  const { data: messages = [], isLoading, error } = useQuery<MessageStat[], Error>({
-    queryKey: ['chatStats', userId],
-    queryFn: fetchMessagesForStats,
-    enabled: !!userId, // Only run query if userId is available
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
-  });
-
-  const [stats, setStats] = useState<Omit<Stats, 'isLoading' | 'error'>>({
+export const useChatStats = (userId: string | undefined) => {
+  const [stats, setStats] = useState<ChatStats>({
     understoodCount: 0,
     dailyCost: 0,
     totalCost: 0,
     dailyQuestions: 0,
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchStats = async () => {
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setError(null);
+      
+      // Get understood count
+      const { data: understoodData, error: understoodError } = await supabase
+        .from('messages')
+        .select('id', { count: 'exact' })
+        .eq('role', 'assistant')
+        .eq('is_understood', true)
+        .in('conversation_id', 
+          supabase
+            .from('conversations')
+            .select('id')
+            .eq('user_id', userId)
+        );
+
+      if (understoodError) throw understoodError;
+
+      // Get total cost
+      const { data: totalCostData, error: totalCostError } = await supabase
+        .from('messages')
+        .select('cost')
+        .in('conversation_id', 
+          supabase
+            .from('conversations')
+            .select('id')
+            .eq('user_id', userId)
+        );
+
+      if (totalCostError) throw totalCostError;
+
+      // Get today's stats
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayData, error: todayError } = await supabase
+        .from('messages')
+        .select('cost, role')
+        .gte('created_at', `${today}T00:00:00.000Z`)
+        .lt('created_at', `${today}T23:59:59.999Z`)
+        .in('conversation_id', 
+          supabase
+            .from('conversations')
+            .select('id')
+            .eq('user_id', userId)
+        );
+
+      if (todayError) throw todayError;
+
+      const understoodCount = understoodData?.length || 0;
+      const totalCost = totalCostData?.reduce((sum, msg) => sum + (msg.cost || 0), 0) || 0;
+      const dailyCost = todayData?.reduce((sum, msg) => sum + (msg.cost || 0), 0) || 0;
+      const dailyQuestions = todayData?.filter(msg => msg.role === 'user').length || 0;
+
+      setStats({
+        understoodCount,
+        dailyCost,
+        totalCost,
+        dailyQuestions,
+      });
+    } catch (err) {
+      console.error('Error fetching chat stats:', err);
+      setError(err as Error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (messages.length > 0) {
-      const today = startOfDay(new Date());
-      let understood = 0;
-      let dailyC = 0;
-      let totalC = 0;
-      let dailyQ = 0;
+    fetchStats();
+  }, [userId]);
 
-      messages.forEach(msg => {
-        if (msg.is_understood) {
-          understood++;
-        }
-        if (msg.cost) {
-          totalC += msg.cost;
-          if (isSameDay(new Date(msg.created_at), today)) {
-            dailyC += msg.cost;
-          }
-        }
-        if (msg.role === 'user' && isSameDay(new Date(msg.created_at), today)) {
-          dailyQ++;
-        }
-      });
-      
-      setStats({
-        understoodCount: understood,
-        dailyCost: dailyC,
-        totalCost: totalC,
-        dailyQuestions: dailyQ,
-      });
-    } else {
-      // Reset stats if no messages or user ID changes to undefined
-      setStats({
-        understoodCount: 0,
-        dailyCost: 0,
-        totalCost: 0,
-        dailyQuestions: 0,
-      });
-    }
-  }, [messages]);
+  // Set up real-time subscription for messages table
+  useEffect(() => {
+    if (!userId) return;
 
-  return { ...stats, isLoading, error };
+    const channel = supabase
+      .channel('chat-stats-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages'
+        },
+        () => {
+          // Refetch stats when messages table changes
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  return {
+    ...stats,
+    isLoading,
+    error,
+    refetch: fetchStats,
+  };
 };

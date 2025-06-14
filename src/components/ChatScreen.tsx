@@ -173,13 +173,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     setAllMessages(prev => ({ ...prev, [subject]: updatedMessagesForSubject }));
 
     try {
-      // ... keep existing code (handleSubmit logic: 
-      // 1. Find or create conversation
-      // 2. Upload image if exists
-      // 3. Save user message to DB
-      // 4. Call AI function
-      // 5. Save AI message to DB
-      // )
+      // ... keep existing code (handleSubmit logic: 1. Find or create conversation, 2. Upload image if exists, 3. Save user message to DB, 4. Call AI function, 5. Save AI message to DB)
       // 1. Find or create conversation
       let { data: conversation, error: convError } = await supabase
         .from('conversations')
@@ -373,6 +367,10 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     const messageIdToUpdate = latestAIMessageIdForActions;
     setLatestAIMessageIdForActions(null);
 
+    // Store current scroll position
+    const scrollContainer = document.querySelector('.overflow-y-auto');
+    const currentScrollTop = scrollContainer?.scrollTop || 0;
+
     setAllMessages(prev => {
       const updatedSubjectMessages = (prev[subject] || []).map(msg =>
         msg.db_id === messageIdToUpdate ? { ...msg, is_understood: true } : msg
@@ -406,6 +404,13 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
           description: "「理解した」状態の保存に失敗しました。",
           variant: "destructive",
         });
+      } else {
+        // Restore scroll position after a short delay to ensure UI has updated
+        setTimeout(() => {
+          if (scrollContainer) {
+            scrollContainer.scrollTop = currentScrollTop;
+          }
+        }, 100);
       }
     } catch (error: any) {
       console.error('Failed to mark message as understood:', error);
