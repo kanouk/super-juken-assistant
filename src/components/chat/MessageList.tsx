@@ -31,17 +31,21 @@ const MessageList: React.FC<MessageListProps> = ({
 
   return (
     <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-4 min-h-0">
-      {messages.map((message, index) => (
-        <MessageItem
-          key={message.id}
-          message={convertToMessage(message)}
-          onCopyToClipboard={() => {}}
-          onTypewriterComplete={() => {}}
-          showQuickActions={!message.isUser && index === messages.length - 1}
-          onQuickAction={onQuickAction}
-          onUnderstood={() => onUnderstood(message.id)}
-        />
-      ))}
+      {messages.map((message, index) => {
+        const isLastAIMessage = !message.isUser && index === messages.length - 1;
+        
+        return (
+          <MessageItem
+            key={message.id}
+            message={convertToMessage(message)}
+            onCopyToClipboard={() => {}}
+            onTypewriterComplete={() => {}}
+            showQuickActions={isLastAIMessage}
+            onQuickAction={onQuickAction}
+            onUnderstood={() => onUnderstood(message.id)}
+          />
+        );
+      })}
       {isLoading && (
         <div className="flex justify-start">
           <div className="bg-gray-100 rounded-lg p-3 max-w-xs lg:max-w-md">
