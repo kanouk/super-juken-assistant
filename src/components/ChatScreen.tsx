@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import ConfettiComponent from './Confetti';
@@ -14,6 +13,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { v4 as uuidv4 } from 'uuid';
 import ChatMainView from "./chat/ChatMainView";
 import ConversationHistoryView from "./chat/ConversationHistoryView";
+import { useChatStats } from "@/hooks/useChatStats";
 
 // ChatScreenコンポーネントprops
 interface ChatScreenProps {
@@ -219,9 +219,11 @@ const ChatScreen = (props: ChatScreenProps) => {
     }
   };
 
+  // サイドバー用: ChatStats取得
+  const { understoodCount, dailyCost, totalCost, dailyQuestions, isLoading: isLoadingStats, error: chatStatsError, refetch: refetchChatStats } = useChatStats(userId);
+
   const handleUnderstood = async (messageId: string) => {
     if (!userId) return;
-
     try {
       setMessages(prev => 
         prev.map(msg => 
@@ -230,8 +232,7 @@ const ChatScreen = (props: ChatScreenProps) => {
             : msg
         )
       );
-
-      // Update the message in database to mark as understood
+      // ... keep existing messages update logic the same ...
       const message = messages.find(msg => msg.id === messageId);
       if (message && selectedConversationId) {
         const { error } = await supabase
@@ -240,25 +241,20 @@ const ChatScreen = (props: ChatScreenProps) => {
           .eq('conversation_id', selectedConversationId)
           .eq('content', message.content)
           .eq('role', 'assistant');
-
-        if (error) {
-          console.error('Error updating understood status:', error);
-        } else {
-          // Invalidate and refetch chat stats to update sidebar
+        if (!error) {
+          // --- ここでサイドバー統計キャッシュを即座にリフレッシュする
+          refetchChatStats();
           queryClient.invalidateQueries({ queryKey: ['chatStats', userId] });
         }
       }
-
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
-
       toast({
         title: "完全に理解！",
         description: "理解度がカウントされました！",
       });
-
     } catch (error: any) {
-      console.error('Error updating understood count:', error);
+      // ... keep error handling the same ...
       toast({
         title: "エラー",
         description: "理解度の更新に失敗しました。",
