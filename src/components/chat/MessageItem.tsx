@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,18 +21,18 @@ interface MessageItemProps {
 }
 
 const subjectColorMap: { [key: string]: string } = {
-  math: 'from-blue-500 to-indigo-500',
-  chemistry: 'from-purple-500 to-pink-500',
-  biology: 'from-green-500 to-emerald-400',
-  english: 'from-indigo-600 to-blue-400',
-  japanese: 'from-rose-500 to-red-400',
-  physics: 'from-orange-500 to-yellow-400',
-  earth_science: 'from-cyan-500 to-blue-300',
-  world_history: 'from-yellow-500 to-amber-400',
-  japanese_history: 'from-pink-500 to-red-400',
-  geography: 'from-teal-500 to-green-300',
-  information: 'from-gray-600 to-slate-400',
-  other: 'from-orange-600 to-pink-500',
+  math: 'from-blue-50 to-blue-100 border-blue-200',
+  chemistry: 'from-purple-50 to-purple-100 border-purple-200',
+  biology: 'from-green-50 to-green-100 border-green-200',
+  english: 'from-indigo-50 to-indigo-100 border-indigo-200',
+  japanese: 'from-rose-50 to-rose-100 border-rose-200',
+  physics: 'from-orange-50 to-orange-100 border-orange-200',
+  earth_science: 'from-cyan-50 to-cyan-100 border-cyan-200',
+  world_history: 'from-yellow-50 to-yellow-100 border-yellow-200',
+  japanese_history: 'from-pink-50 to-pink-100 border-pink-200',
+  geography: 'from-teal-50 to-teal-100 border-teal-200',
+  information: 'from-gray-50 to-gray-100 border-gray-200',
+  other: 'from-slate-50 to-slate-100 border-slate-200',
 };
 
 const MessageItem: React.FC<MessageItemProps> = ({
@@ -52,10 +53,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     }
   }, [message.role, message.db_id, onTypewriterComplete]);
 
-  const gradient = subjectColorMap[subjectId] || 'from-blue-600 to-purple-600';
-  const borderClass = message.role === 'assistant'
-    ? `border-l-4 border-transparent bg-gradient-to-br ${gradient} bg-clip-border`
-    : '';
+  const gradient = subjectColorMap[subjectId] || 'from-slate-50 to-slate-100 border-slate-200';
 
   return (
     <div className="w-full group">
@@ -80,10 +78,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
             </AvatarFallback>
           </Avatar>
 
-          <Card className={`flex-1 min-w-0 shadow-sm border-0 ${
+          <Card className={`flex-1 min-w-0 shadow-sm ${
             message.role === 'user'
-              ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
-              : `bg-white border border-gray-200 text-gray-900 ${borderClass}`
+              ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0'
+              : `bg-gradient-to-br ${gradient} text-gray-900 border`
           }`}>
             <CardContent className="p-4">
               {message.image_url && (
