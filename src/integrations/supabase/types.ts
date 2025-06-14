@@ -127,6 +127,7 @@ export type Database = {
           common_instruction: string | null
           id: string
           models: Json | null
+          subject_configs: Json | null
           subject_instructions: Json | null
         }
         Insert: {
@@ -134,6 +135,7 @@ export type Database = {
           common_instruction?: string | null
           id: string
           models?: Json | null
+          subject_configs?: Json | null
           subject_instructions?: Json | null
         }
         Update: {
@@ -141,6 +143,7 @@ export type Database = {
           common_instruction?: string | null
           id?: string
           models?: Json | null
+          subject_configs?: Json | null
           subject_instructions?: Json | null
         }
         Relationships: [
