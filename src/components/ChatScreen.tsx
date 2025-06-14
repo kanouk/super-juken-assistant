@@ -10,7 +10,6 @@ import TypewriterEffect from './TypewriterEffect';
 import ConfettiComponent from './Confetti';
 import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
-import { Message } from '@/integrations/supabase/types';
 
 interface Message {
   id: string; // This can be a local ID for optimistic updates, or Supabase UUID
@@ -302,7 +301,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
           cost: functionData.cost,
           model: functionData.model,
           created_at: new Date().toISOString(),
-          is_understood: false,
+          is_understood: false, // Default to false for new AI messages
         })
         .select()
         .single();
@@ -321,7 +320,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
         model: functionData.model,
         created_at: dbAiMessage.created_at,
         subject: subject,
-        is_understood: false,
+        is_understood: dbAiMessage.is_understood || false, // Use value from DB
       };
 
       setAllMessages(prev => ({
@@ -348,8 +347,6 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
       setInputText(submittingText);
       if (submittingImagePreview) {
         setImagePreview(submittingImagePreview);
-        // This line was causing an error because submittingImageFile could be null.
-        // Corrected to ensure it's only set if it exists.
         if (submittingImageFile) {
            setSelectedImage(submittingImageFile);
         }
