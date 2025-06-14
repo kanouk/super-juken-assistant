@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -28,10 +27,6 @@ export const useChatStats = (userId: string | undefined) => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-
-  const channelRef = useRef<any>(null);
-  const channelNameRef = useRef<string | null>(null);
-  const isSubscribedRef = useRef(false);
 
   const fetchStats = async () => {
     if (!userId) {
@@ -107,76 +102,6 @@ export const useChatStats = (userId: string | undefined) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  // Realtime購読部分
-  useEffect(() => {
-    const instanceId = instanceIdRef.current;
-    // クリーンアップ: 既存チャンネルを確実に解除
-    if (channelRef.current) {
-      try {
-        channelRef.current.unsubscribe && channelRef.current.unsubscribe();
-        console.info(`[useChatStats][${instanceId}] Unsubscribed previous channel:`, channelNameRef.current);
-      } catch (e) {
-        console.warn(`[useChatStats][${instanceId}] unsubscribe error`, e);
-      }
-      supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
-      channelNameRef.current = null;
-      isSubscribedRef.current = false;
-    }
-    if (!userId) return;
-
-    const channelName = 'chat-stats-changes-' + userId;
-    console.info(`[useChatStats][${instanceId}] Creating new channel:`, channelName);
-
-    // 新チャンネル生成&購読
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-        },
-        () => {
-          console.info(`[useChatStats][${instanceId}] Detected messages change → refetch stats`);
-          fetchStats();
-        }
-      );
-
-    let cleaned = false;
-    let subscribed = false;
-    channel.subscribe((status: string) => {
-      if (cleaned || subscribed) return;
-      if (status === 'SUBSCRIBED') {
-        channelRef.current = channel;
-        channelNameRef.current = channelName;
-        isSubscribedRef.current = true;
-        subscribed = true;
-        console.info(`[useChatStats][${instanceId}] SUBSCRIBED channel:`, channelName);
-      }
-    });
-
-    // アンマウント時/依存変化時のクリーンアップ
-    return () => {
-      cleaned = true;
-      if (channelRef.current) {
-        try {
-          channelRef.current.unsubscribe && channelRef.current.unsubscribe();
-          console.info(`[useChatStats][${instanceId}] Cleanup: unsubscribed channel:`, channelName);
-        } catch (e) {
-          console.warn(`[useChatStats][${instanceId}] unsubscribe error during cleanup`, e);
-        }
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-        isSubscribedRef.current = false;
-        channelNameRef.current = null;
-        console.info(`[useChatStats][${instanceId}] CLEANED:`, channelName);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
-
   return {
     ...stats,
     isLoading,
@@ -185,4 +110,3 @@ export const useChatStats = (userId: string | undefined) => {
     instanceId: instanceIdRef.current, // デバッグ用
   };
 };
-
