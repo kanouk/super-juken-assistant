@@ -100,18 +100,19 @@ export const useChatStats = (userId: string | undefined) => {
 
   useEffect(() => {
     fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
 
-    // 既存チャンネルがあればクリーンアップ
+    // 前のチャンネル停止
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
 
-    // チャンネル生成&サブスクライブ
+    // 新しいチャンネル作成
     const channel = supabase
       .channel('chat-stats-changes')
       .on(
@@ -127,16 +128,19 @@ export const useChatStats = (userId: string | undefined) => {
         }
       );
 
+    // ここでサブスクライブは一度だけ呼ぶ
     channel.subscribe();
     channelRef.current = channel;
 
+    // クリーンアップ: 単一チャンネルだけ remove
     return () => {
-      // クリーンアップ: チャンネル解除
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
+    // userId のみ依存
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   return {
