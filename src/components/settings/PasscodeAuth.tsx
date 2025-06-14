@@ -15,6 +15,7 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
   const [isShaking, setIsShaking] = useState(false);
   const otpGroupRef = useRef<HTMLDivElement>(null);
 
+  // ✅ [修正] passcodeInputにkeyを付与し、毎回InputOTPGroupが再生成されるようにする
   // 毎回初回マウント時のみ1桁目にフォーカス
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -24,22 +25,22 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
       }
     }, 10); // 最小限の遅延
     return () => clearTimeout(timer);
-  }, []); // ← 毎回開かれるたび必ず1文字目にfocus
+  }, [passcodeInput]); // ← 入力リセット時もフォーカス
 
   const handlePasscodeChange = (value: string) => {
     setPasscodeInput(value);
-    
+
     if (value.length === 6) {
       if (value === expectedPasscode) {
         onAuthenticated();
       } else {
         setIsShaking(true);
         setPasscodeInput('');
-        
+
         if (navigator.vibrate) {
           navigator.vibrate([100, 50, 100]);
         }
-        
+
         setTimeout(() => {
           setIsShaking(false);
         }, 500);
@@ -68,6 +69,8 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
               maxLength={6}
               value={passcodeInput}
               onChange={handlePasscodeChange}
+              // 🔽 入力リセット・新規描画時に再生成(keyでリセット)
+              key={passcodeInput.length === 0 ? Math.random() : 'otp'}
             >
               <InputOTPGroup ref={otpGroupRef} className="gap-2">
                 <InputOTPSlot 

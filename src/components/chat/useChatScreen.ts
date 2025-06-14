@@ -42,13 +42,14 @@ export interface UseChatScreenProps {
 
 export function useChatScreen(props: UseChatScreenProps) {
   const { subject, subjectName, currentModel, userId, onToggleSidebar, isMobile, availableModels } = props;
+  // 🔽 選択中モデルは必ずprops.currentModelで初期化し、その後ローカルで管理
+  const [selectedModel, setSelectedModel] = useState(currentModel);
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImages, setSelectedImages] = useState<ImageData[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showConversations, setShowConversations] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState(currentModel);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -101,6 +102,8 @@ export function useChatScreen(props: UseChatScreenProps) {
   // モデル変更
   const handleModelChange = (value: string) => {
     setSelectedModel(value);
+    // 外からcurrentModelをpropsで制御している場合、onSubjectChange的なcallbackも実装可能
+    // 例: props.onModelChange?.(value);
   };
 
   // メッセージ送信
@@ -340,7 +343,8 @@ export function useChatScreen(props: UseChatScreenProps) {
       showConfetti,
       showConversations,
       selectedConversationId,
-      selectedModel,
+      // 🔽 model変更を子へ正しく伝搬
+      selectedModel, // ← ここ
       displayModelOptions,
       conversations,
       understoodCount,
@@ -353,7 +357,7 @@ export function useChatScreen(props: UseChatScreenProps) {
     },
     handlers: {
       setSelectedImages,
-      handleModelChange,
+      handleModelChange, // ← ここ
       handleSendMessage,
       handleUnderstood,
       handleNewChat,
