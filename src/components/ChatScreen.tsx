@@ -11,16 +11,8 @@ import { MessageType, ImageData } from './chat/types';
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { v4 as uuidv4 } from 'uuid';
-
-interface ChatScreenProps {
-  subject: string;
-  subjectName: string;
-  currentModel: string;
-  userId: string | undefined;
-  onSubjectChange?: (subject: string) => void;
-  onToggleSidebar: () => void;
-  isMobile: boolean;
-}
+import ChatMainView from "./chat/ChatMainView";
+import ConversationHistoryView from "./chat/ConversationHistoryView";
 
 const modelOptions = [
   { label: "GPT-4.1 (2025-04-14)", value: "gpt-4.1-2025-04-14" },
