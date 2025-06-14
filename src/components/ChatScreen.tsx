@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import ConfettiComponent from './Confetti';
@@ -340,6 +341,8 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
         };
       });
 
+      // クイックアクションのIDを即座に設定
+      setLatestAIMessageIdForActions(dbAiMessage.id);
 
       toast({
         title: "回答を生成しました",
@@ -460,14 +463,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
   };
   
   const handleTypewriterComplete = (messageDbId?: string) => {
-    if (messageDbId) {
-      // Check if this is indeed the latest AI message in the current view
-      const currentMessagesForSubject = allMessages[subject] || [];
-      const lastMessageInSubject = currentMessagesForSubject[currentMessagesForSubject.length - 1];
-      if (lastMessageInSubject && lastMessageInSubject.db_id === messageDbId && lastMessageInSubject.role === 'assistant') {
-        setLatestAIMessageIdForActions(messageDbId);
-      }
-    }
+    // タイプライター効果を削除したため、この関数は何もしない
   };
 
   const handleInputTextChange = (text: string) => {

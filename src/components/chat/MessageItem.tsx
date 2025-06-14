@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { Message } from './types';
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { User, Bot, Copy } from 'lucide-react';
 import LaTeXRenderer from '../LaTeXRenderer';
 import QuickActions from './QuickActions';
+import { useProfile } from '@/hooks/useProfile';
 
 interface MessageItemProps {
   message: Message;
@@ -26,6 +27,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
   onQuickAction,
   onUnderstood,
 }) => {
+  const { profile } = useProfile();
+
   // AIメッセージが表示された時に即座にコールバックを呼び出す
   React.useEffect(() => {
     if (message.role === 'assistant' && message.db_id) {
@@ -44,6 +47,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
           message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
         }`}>
           <Avatar className="w-8 h-8 shrink-0">
+            {message.role === 'user' && profile?.avatar_url ? (
+              <AvatarImage src={profile.avatar_url} alt="ユーザーアバター" />
+            ) : null}
             <AvatarFallback className={
               message.role === 'user'
                 ? 'bg-blue-100 text-blue-700'
