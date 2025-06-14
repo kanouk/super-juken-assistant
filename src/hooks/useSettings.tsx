@@ -168,7 +168,7 @@ export const useSettings = () => {
           models: newSettings.models,
           common_instruction: newSettings.commonInstruction,
           subject_instructions: newSettings.subjectInstructions,
-          subject_configs: newSettings.subjectConfigs
+          subject_configs: newSettings.subjectConfigs as any
         })
         .eq('id', user.id);
 
