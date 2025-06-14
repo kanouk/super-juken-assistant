@@ -27,7 +27,7 @@ const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
         if (math) {
           try {
             return (
-              <div key={index} className="my-2 flex justify-center">
+              <div key={index} className="my-4 flex justify-center">
                 <BlockMath math={math} />
               </div>
             );
@@ -61,8 +61,7 @@ const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
       
       if (part.trim()) { 
         return (
-          // prose-smからprose-baseに変更し、行間を調整するために leading-relaxed を追加
-          <div key={index} className="prose prose-base max-w-none dark:prose-invert leading-relaxed">
+          <div key={index} className="prose prose-base max-w-none dark:prose-invert leading-relaxed prose-headings:my-4 prose-headings:font-semibold prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-ul:my-3 prose-ol:my-3 prose-li:my-1 prose-p:my-2">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
             >
@@ -76,7 +75,6 @@ const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
   }, [content]);
 
   return (
-    // classNameに渡される text-sm や text-base を優先しつつ、全体の行間を調整
     <div className={`${className} leading-relaxed`}>
       {processedContent.filter(Boolean)}
     </div>
@@ -84,4 +82,3 @@ const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
 };
 
 export default LaTeXRenderer;
-
