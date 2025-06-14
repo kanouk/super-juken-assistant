@@ -271,8 +271,8 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             <TabsTrigger value="models" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               モデル設定
             </TabsTrigger>
-            <TabsTrigger value="instructions" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-              指示設定
+            <TabsTrigger value="general" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              全体設定
             </TabsTrigger>
             <TabsTrigger value="subjects" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               教科設定
@@ -427,69 +427,34 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             </Card>
           </TabsContent>
 
-          {/* Instructions Settings */}
-          <TabsContent value="instructions">
-            <div className="space-y-6">
-              <Card className="shadow-lg border-2 border-gray-100 bg-white/80 backdrop-blur-sm">
-                <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 border-b border-gray-100">
-                  <CardTitle className="flex items-center text-xl">
-                    <MessageSquare className="h-6 w-6 mr-3 text-orange-600" />
+          {/* General Settings (formerly Instructions Settings) */}
+          <TabsContent value="general">
+            <Card className="shadow-lg border-2 border-gray-100 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 border-b border-gray-100">
+                <CardTitle className="flex items-center text-xl">
+                  <MessageSquare className="h-6 w-6 mr-3 text-orange-600" />
+                  全体インストラクション
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div>
+                  <Label htmlFor="common-instruction" className="text-sm font-medium text-gray-700">
                     共通インストラクション
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
+                  </Label>
                   <Textarea
+                    id="common-instruction"
                     value={settings.commonInstruction}
                     onChange={(e) => updateSetting('commonInstruction', e.target.value)}
                     rows={4}
                     placeholder="AIに対する共通の指示を入力してください..."
-                    className="border-2 border-gray-200 focus:border-orange-500"
+                    className="mt-2 border-2 border-gray-200 focus:border-orange-500"
                   />
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-lg border-2 border-gray-100 bg-white/80 backdrop-blur-sm">
-                <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 border-b border-gray-100">
-                  <CardTitle className="text-xl">教科別インストラクション</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-6">
-                  {Object.entries(settings.subjectInstructions).map(([subject, instruction]) => {
-                    const subjectInfo: { [key: string]: { name: string; icon: any; color: string } } = {
-                      math: { name: '数学', icon: Calculator, color: 'text-blue-600' },
-                      chemistry: { name: '化学', icon: FlaskConical, color: 'text-purple-600' },
-                      biology: { name: '生物', icon: Atom, color: 'text-green-600' },
-                      english: { name: '英語', icon: Languages, color: 'text-indigo-600' },
-                      japanese: { name: '国語', icon: BookOpen, color: 'text-red-600' },
-                      geography: { name: '地理', icon: MapPin, color: 'text-teal-600' },
-                      information: { name: '情報', icon: Monitor, color: 'text-gray-600' },
-                      other: { name: 'その他', icon: Plus, color: 'text-orange-600' }
-                    };
-
-                    const subjectData = subjectInfo[subject];
-                    if (!subjectData) return null;
-
-                    const IconComponent = subjectData.icon;
-
-                    return (
-                      <div key={subject} className="space-y-3">
-                        <Label htmlFor={`${subject}-instruction`} className="flex items-center text-sm font-medium text-gray-700">
-                          <IconComponent className={`h-5 w-5 mr-2 ${subjectData.color}`} />
-                          {subjectData.name}
-                        </Label>
-                        <Textarea
-                          id={`${subject}-instruction`}
-                          value={instruction}
-                          onChange={(e) => updateSetting(`subjectInstructions.${subject}`, e.target.value)}
-                          rows={3}
-                          placeholder={`${subjectData.name}に関する指示を入力してください...`}
-                          className="border-2 border-gray-200 focus:border-orange-500"
-                        />
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    すべての教科で共通して使用される基本的な指示です。教科別のカスタムインストラクションは「教科設定」タブで設定できます。
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Subject Settings */}
