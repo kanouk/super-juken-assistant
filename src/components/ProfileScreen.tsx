@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +33,18 @@ interface UserProfile {
   exam_settings: ExamSettings;
 }
 
+// 型ガード関数
+const isValidExamSettings = (obj: any): obj is ExamSettings => {
+  return obj && 
+    typeof obj === 'object' &&
+    obj.kyotsu && 
+    obj.todai &&
+    typeof obj.kyotsu.name === 'string' &&
+    typeof obj.kyotsu.date === 'string' &&
+    typeof obj.todai.name === 'string' &&
+    typeof obj.todai.date === 'string';
+};
+
 const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
   const [profile, setProfile] = useState<UserProfile>({
     display_name: '',
@@ -67,15 +78,24 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
       if (error) throw error;
 
       if (data) {
+        // デフォルトの試験設定
+        const defaultExamSettings: ExamSettings = {
+          kyotsu: { name: '共通テスト', date: '2026-01-17' },
+          todai: { name: '東大二次試験', date: '2026-02-25' }
+        };
+
+        // exam_settingsの型安全な処理
+        let examSettings = defaultExamSettings;
+        if (data.exam_settings && isValidExamSettings(data.exam_settings)) {
+          examSettings = data.exam_settings;
+        }
+
         setProfile({
           display_name: data.display_name || '',
           email: data.email || user.email || '',
           avatar_url: data.avatar_url || '',
           show_countdown: data.show_countdown ?? true,
-          exam_settings: data.exam_settings || {
-            kyotsu: { name: '共通テスト', date: '2026-01-17' },
-            todai: { name: '東大二次試験', date: '2026-02-25' }
-          }
+          exam_settings: examSettings
         });
       }
     } catch (error: any) {
@@ -96,6 +116,9 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found');
 
+      // exam_settingsをJSONBとして適切に保存
+      const examSettingsJson = JSON.parse(JSON.stringify(profile.exam_settings));
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -103,7 +126,7 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
           email: profile.email || null,
           avatar_url: profile.avatar_url || null,
           show_countdown: profile.show_countdown,
-          exam_settings: profile.exam_settings
+          exam_settings: examSettingsJson
         })
         .eq('id', user.id);
 

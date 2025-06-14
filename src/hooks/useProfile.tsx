@@ -21,6 +21,18 @@ interface UserProfile {
   exam_settings: ExamSettings;
 }
 
+// 型ガード関数を追加
+const isValidExamSettings = (obj: any): obj is ExamSettings => {
+  return obj && 
+    typeof obj === 'object' &&
+    obj.kyotsu && 
+    obj.todai &&
+    typeof obj.kyotsu.name === 'string' &&
+    typeof obj.kyotsu.date === 'string' &&
+    typeof obj.todai.name === 'string' &&
+    typeof obj.todai.date === 'string';
+};
+
 export const useProfile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,15 +54,24 @@ export const useProfile = () => {
       if (error) throw error;
 
       if (data) {
+        // デフォルトの試験設定
+        const defaultExamSettings: ExamSettings = {
+          kyotsu: { name: '共通テスト', date: '2026-01-17' },
+          todai: { name: '東大二次試験', date: '2026-02-25' }
+        };
+
+        // exam_settingsの型安全な処理
+        let examSettings = defaultExamSettings;
+        if (data.exam_settings && isValidExamSettings(data.exam_settings)) {
+          examSettings = data.exam_settings;
+        }
+
         setProfile({
           display_name: data.display_name,
           email: data.email || user.email,
           avatar_url: data.avatar_url,
           show_countdown: data.show_countdown ?? true,
-          exam_settings: data.exam_settings || {
-            kyotsu: { name: '共通テスト', date: '2026-01-17' },
-            todai: { name: '東大二次試験', date: '2026-02-25' }
-          }
+          exam_settings: examSettings
         });
       }
     } catch (error) {
