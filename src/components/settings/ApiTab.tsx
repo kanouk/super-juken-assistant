@@ -16,13 +16,13 @@ interface ApiTabProps {
 export const ApiTab = ({ apiKeys, updateSetting }: ApiTabProps) => {
   return (
     <Card className="shadow-lg border-2 border-gray-100 bg-white/80 backdrop-blur-sm">
-      <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-100">
-        <CardTitle className="flex items-center text-xl">
-          <Key className="h-6 w-6 mr-3 text-green-600" />
+      <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-100 p-4 lg:p-6">
+        <CardTitle className="flex items-center text-lg lg:text-xl">
+          <Key className="h-5 w-5 lg:h-6 lg:w-6 mr-2 lg:mr-3 text-green-600" />
           APIキー設定
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-6 space-y-6">
+      <CardContent className="p-4 lg:p-6 space-y-4 lg:space-y-6">
         <div>
           <Label htmlFor="openai-key" className="text-sm font-medium text-gray-700">
             OpenAI APIキー
@@ -33,7 +33,7 @@ export const ApiTab = ({ apiKeys, updateSetting }: ApiTabProps) => {
             value={apiKeys.openai}
             onChange={(e) => updateSetting('apiKeys.openai', e.target.value)}
             placeholder="sk-..."
-            className="mt-2 border-2 border-gray-200 focus:border-green-500"
+            className="mt-2 border-2 border-gray-200 focus:border-green-500 text-sm lg:text-base"
           />
         </div>
         <div>
@@ -46,7 +46,7 @@ export const ApiTab = ({ apiKeys, updateSetting }: ApiTabProps) => {
             value={apiKeys.google}
             onChange={(e) => updateSetting('apiKeys.google', e.target.value)}
             placeholder="AI..."
-            className="mt-2 border-2 border-gray-200 focus:border-green-500"
+            className="mt-2 border-2 border-gray-200 focus:border-green-500 text-sm lg:text-base"
           />
         </div>
         <div>
@@ -59,7 +59,7 @@ export const ApiTab = ({ apiKeys, updateSetting }: ApiTabProps) => {
             value={apiKeys.anthropic}
             onChange={(e) => updateSetting('apiKeys.anthropic', e.target.value)}
             placeholder="sk-ant-..."
-            className="mt-2 border-2 border-gray-200 focus:border-green-500"
+            className="mt-2 border-2 border-gray-200 focus:border-green-500 text-sm lg:text-base"
           />
         </div>
       </CardContent>

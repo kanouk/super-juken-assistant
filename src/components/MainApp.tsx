@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import ChatScreen from './ChatScreen';
@@ -7,14 +8,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useChatStats } from '@/hooks/useChatStats';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { User } from '@supabase/supabase-js';
 
 const MainApp = () => {
   const [selectedSubject, setSelectedSubject] = useState('math');
   const [currentView, setCurrentView] = useState<'chat' | 'settings' | 'profile'>('chat');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const getUser = async () => {
@@ -57,14 +61,23 @@ const MainApp = () => {
   const handleSubjectChange = (subject: string) => {
     setSelectedSubject(subject);
     setCurrentView('chat');
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleSettingsClick = () => {
     setCurrentView('settings');
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleProfileClick = () => {
     setCurrentView('profile');
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleBackToChat = () => {
@@ -93,32 +106,59 @@ const MainApp = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar
-        selectedSubject={selectedSubject}
-        onSubjectChange={handleSubjectChange}
-        onSettingsClick={handleSettingsClick}
-        onProfileClick={handleProfileClick}
-        onLogout={handleLogout}
-        dailyQuestions={dailyQuestions}
-        totalCost={totalCost}
-        understoodCount={understoodCount}
-        dailyCostProp={dailyCost}
-        isLoadingStats={isLoadingStats}
-      />
+    <div className="flex h-screen bg-gray-50 relative">
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       
-      <div className="flex-1">
+      {/* Sidebar */}
+      <div className={`
+        ${isMobile ? 'fixed inset-y-0 left-0 z-50' : 'relative'}
+        ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
+        transition-transform duration-300 ease-in-out
+        lg:translate-x-0 lg:static lg:inset-0
+      `}>
+        <Sidebar
+          selectedSubject={selectedSubject}
+          onSubjectChange={handleSubjectChange}
+          onSettingsClick={handleSettingsClick}
+          onProfileClick={handleProfileClick}
+          onLogout={handleLogout}
+          dailyQuestions={dailyQuestions}
+          totalCost={totalCost}
+          understoodCount={understoodCount}
+          dailyCostProp={dailyCost}
+          isLoadingStats={isLoadingStats}
+        />
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
         {currentView === 'chat' ? (
           <ChatScreen
             subject={selectedSubject}
             subjectName={subjectNames[selectedSubject]}
             currentModel="GPT-4o"
             userId={currentUser?.id}
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+            isMobile={isMobile}
           />
         ) : currentView === 'settings' ? (
-          <SettingsScreen onBack={handleBackToChat} />
+          <SettingsScreen 
+            onBack={handleBackToChat}
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+            isMobile={isMobile}
+          />
         ) : (
-          <ProfileScreen onBack={handleBackToChat} />
+          <ProfileScreen 
+            onBack={handleBackToChat}
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+            isMobile={isMobile}
+          />
         )}
       </div>
     </div>

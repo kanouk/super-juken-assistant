@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -168,17 +167,18 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 px-3 lg:px-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{subjectName}の履歴</CardTitle>
+          <CardTitle className="text-base lg:text-lg truncate">{subjectName}の履歴</CardTitle>
           <Button
             variant="outline"
             size="sm"
             onClick={() => onSelectConversation(null)}
-            className="gap-2"
+            className="gap-1 lg:gap-2 flex-shrink-0"
           >
             <Plus className="h-4 w-4" />
-            新規チャット
+            <span className="hidden sm:inline">新規チャット</span>
+            <span className="sm:hidden">新規</span>
           </Button>
         </div>
       </CardHeader>
@@ -191,11 +191,11 @@ const ConversationList: React.FC<ConversationListProps> = ({
         ) : conversations.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
             <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>まだ会話がありません</p>
-            <p className="text-sm">新規チャットを開始してください</p>
+            <p className="text-sm lg:text-base">まだ会話がありません</p>
+            <p className="text-xs lg:text-sm">新規チャットを開始してください</p>
           </div>
         ) : (
-          <ScrollArea className="h-96">
+          <ScrollArea className="h-64 lg:h-96">
             {conversations.map((conversation) => (
               <div
                 key={conversation.id}
@@ -207,11 +207,11 @@ const ConversationList: React.FC<ConversationListProps> = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     {editingId === conversation.id ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 lg:gap-2">
                         <Input
                           value={editingTitle}
                           onChange={(e) => setEditingTitle(e.target.value)}
-                          className="text-sm h-8"
+                          className="text-sm h-7 lg:h-8"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               handleSaveEdit(conversation.id);
@@ -225,7 +225,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 p-0"
+                          className="h-7 w-7 lg:h-8 lg:w-8 p-0 flex-shrink-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSaveEdit(conversation.id);
@@ -236,7 +236,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 p-0"
+                          className="h-7 w-7 lg:h-8 lg:w-8 p-0 flex-shrink-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleCancelEdit();
@@ -246,7 +246,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 lg:gap-2">
                         <h3 className="font-medium text-sm truncate flex-1">
                           {conversation.title}
                         </h3>

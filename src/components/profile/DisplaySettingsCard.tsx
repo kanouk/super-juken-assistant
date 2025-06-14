@@ -14,26 +14,26 @@ interface DisplaySettingsCardProps {
 const DisplaySettingsCard: React.FC<DisplaySettingsCardProps> = ({ showCountdown, onShowCountdownChange }) => {
   return (
     <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-      <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg">
-        <CardTitle className="flex items-center space-x-2">
-          <Settings2 className="h-5 w-5 text-green-600" />
+      <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg p-4 lg:p-6">
+        <CardTitle className="flex items-center space-x-2 text-lg lg:text-xl">
+          <Settings2 className="h-4 w-4 lg:h-5 lg:w-5 text-green-600" />
           <span>表示設定</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
+      <CardContent className="p-4 lg:p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1 flex-1 min-w-0">
             <Label className="text-sm font-medium text-gray-700">
               カウントダウン表示
             </Label>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs lg:text-sm text-gray-500">
               サイドバーに入試までのカウントダウンを表示します
             </p>
           </div>
           <Switch
             checked={showCountdown}
             onCheckedChange={onShowCountdownChange}
-            className="data-[state=checked]:bg-green-600"
+            className="data-[state=checked]:bg-green-600 flex-shrink-0"
           />
         </div>
       </CardContent>
