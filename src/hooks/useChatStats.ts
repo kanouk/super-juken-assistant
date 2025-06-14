@@ -19,8 +19,10 @@ export const useChatStats = (userId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // サブスクライブ用のチャンネル参照
+  // 現在のチャンネル名を追跡する
   const channelRef = useRef<any>(null);
+  const channelNameRef = useRef<string | null>(null);
+  const isSubscribedRef = useRef(false);
 
   const fetchStats = async () => {
     if (!userId) {
@@ -30,12 +32,13 @@ export const useChatStats = (userId: string | undefined) => {
     try {
       setError(null);
 
-      // conversations取得
       const { data: conversations, error: conversationsError } = await supabase
         .from('conversations')
         .select('id')
         .eq('user_id', userId);
+
       if (conversationsError) throw conversationsError;
+
       const conversationIds = conversations?.map(conv => conv.id) || [];
       if (conversationIds.length === 0) {
         setStats({
@@ -47,7 +50,7 @@ export const useChatStats = (userId: string | undefined) => {
         setIsLoading(false);
         return;
       }
-      // understood数取得
+
       const { count: understoodCount, error: understoodError } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
@@ -56,14 +59,12 @@ export const useChatStats = (userId: string | undefined) => {
         .in('conversation_id', conversationIds);
       if (understoodError) throw understoodError;
 
-      // コスト取得
       const { data: totalCostData, error: totalCostError } = await supabase
         .from('messages')
         .select('cost')
         .in('conversation_id', conversationIds);
       if (totalCostError) throw totalCostError;
 
-      // 今日分取得
       const today = new Date().toISOString().split('T')[0];
       const { data: todayData, error: todayError } = await supabase
         .from('messages')
@@ -91,36 +92,53 @@ export const useChatStats = (userId: string | undefined) => {
     }
   };
 
+  // 1. userIdが変わるたびfetch
   useEffect(() => {
     fetchStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
+  // 2. Realtime購読部分の厳密化
   useEffect(() => {
+    // userId無し時はクリーンアップ
     if (!userId) {
-      // ユーザーがいないときはチャンネル解除
       if (channelRef.current) {
         try {
-          channelRef.current.unsubscribe();
-        } catch (e) {}
+          channelRef.current.unsubscribe && channelRef.current.unsubscribe();
+        } catch (e) {
+          console.warn('unsubscribe error', e);
+        }
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
+        channelNameRef.current = null;
+        isSubscribedRef.current = false;
       }
       return;
     }
+    const channelName = 'chat-stats-changes-' + userId;
 
-    // 前のチャンネルのクリーンアップ
-    if (channelRef.current) {
-      try {
-        channelRef.current.unsubscribe();
-      } catch (e) {}
-      supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
+    // 既存チャンネル名と同じ場合はスキップ（二重購読ガード）
+    if (channelNameRef.current === channelName && channelRef.current && isSubscribedRef.current) {
+      console.debug('Already subscribed:', channelName);
+      return;
     }
 
-    // 正常に新しいチャンネルサブスクライブ
+    // 旧チャンネル解除・停止
+    if (channelRef.current) {
+      try {
+        channelRef.current.unsubscribe && channelRef.current.unsubscribe();
+      } catch (e) {
+        console.warn('unsubscribe error on switch', e);
+      }
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+      isSubscribedRef.current = false;
+      channelNameRef.current = null;
+    }
+
+    // 新チャンネル生成&購読
     const channel = supabase
-      .channel('chat-stats-changes-' + userId)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -133,23 +151,32 @@ export const useChatStats = (userId: string | undefined) => {
         }
       );
 
-    // subscribeがPromiseであればawaitする
-    let unsubscribed = false;
-    const subscribeResult = channel.subscribe((status: string) => {
-      if (status === 'SUBSCRIBED' && !unsubscribed) {
+    let cleaned = false;
+    // サブスクライブ
+    channel.subscribe((status: string) => {
+      if (cleaned) return;
+      if (status === 'SUBSCRIBED') {
         channelRef.current = channel;
+        channelNameRef.current = channelName;
+        isSubscribedRef.current = true;
+        console.debug('[useChatStats] SUBSCRIBED channel:', channelName);
       }
     });
 
-    // クリーンアップ関数: 必ずチャンネル解除を保証
+    // アンマウント時/依存変化時の確実なクリーンナップ
     return () => {
-      unsubscribed = true;
+      cleaned = true;
       if (channelRef.current) {
         try {
-          channelRef.current.unsubscribe();
-        } catch (e) {}
+          channelRef.current.unsubscribe && channelRef.current.unsubscribe();
+        } catch (e) {
+          console.warn('unsubscribe error during cleanup', e);
+        }
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
+        isSubscribedRef.current = false;
+        channelNameRef.current = null;
+        console.debug('[useChatStats] CLEANED:', channelName);
       }
     };
     // userId のみ依存
@@ -163,4 +190,3 @@ export const useChatStats = (userId: string | undefined) => {
     refetch: fetchStats,
   };
 };
-
