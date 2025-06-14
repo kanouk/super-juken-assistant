@@ -22,6 +22,23 @@ interface ChatScreenProps {
   isMobile: boolean;
 }
 
+const modelOptions = [
+  { label: "GPT-4.1 (2025-04-14)", value: "gpt-4.1-2025-04-14" },
+  { label: "O3 (2025-04-16)", value: "o3-2025-04-16" },
+  { label: "O4 Mini (2025-04-16)", value: "o4-mini-2025-04-16" },
+  { label: "GPT-4o（旧モデル）", value: "gpt-4o" },
+  { label: "Gemini 2.5 Pro", value: "gemini-2.5-pro" },
+  { label: "Gemini 1.5 Pro", value: "gemini-1.5-pro" },
+  { label: "Gemini 1.5 Flash", value: "gemini-1.5-flash" },
+  { label: "Sonnet 4 (2025-05-14)", value: "claude-sonnet-4-20250514" },
+  { label: "Opus 4 (2025-05-14)", value: "claude-opus-4-20250514" },
+  { label: "3.5 Haiku (2024-10-22)", value: "claude-3-5-haiku-20241022" },
+  { label: "3.7 Sonnet (2025-02-19)", value: "claude-3-7-sonnet-20250219" },
+  { label: "3 Sonnet（旧モデル）", value: "claude-3-sonnet" },
+  { label: "3 Haiku（旧モデル）", value: "claude-3-haiku" },
+  { label: "3 Opus（旧モデル）", value: "claude-3-opus" },
+];
+
 const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChange, onToggleSidebar, isMobile }: ChatScreenProps) => {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -308,6 +325,8 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
         <ChatHeader 
           subjectName={`${subjectName} - 会話履歴`}
           currentModel={currentModel}
+          modelOptions={modelOptions}
+          currentSubjectId={subject}
           onBackToList={handleBackToChat}
           showBackButton={true}
           onToggleSidebar={onToggleSidebar}
@@ -330,6 +349,8 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId, onSubjectChang
       <ChatHeader 
         subjectName={subjectName}
         currentModel={currentModel}
+        modelOptions={modelOptions}
+        currentSubjectId={subject}
         onNewChat={handleNewChat}
         onShowHistory={handleShowHistory}
         showNewChatButton={messages.length > 0}
