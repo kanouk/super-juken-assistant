@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Plus, Edit2, Check, X } from 'lucide-react';
+import { MessageSquare, Plus, Edit2, Check, X, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
 
@@ -38,6 +38,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -114,6 +115,44 @@ const ConversationList: React.FC<ConversationListProps> = ({
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditingTitle('');
+  };
+
+  const handleDeleteConversation = async (conversationId: string) => {
+    setDeletingId(conversationId);
+    
+    try {
+      // まず関連するメッセージを削除
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', conversationId);
+
+      if (messagesError) throw messagesError;
+
+      // 次に会話を削除
+      const { error: conversationError } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', conversationId);
+
+      if (conversationError) throw conversationError;
+
+      // ローカル状態を更新
+      setConversations(prev => prev.filter(conv => conv.id !== conversationId));
+      
+      toast({
+        title: "削除完了",
+        description: "会話が正常に削除されました。",
+      });
+    } catch (error: any) {
+      toast({
+        title: "エラー",
+        description: "会話の削除に失敗しました: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -211,17 +250,33 @@ const ConversationList: React.FC<ConversationListProps> = ({
                         <h3 className="font-medium text-sm truncate flex-1">
                           {conversation.title}
                         </h3>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:opacity-100 shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleStartEdit(conversation);
-                          }}
-                        >
-                          <Edit2 className="h-3 w-3" />
-                        </Button>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover:opacity-100 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartEdit(conversation);
+                            }}
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm('この会話を削除してもよろしいですか？')) {
+                                handleDeleteConversation(conversation.id);
+                              }
+                            }}
+                            disabled={deletingId === conversation.id}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     )}
                     <p className="text-xs text-gray-500 mt-1">

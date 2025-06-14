@@ -26,7 +26,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showConversationList, setShowConversationList] = useState(true);
+  const [showConversationList, setShowConversationList] = useState(false); // Changed to false
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -48,7 +48,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     setLatestAIMessageIdForActions(null);
     setCurrentConversationId(null);
     setMessages([]);
-    setShowConversationList(true);
+    setShowConversationList(false); // Changed to false
   }, [subject]);
 
   useEffect(() => {
@@ -57,24 +57,13 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     }
   }, [messages]);
 
-  // 新規チャット開始時のタイトル生成
-  const generateConversationTitle = (firstMessage: string, subject: string): string => {
-    const subjectNames: { [key: string]: string } = {
-      math: '数学',
-      chemistry: '化学',
-      biology: '生物',
-      english: '英語',
-      japanese: '国語',
-      geography: '地理',
-      information: '情報',
-      other: 'その他'
-    };
-    
-    const truncatedMessage = firstMessage.length > 20 
-      ? firstMessage.substring(0, 20) + '...' 
+  // 新規チャット開始時のタイトル生成 - 教科名を削除
+  const generateConversationTitle = (firstMessage: string): string => {
+    const truncatedMessage = firstMessage.length > 30 
+      ? firstMessage.substring(0, 30) + '...' 
       : firstMessage;
     
-    return `${subjectNames[subject] || 'その他'}: ${truncatedMessage}`;
+    return truncatedMessage;
   };
 
   const handleSelectConversation = async (conversationId: string | null) => {
@@ -200,7 +189,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
       
       // 新規チャットの場合、会話を作成
       if (!conversationId) {
-        const conversationTitle = generateConversationTitle(submittingText, subject);
+        const conversationTitle = generateConversationTitle(submittingText);
         const { data: newConversation, error: newConvError } = await supabase
           .from('conversations')
           .insert({ 
@@ -453,8 +442,9 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
         currentModel={currentModel}
         onBackToList={() => setShowConversationList(true)}
         onNewChat={() => handleSelectConversation(null)}
-        showBackButton={true}
-        showNewChatButton={currentConversationId !== null}
+        showBackButton={false} // Changed to false since we start with new chat
+        showNewChatButton={false} // Changed to false since we start with new chat
+        showHistoryButton={true} // Add history button
       />
 
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">

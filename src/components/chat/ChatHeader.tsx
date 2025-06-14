@@ -1,15 +1,17 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, History } from 'lucide-react';
 
 interface ChatHeaderProps {
   subjectName: string;
   currentModel: string;
   onBackToList?: () => void;
   onNewChat?: () => void;
+  onShowHistory?: () => void;
   showBackButton?: boolean;
   showNewChatButton?: boolean;
+  showHistoryButton?: boolean;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({ 
@@ -17,8 +19,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   currentModel, 
   onBackToList,
   onNewChat,
+  onShowHistory,
   showBackButton = false,
-  showNewChatButton = false
+  showNewChatButton = false,
+  showHistoryButton = false
 }) => {
   return (
     <div className="bg-white border-b border-gray-200 p-4">
@@ -41,6 +45,17 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {showHistoryButton && onShowHistory && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onShowHistory}
+              className="gap-2"
+            >
+              <History className="h-4 w-4" />
+              履歴
+            </Button>
+          )}
           {showNewChatButton && onNewChat && (
             <Button
               variant="outline"
