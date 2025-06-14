@@ -27,6 +27,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
   const [isLoading, setIsLoading] = useState(false);
   // fileInputRef is now inside MessageInput.tsx
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const [latestAIMessageIdForActions, setLatestAIMessageIdForActions] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -36,6 +37,14 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Clean up input when subject changes
+  useEffect(() => {
+    setInputText('');
+    setSelectedImage(null);
+    setImagePreview(null);
+    setLatestAIMessageIdForActions(null);
+  }, [subject]);
 
   useEffect(() => {
     scrollToBottom();
@@ -72,7 +81,6 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
       if (!userId || !subject) return;
       setIsLoading(true);
       try {
-        // ... keep existing code (fetchMessages logic: find/create conversation, fetch messages)
         // 1. Find or create conversation
         let { data: conversation, error: convError } = await supabase
           .from('conversations')
@@ -173,7 +181,6 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     setAllMessages(prev => ({ ...prev, [subject]: updatedMessagesForSubject }));
 
     try {
-      // ... keep existing code (handleSubmit logic: 1. Find or create conversation, 2. Upload image if exists, 3. Save user message to DB, 4. Call AI function, 5. Save AI message to DB)
       // 1. Find or create conversation
       let { data: conversation, error: convError } = await supabase
         .from('conversations')
@@ -367,10 +374,21 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     const messageIdToUpdate = latestAIMessageIdForActions;
     setLatestAIMessageIdForActions(null);
 
-    // Store current scroll position
-    const scrollContainer = document.querySelector('.overflow-y-auto');
-    const currentScrollTop = scrollContainer?.scrollTop || 0;
+    // Preserve scroll position by storing the exact element and its position
+    const scrollContainer = scrollContainerRef.current;
+    let scrollTarget: Element | null = null;
+    let offsetFromTop = 0;
 
+    if (scrollContainer) {
+      // Find the message element we want to keep in view
+      const messageElement = scrollContainer.querySelector(`[data-message-id="${messageIdToUpdate}"]`);
+      if (messageElement) {
+        scrollTarget = messageElement;
+        offsetFromTop = messageElement.getBoundingClientRect().top - scrollContainer.getBoundingClientRect().top;
+      }
+    }
+
+    // Update the message state optimistically
     setAllMessages(prev => {
       const updatedSubjectMessages = (prev[subject] || []).map(msg =>
         msg.db_id === messageIdToUpdate ? { ...msg, is_understood: true } : msg
@@ -405,12 +423,14 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
           variant: "destructive",
         });
       } else {
-        // Restore scroll position after a short delay to ensure UI has updated
-        setTimeout(() => {
-          if (scrollContainer) {
-            scrollContainer.scrollTop = currentScrollTop;
+        // Restore scroll position after DOM updates
+        requestAnimationFrame(() => {
+          if (scrollContainer && scrollTarget) {
+            const newTop = scrollTarget.getBoundingClientRect().top - scrollContainer.getBoundingClientRect().top;
+            const scrollAdjustment = newTop - offsetFromTop;
+            scrollContainer.scrollTop += scrollAdjustment;
           }
-        }, 100);
+        });
       }
     } catch (error: any) {
       console.error('Failed to mark message as understood:', error);
@@ -467,7 +487,7 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
       <ConfettiComponent trigger={showConfetti} onComplete={() => setShowConfetti(false)} />
       <ChatHeader subjectName={subjectName} currentModel={currentModel} />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && !isLoading ? (
           <ChatEmptyState subjectName={subjectName} />
         ) : (

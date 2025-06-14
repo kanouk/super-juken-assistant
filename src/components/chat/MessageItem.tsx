@@ -28,7 +28,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   onUnderstood,
 }) => {
   return (
-    <div key={message.id}>
+    <div key={message.id} data-message-id={message.db_id || message.id}>
       <div
         className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} ${
           message.role === 'assistant' ? 'animate-fade-in' : ''
@@ -61,7 +61,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 />
               )}
               {message.role === 'user' ? (
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <div className="text-sm whitespace-pre-wrap prose prose-sm max-w-none prose-headings:text-white prose-strong:text-white prose-ul:text-white prose-ol:text-white prose-li:text-white">
+                  <LaTeXRenderer content={message.content} className="text-sm" />
+                </div>
               ) : (
                 <TypewriterEffect
                   content={message.content}
@@ -69,7 +71,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   speed={20}
                   onComplete={() => onTypewriterComplete(message.db_id)}
                   renderer={(content) => (
-                    <LaTeXRenderer content={content} className="text-base" />
+                    <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700">
+                      <LaTeXRenderer content={content} className="text-base" />
+                    </div>
                   )}
                 />
               )}
