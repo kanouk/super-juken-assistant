@@ -381,19 +381,9 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
     const messageIdToUpdate = latestAIMessageIdForActions;
     setLatestAIMessageIdForActions(null);
 
-    // Preserve scroll position by storing the exact element and its position
+    // 現在のスクロール位置を保存
     const scrollContainer = scrollContainerRef.current;
-    let scrollTarget: Element | null = null;
-    let offsetFromTop = 0;
-
-    if (scrollContainer) {
-      // Find the message element we want to keep in view
-      const messageElement = scrollContainer.querySelector(`[data-message-id="${messageIdToUpdate}"]`);
-      if (messageElement) {
-        scrollTarget = messageElement;
-        offsetFromTop = messageElement.getBoundingClientRect().top - scrollContainer.getBoundingClientRect().top;
-      }
-    }
+    const currentScrollTop = scrollContainer?.scrollTop || 0;
 
     // Update the message state optimistically
     setAllMessages(prev => {
@@ -430,14 +420,12 @@ const ChatScreen = ({ subject, subjectName, currentModel, userId }: ChatScreenPr
           variant: "destructive",
         });
       } else {
-        // Restore scroll position after DOM updates
-        requestAnimationFrame(() => {
-          if (scrollContainer && scrollTarget) {
-            const newTop = scrollTarget.getBoundingClientRect().top - scrollContainer.getBoundingClientRect().top;
-            const scrollAdjustment = newTop - offsetFromTop;
-            scrollContainer.scrollTop += scrollAdjustment;
+        // スクロール位置を元に戻す
+        setTimeout(() => {
+          if (scrollContainer) {
+            scrollContainer.scrollTop = currentScrollTop;
           }
-        });
+        }, 100);
       }
     } catch (error: any) {
       console.error('Failed to mark message as understood:', error);
