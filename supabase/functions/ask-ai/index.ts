@@ -205,7 +205,14 @@ serve(async (req) => {
     else if (provider === "google") {
       if (!apiKeys.google) throw new Error("Google Gemini API key not configured");
 
-      // モデル名を使う
+      // モデル名自動変換: v1beta対応のみ許可
+      let geminiModel = selectedModel;
+      // 利用不可能モデルの場合は1.5-proに自動フォールバック
+      const supportedModels = ["gemini-1.5-pro", "gemini-1.5-flash"];
+      if (!supportedModels.includes(geminiModel)) {
+        geminiModel = "gemini-1.5-pro";
+      }
+
       // system prompt: Geminiは contextPartsとして扱う
       const contentParts: any[] = [];
       if (systemMessage) contentParts.push({ text: systemMessage });
@@ -217,7 +224,7 @@ serve(async (req) => {
       contentParts.push({ text: message });
 
       // リクエスト形式
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKeys.google}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKeys.google}`;
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -240,7 +247,7 @@ serve(async (req) => {
       const outputTokens = aiResponse.length / 4;
       cost = (inputTokens * 0.000008) + (outputTokens * 0.000032);
 
-      usedModel = selectedModel;
+      usedModel = geminiModel;
     }
     // ---- その他: 未知プロバイダー ----
     else {
