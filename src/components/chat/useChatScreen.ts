@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useChatStats } from "@/hooks/useChatStats";
-import { allModelOptions } from './constants';
 import { useConversations } from './useConversations';
 import { useMessages } from './useMessages';
 import { ImageData } from './types';
@@ -69,15 +68,6 @@ export function useChatScreen(props: UseChatScreenProps) {
   // Chat stats for sidebar
   const { understoodCount, dailyCost, totalCost, dailyQuestions, isLoading: isLoadingStats, error: chatStatsError, refetch: refetchChatStats } = useChatStats(userId);
 
-  // Model filtering
-  const selectedModelsObj = availableModels;
-  const filteredModelOptions = allModelOptions.filter(opt => (
-    (!selectedModelsObj?.openai || opt.value === selectedModelsObj.openai.value) ||
-    (!selectedModelsObj?.google || opt.value === selectedModelsObj.google.value) ||
-    (!selectedModelsObj?.anthropic || opt.value === selectedModelsObj.anthropic.value)
-  ));
-  const displayModelOptions = filteredModelOptions.length > 0 ? filteredModelOptions : allModelOptions;
-
   useEffect(() => {
     setMessages([]);
     setSelectedConversationId(null);
@@ -124,7 +114,6 @@ export function useChatScreen(props: UseChatScreenProps) {
       showConversations,
       selectedConversationId,
       selectedModel,
-      displayModelOptions,
       conversations,
       understoodCount,
       dailyCost,

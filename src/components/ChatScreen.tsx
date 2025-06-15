@@ -18,14 +18,12 @@ const ChatScreen = (props: ChatScreenProps) => {
       showConversations,
       selectedConversationId,
       selectedModel,
-      displayModelOptions,
       conversations,
       messagesEndRef,
       conversationUnderstood,
     },
     handlers: {
       setSelectedImages,
-      handleModelChange,
       handleSendMessage,
       handleUnderstood,
       handleNewChat,
@@ -44,8 +42,6 @@ const ChatScreen = (props: ChatScreenProps) => {
         subject={subject}
         subjectName={subjectName}
         currentModel={selectedModel}
-        modelOptions={displayModelOptions}
-        onModelChange={handleModelChange}
         onBackToList={handleBackToChat}
         onToggleSidebar={onToggleSidebar}
         isMobile={props.isMobile}
@@ -62,7 +58,6 @@ const ChatScreen = (props: ChatScreenProps) => {
       subject={subject}
       subjectName={subjectName}
       currentModel={selectedModel}
-      modelOptions={displayModelOptions}
       messages={messages}
       isLoading={isLoading}
       selectedImages={selectedImages}

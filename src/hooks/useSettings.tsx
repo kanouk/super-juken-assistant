@@ -132,14 +132,17 @@ export const useSettings = () => {
         .single();
 
       if (settingsData) {
+        // Since selected_model doesn't exist in the database yet, we'll use the default
+        const selectedModel = typeof (settingsData as any).selected_model === 'string' 
+          ? (settingsData as any).selected_model 
+          : 'gpt-4o';
+
         setSettings(prev => ({
           ...prev,
           passcode: profileData?.passcode || prev.passcode,
           apiKeys: isApiKeys(settingsData.api_keys) ? settingsData.api_keys : prev.apiKeys,
           models: isModels(settingsData.models) ? settingsData.models : prev.models,
-          selectedModel: typeof settingsData.selected_model === 'string' 
-            ? settingsData.selected_model 
-            : prev.selectedModel,
+          selectedModel: selectedModel,
           commonInstruction: typeof settingsData.common_instruction === 'string' 
             ? settingsData.common_instruction 
             : prev.commonInstruction,
@@ -171,13 +174,12 @@ export const useSettings = () => {
 
       if (profileError) throw profileError;
 
-      // 設定を設定テーブルに保存
+      // 設定を設定テーブルに保存 (selected_model is not in the database schema, so we skip it for now)
       const { error: settingsError } = await supabase
         .from('settings')
         .update({
           api_keys: newSettings.apiKeys,
           models: newSettings.models,
-          selected_model: newSettings.selectedModel,
           common_instruction: newSettings.commonInstruction,
           subject_instructions: newSettings.subjectInstructions,
           subject_configs: newSettings.subjectConfigs as any
