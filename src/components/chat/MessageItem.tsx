@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -114,38 +115,30 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
               {/* AIメッセージは黒基調 */}
               <LaTeXRenderer content={message.content} colorScheme="assistant" />
-              
-              {/* コピー＆コスト・モデル表示 */}
-              <div className="absolute right-2 bottom-2 flex items-center gap-2 mb-2">
-                <button
-                  type="button"
-                  aria-label="回答をコピー"
-                  onClick={handleCopy}
-                  className="p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600"
-                  tabIndex={0}
-                  style={{ fontSize: 0 }}
-                >
-                  <Copy className="w-4 h-4" />
-                </button>
-                {/* コストを薄く表示 */}
-                {typeof message.cost === "number" && (
-                  <span className="text-xs text-gray-400 ml-1">
-                    ¥{message.cost.toFixed(4)}
-                  </span>
-                )}
-                {/* コストとモデル表示（薄グレー） */}
-                {(message.cost !== undefined || message.model) && (
-                  <span className="text-xs text-gray-400 ml-1 select-none">
-                    {message.model && (
-                      <span>{message.model}</span>
-                    )}
-                    {message.cost !== undefined && (
-                      <span className="ml-1">¥{Number(message.cost).toFixed(4)}</span>
-                    )}
-                  </span>
-                )}
-              </div>
 
+              {/* モデル名・コスト・コピーボタンを横並びで下部右寄せ表示 */}
+              {(message.model || message.cost !== undefined) && (
+                <div className="flex items-center justify-end gap-2 mt-5">
+                  {message.model && (
+                    <span className="text-xs text-gray-400">{message.model}</span>
+                  )}
+                  {message.cost !== undefined && (
+                    <span className="text-xs text-gray-400 ml-1">¥{Number(message.cost).toFixed(4)}</span>
+                  )}
+                  <button
+                    type="button"
+                    aria-label="回答をコピー"
+                    onClick={handleCopy}
+                    className="p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600 ml-4"
+                    tabIndex={0}
+                    style={{ fontSize: 0 }}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* 旧コスト・モデル表示（薄グレー/カード下部）、今後不要なら削除可 */}
               {(message.cost || message.model) && (
                 <div className="mt-6 pt-4 border-t border-gray-100">
                   <div className="flex items-center justify-between text-sm text-gray-500">
