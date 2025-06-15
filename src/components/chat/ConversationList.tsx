@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -6,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Plus, Edit2, Check, X, Trash2 } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { MessageSquare, Plus, Edit2, Check, X, Trash2, CheckCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
 
@@ -16,6 +18,7 @@ interface Conversation {
   created_at: string;
   subject: string;
   user_id: string;
+  is_understood?: boolean;
 }
 
 interface ConversationListProps {
@@ -208,9 +211,17 @@ const ConversationList: React.FC<ConversationListProps> = ({
                         </div>
                       </div>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formatDate(conversation.created_at)}
-                    </p>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-xs text-gray-500">
+                        {formatDate(conversation.created_at)}
+                      </p>
+                      {conversation.is_understood && (
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-300 text-xs px-2 py-0.5 flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          理解済み
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
