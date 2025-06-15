@@ -20,6 +20,7 @@ interface MessageItemProps {
   subjectId?: string;
   isUnderstood?: boolean;
   disabled?: boolean;
+  currentModel?: string;
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({
@@ -32,6 +33,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   subjectId = 'other',
   isUnderstood,
   disabled = false,
+  currentModel,
 }) => {
   const { profile } = useProfile();
   const { toast } = useToast();
@@ -119,7 +121,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
               <div className="flex w-full">
                 <MessageItemFooter
                   content={message.content}
-                  model={message.model}
+                  model={message.model ?? currentModel}
                   cost={message.cost}
                   onCopyToClipboard={onCopyToClipboard}
                 />
