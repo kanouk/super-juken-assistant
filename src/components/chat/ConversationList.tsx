@@ -108,7 +108,6 @@ const ConversationList: React.FC<ConversationListProps> = ({
         </div>
       </CardHeader>
       <Separator />
-      {/* スクロールも高さも flex-1/h-full で統一し高さの伝搬を保証 */}
       <CardContent className="p-0 flex-1 flex flex-col min-h-0">
         {conversations.length === 0 ? (
           <div className="p-4 text-center text-gray-500 flex-1 flex flex-col justify-center">
@@ -117,26 +116,28 @@ const ConversationList: React.FC<ConversationListProps> = ({
             <p className="text-xs lg:text-sm">新規チャットを開始してください</p>
           </div>
         ) : (
-          <ScrollArea className="flex-1 h-full min-h-0">
-            <div className="flex flex-col w-full h-full min-h-0">
-              {conversations.map((conversation) => (
-                <ConversationListItem
-                  key={conversation.id}
-                  conversation={conversation}
-                  isEditing={editingId === conversation.id}
-                  isDeleting={deletingId === conversation.id}
-                  editingTitle={editingTitle}
-                  onStartEdit={handleStartEdit}
-                  onSaveEdit={handleSaveEdit}
-                  onCancelEdit={handleCancelEdit}
-                  onSetEditingTitle={setEditingTitle}
-                  onDelete={handleDeleteConversation}
-                  onSelect={onSelectConversation}
-                  formatDate={formatDate}
-                />
-              ))}
-            </div>
-          </ScrollArea>
+          <div className="flex-1 min-h-0 flex flex-col">
+            <ScrollArea className="flex-1 min-h-0 h-full w-full">
+              <div className="flex flex-col w-full min-h-0">
+                {conversations.map((conversation) => (
+                  <ConversationListItem
+                    key={conversation.id}
+                    conversation={conversation}
+                    isEditing={editingId === conversation.id}
+                    isDeleting={deletingId === conversation.id}
+                    editingTitle={editingTitle}
+                    onStartEdit={handleStartEdit}
+                    onSaveEdit={handleSaveEdit}
+                    onCancelEdit={handleCancelEdit}
+                    onSetEditingTitle={setEditingTitle}
+                    onDelete={handleDeleteConversation}
+                    onSelect={onSelectConversation}
+                    formatDate={formatDate}
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
         )}
       </CardContent>
     </Card>
