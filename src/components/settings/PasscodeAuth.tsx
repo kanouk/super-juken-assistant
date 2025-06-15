@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { InputOTP, InputOTPGroup } from "@/components/ui/input-otp";
 import { Lock } from "lucide-react";
 
 interface PasscodeAuthProps {
@@ -15,19 +15,16 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
   const [isShaking, setIsShaking] = useState(false);
 
   const otpGroupRef = useRef<HTMLDivElement>(null);
-  // 最新input要素へのref
+  // input refs
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // 表示時に先頭inputへ自動フォーカス
+  // 初回表示時に先頭inputへ自動フォーカス
   useEffect(() => {
-    // setTimeout必要: 初回マウント後にinputが描画されるため
     const timer = setTimeout(() => {
-      // div配下のinput全てを取得
       if (otpGroupRef.current) {
         const inputField = otpGroupRef.current.querySelector('input');
         inputField?.focus();
       }
-      // 必ず先頭input要素にrefで直接focus
       if (inputRefs.current[0]) {
         inputRefs.current[0].focus();
       }
@@ -35,7 +32,7 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
     return () => clearTimeout(timer);
   }, []);
 
-  // 入力時のフォーカス制御＋バリデーション
+  // 入力＆バリデーション
   const handlePasscodeChange = useCallback((value: string) => {
     setPasscodeInput(value);
 
@@ -50,7 +47,6 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
         }
         setTimeout(() => {
           setIsShaking(false);
-          // 失敗時は必ず1文字目に戻す
           if (inputRefs.current[0]) {
             inputRefs.current[0].focus();
           }
@@ -59,11 +55,10 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
     }
   }, [expectedPasscode, onAuthenticated]);
 
-  // 個々のslotへrefをセット、Enterなどで最後以外なら次inputへ
+  // 1文字入力ごとに次inputへ移動
   const handleInput = (e: React.FormEvent<HTMLInputElement>, idx: number) => {
     const input = e.target as HTMLInputElement;
     if (input.value && idx < 5) {
-      // 1文字入力したら自動的に次のinputをfocus
       inputRefs.current[idx + 1]?.focus();
     }
   };
@@ -89,26 +84,34 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
               value={passcodeInput}
               onChange={handlePasscodeChange}
               key={passcodeInput.length === 0 ? Math.random() : "otp"}
-              // input要素にイベントを渡すためにrender prop活用
               render={({ slots }) => (
                 <InputOTPGroup ref={otpGroupRef} className="gap-2">
-                  {[0,1,2,3,4,5].map((index) => (
-                    <InputOTPSlot
+                  {slots.map((slot, index) => (
+                    <div
                       key={index}
-                      index={index}
-                      className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
-                      ref={el => inputRefs.current[index] = el as HTMLInputElement}
-                      // 入力時
-                      inputProps={{
-                        type: 'tel',
-                        pattern: '[0-9]*',
-                        inputMode: 'numeric',
-                        onInput: (e: React.FormEvent<HTMLInputElement>) => handleInput(e, index),
-                        tabIndex: 0, // tab周りも正常化
-                        maxLength: 1,
-                        autoFocus: index === 0 // 1個目だけautoFocus
-                      }}
-                    />
+                      className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg"
+                    >
+                      <input
+                        {...slot.inputProps}
+                        ref={el => inputRefs.current[index] = el}
+                        type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={1}
+                        autoFocus={index === 0}
+                        tabIndex={0}
+                        className="w-full h-full text-center bg-transparent focus:outline-none text-white text-2xl font-bold selection:bg-blue-100"
+                        onInput={e => handleInput(e, index)}
+                        aria-label={`パスコード桁${index + 1}`}
+                        autoComplete="one-time-code"
+                      />
+                      {/* カーソルなどslotの視覚情報は保持 */}
+                      {slot.hasFakeCaret && (
+                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                          <div className="h-4 w-px animate-caret-blink bg-white duration-1000" />
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </InputOTPGroup>
               )}
@@ -128,4 +131,3 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
     </div>
   );
 };
-
