@@ -92,6 +92,20 @@ type SupabaseSettingsRow = {
   mbti_instructions?: { [key: string]: string } | null; // Added here
 };
 
+// === Add the following utility ===
+const isStringRecord = (obj: any): obj is { [key: string]: string } => {
+  return (
+    obj &&
+    typeof obj === "object" &&
+    !Array.isArray(obj) &&
+    Object.values(obj).every((v) => typeof v === "string")
+  );
+};
+const normalizeMbtiInstructions = (maybe: any): { [key: string]: string } => {
+  if (isStringRecord(maybe)) return maybe;
+  return {};
+};
+
 export const useSettings = () => {
   const [settings, setSettings] = useState<Settings>({
     passcode: '999999',
@@ -136,7 +150,6 @@ export const useSettings = () => {
         setIsLoading(false);
         return;
       }
-
       // プロフィールからパスコードを取得
       const { data: profileData } = await supabase
         .from('profiles')
@@ -144,19 +157,17 @@ export const useSettings = () => {
         .eq('id', user.id)
         .single();
 
-      // 設定データを取得
       const { data: rawSettingsData } = await supabase
         .from('settings')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
 
-      // Type guard logic will refine below, so no need to cast to SupabaseSettingsRow here
       const settingsData = rawSettingsData;
 
       if (settingsData) {
-        const selectedProvider = typeof settingsData.selected_provider === 'string' 
-          ? settingsData.selected_provider 
+        const selectedProvider = typeof settingsData.selected_provider === 'string'
+          ? settingsData.selected_provider
           : 'openai';
 
         setSettings(prev => ({
@@ -165,18 +176,16 @@ export const useSettings = () => {
           apiKeys: isApiKeys(settingsData.api_keys) ? settingsData.api_keys : prev.apiKeys,
           models: isModels(settingsData.models) ? settingsData.models : prev.models,
           selectedProvider: selectedProvider,
-          commonInstruction: typeof settingsData.common_instruction === 'string' 
-            ? settingsData.common_instruction 
+          commonInstruction: typeof settingsData.common_instruction === 'string'
+            ? settingsData.common_instruction
             : prev.commonInstruction,
-          subjectInstructions: isSubjectInstructions(settingsData.subject_instructions) 
-            ? settingsData.subject_instructions 
+          subjectInstructions: isSubjectInstructions(settingsData.subject_instructions)
+            ? settingsData.subject_instructions
             : prev.subjectInstructions,
-          subjectConfigs: isSubjectConfigs(settingsData.subject_configs) 
-            ? settingsData.subject_configs 
+          subjectConfigs: isSubjectConfigs(settingsData.subject_configs)
+            ? settingsData.subject_configs
             : prev.subjectConfigs,
-          mbtiInstructions: (typeof settingsData.mbti_instructions === 'object' && settingsData.mbti_instructions !== null)
-            ? settingsData.mbti_instructions
-            : {},
+          mbtiInstructions: normalizeMbtiInstructions(settingsData.mbti_instructions),
         }));
       }
     } catch (error) {
