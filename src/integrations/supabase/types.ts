@@ -218,6 +218,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      check_super_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_super_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
