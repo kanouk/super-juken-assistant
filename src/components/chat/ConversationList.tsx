@@ -116,28 +116,27 @@ const ConversationList: React.FC<ConversationListProps> = ({
             <p className="text-xs lg:text-sm">新規チャットを開始してください</p>
           </div>
         ) : (
-          <div className="flex-1 min-h-0 flex flex-col">
-            <ScrollArea className="flex-1 min-h-0 h-full w-full">
-              <div className="flex flex-col w-full min-h-0">
-                {conversations.map((conversation) => (
-                  <ConversationListItem
-                    key={conversation.id}
-                    conversation={conversation}
-                    isEditing={editingId === conversation.id}
-                    isDeleting={deletingId === conversation.id}
-                    editingTitle={editingTitle}
-                    onStartEdit={handleStartEdit}
-                    onSaveEdit={handleSaveEdit}
-                    onCancelEdit={handleCancelEdit}
-                    onSetEditingTitle={setEditingTitle}
-                    onDelete={handleDeleteConversation}
-                    onSelect={onSelectConversation}
-                    formatDate={formatDate}
-                  />
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
+          // ここでScrollArea→divラップの二重構造をやめ、ScrollArea直下にリストを描画
+          <ScrollArea className="flex-1 min-h-0 h-full w-full">
+            <div className="flex flex-col w-full min-h-0">
+              {conversations.map((conversation) => (
+                <ConversationListItem
+                  key={conversation.id}
+                  conversation={conversation}
+                  isEditing={editingId === conversation.id}
+                  isDeleting={deletingId === conversation.id}
+                  editingTitle={editingTitle}
+                  onStartEdit={handleStartEdit}
+                  onSaveEdit={handleSaveEdit}
+                  onCancelEdit={handleCancelEdit}
+                  onSetEditingTitle={setEditingTitle}
+                  onDelete={handleDeleteConversation}
+                  onSelect={onSelectConversation}
+                  formatDate={formatDate}
+                />
+              ))}
+            </div>
+          </ScrollArea>
         )}
       </CardContent>
     </Card>
@@ -145,3 +144,4 @@ const ConversationList: React.FC<ConversationListProps> = ({
 };
 
 export default ConversationList;
+
