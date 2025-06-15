@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -102,7 +101,6 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 {/* AI bot icon省略 */}
               </AvatarFallback>
             </Avatar>
-
             <div className="flex-1 min-w-0 relative">
               {message.image_url && (
                 <div className="mb-4">
@@ -116,17 +114,32 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
               {/* AIメッセージは黒基調 */}
               <LaTeXRenderer content={message.content} colorScheme="assistant" />
-              {/* コピーアイコンを右下へ小さく重ねて配置し、回答との間に余白を追加 */}
-              <button
-                type="button"
-                aria-label="回答をコピー"
-                onClick={handleCopy}
-                className="absolute right-2 bottom-2 p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600 mb-2"
-                tabIndex={0}
-                style={{ fontSize: 0 }}
-              >
-                <Copy className="w-4 h-4" />
-              </button>
+              
+              {/* コピー＆コスト・モデル表示 */}
+              <div className="absolute right-2 bottom-2 flex items-center gap-2 mb-2">
+                <button
+                  type="button"
+                  aria-label="回答をコピー"
+                  onClick={handleCopy}
+                  className="p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600"
+                  tabIndex={0}
+                  style={{ fontSize: 0 }}
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+                {/* コストとモデル表示（薄グレー） */}
+                {(message.cost !== undefined || message.model) && (
+                  <span className="text-xs text-gray-400 ml-1 select-none">
+                    {message.model && (
+                      <span>{message.model}</span>
+                    )}
+                    {message.cost !== undefined && (
+                      <span className="ml-1">¥{Number(message.cost).toFixed(4)}</span>
+                    )}
+                  </span>
+                )}
+              </div>
+
               {(message.cost || message.model) && (
                 <div className="mt-6 pt-4 border-t border-gray-100">
                   <div className="flex items-center justify-between text-sm text-gray-500">
@@ -168,4 +181,3 @@ const MessageItem: React.FC<MessageItemProps> = ({
 };
 
 export default MessageItem;
-

@@ -134,23 +134,32 @@ export function useMessages({
 
       if (error) throw error;
 
+      // cost, model取得
+      const aiCost = typeof data.cost === "number" ? data.cost : 0;
+      const aiModel = data.model || "";
+
       const aiMessage: MessageType = {
         id: (Date.now() + 1).toString(),
         content: data.response,
         isUser: false,
         timestamp: new Date(),
         isUnderstood: false,
+        cost: aiCost,
+        model: aiModel,
       };
 
       setMessages(prev => [...prev, aiMessage]);
 
+      // DBへcost, modelも一緒に保存（assistant）
       const { data: aiMessageData, error: aiMessageError } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
           content: data.response,
           role: 'assistant',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          cost: aiCost,
+          model: aiModel,
         })
         .select()
         .single();
@@ -160,7 +169,7 @@ export function useMessages({
       setMessages(prev => 
         prev.map(msg => 
           msg.id === aiMessage.id 
-            ? { ...msg, id: aiMessageData.id.toString() }
+            ? { ...msg, id: aiMessageData.id.toString(), cost: aiCost, model: aiModel }
             : msg
         )
       );
