@@ -1,4 +1,3 @@
-
 import React from "react";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
@@ -52,7 +51,6 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
 }) => {
   // モバイル下部固定入力欄のために高さ分余白を確保
   const inputBarHeight = 98; // Input部分 + padding想定。微調整可
-  const isMobile = isMobile || false;
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-white">
