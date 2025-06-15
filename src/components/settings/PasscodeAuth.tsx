@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -70,14 +69,12 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
               containerClassName=""
               render={({ slots }) => (
                 <InputOTPGroup ref={otpGroupRef} className="gap-2">
-                  {slots && slots.map((slot, index) => (
-                    slot ? (
-                      <InputOTPSlot
-                        key={index}
-                        index={index}
-                        className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold"
-                      />
-                    ) : null
+                  {slots.map((_, index) => (
+                    <InputOTPSlot
+                      key={index}
+                      index={index}
+                      className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold"
+                    />
                   ))}
                 </InputOTPGroup>
               )}
