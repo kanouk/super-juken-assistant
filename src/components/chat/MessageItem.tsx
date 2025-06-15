@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -116,9 +115,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
               {/* AIメッセージは黒基調 */}
               <LaTeXRenderer content={message.content} colorScheme="assistant" />
 
-              {/* モデル名・コスト・コピー：どちらか一方でもあれば表示。右下絶対配置で重なりなし */}
+              {/* モデル名・コスト・コピー：常に（モデル/コストある場合）右下に絶対配置、十分に離して */}
               {(message.model || message.cost !== undefined) && (
-                <div className="absolute bottom-4 right-5 flex items-center gap-3 z-10">
+                <div className="absolute right-5 bottom-4 flex items-center gap-4 z-10 bg-white/80 px-3 py-1 rounded-lg shadow-sm">
                   {message.model && (
                     <span className="text-xs text-gray-400">{message.model}</span>
                   )}
@@ -129,7 +128,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                     type="button"
                     aria-label="回答をコピー"
                     onClick={handleCopy}
-                    className="p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600 ml-3"
+                    className="ml-6 p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600"
                     tabIndex={0}
                     style={{ fontSize: 0 }}
                   >
@@ -180,4 +179,3 @@ const MessageItem: React.FC<MessageItemProps> = ({
 };
 
 export default MessageItem;
-
