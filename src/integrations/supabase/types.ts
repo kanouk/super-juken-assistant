@@ -130,6 +130,7 @@ export type Database = {
           common_instruction: string | null
           id: string
           models: Json | null
+          selected_provider: string | null
           subject_configs: Json | null
           subject_instructions: Json | null
         }
@@ -138,6 +139,7 @@ export type Database = {
           common_instruction?: string | null
           id: string
           models?: Json | null
+          selected_provider?: string | null
           subject_configs?: Json | null
           subject_instructions?: Json | null
         }
@@ -146,6 +148,7 @@ export type Database = {
           common_instruction?: string | null
           id?: string
           models?: Json | null
+          selected_provider?: string | null
           subject_configs?: Json | null
           subject_instructions?: Json | null
         }
