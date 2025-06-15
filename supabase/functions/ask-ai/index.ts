@@ -7,90 +7,14 @@ import { requestOpenAI } from "./providers/openai.ts";
 import { requestAnthropic } from "./providers/anthropic.ts";
 import { requestGoogle } from "./providers/google.ts";
 import { getDisplayCost } from "./utils/cost.ts";
+import { safeParseJson, sanitize } from "./utils/parse.ts";
+import { getApiConfig } from "./utils/apiConfig.ts";
+import { buildSystemMessage } from "./utils/systemMessage.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// free_user_api_keys の型安全な取得
-function safeParseJson(str: any, fallback: any) {
-  if (typeof str === "object" && str !== null) return str;
-  if (typeof str !== "string") return fallback;
-  try {
-    const obj = JSON.parse(str);
-    if (typeof obj === "object" && obj !== null) return obj;
-    return fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function sanitize(str: any): string {
-  return typeof str === "string" ? str.trim() : "";
-}
-
-function getApiConfig(settings: any, adminSettingMap: any, userId: string) {
-  // 管理者API: 無料ユーザー用
-  let freeUserApiKeys = adminSettingMap['free_user_api_keys'] || {};
-  let freeUserModels = adminSettingMap['free_user_models'] || {};
-  
-  // (重要) free_user_api_keys が JSON文字列の場合に必ずオブジェクトへ
-  freeUserApiKeys = safeParseJson(freeUserApiKeys, {});
-  freeUserModels = safeParseJson(freeUserModels, {});
-
-  let apiKeys = settings?.api_keys || {};
-  let models = settings?.models || {};
-  let selectedProvider = settings?.selected_provider || "openai";
-  let usedFreeApi = false;
-
-  let anyUserKeySet =
-    (apiKeys.openai && apiKeys.openai.trim() !== "") ||
-    (apiKeys.google && apiKeys.google.trim() !== "") ||
-    (apiKeys.anthropic && apiKeys.anthropic.trim() !== "");
-
-  if (!anyUserKeySet) {
-    apiKeys = {
-      openai: freeUserApiKeys.openai || "",
-      google: freeUserApiKeys.google || "",
-      anthropic: freeUserApiKeys.anthropic || "",
-    };
-    models = {
-      openai: freeUserModels.openai || "gpt-4o",
-      google: freeUserModels.google || "gemini-1.5-pro",
-      anthropic: freeUserModels.anthropic || "claude-3-sonnet",
-    };
-    usedFreeApi = true;
-  }
-
-  // ログを詳細化
-  console.log("getApiConfig result", { 
-    apiKeys, 
-    models, 
-    selectedProvider, 
-    usedFreeApi, 
-    rawAdminSettingMap: adminSettingMap,
-    rawFreeUserApiKeys: adminSettingMap['free_user_api_keys']
-  });
-
-  return { apiKeys, models, selectedProvider, usedFreeApi };
-}
-
-function buildSystemMessage(settings: any, subject: string) {
-  let msg = settings?.common_instruction || 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。数学や化学の問題ではLaTeX記法を使って数式を表現してください。LaTeX記法を使用する際は、インライン数式は$...$、ブロック数式は$$...$$で囲んでください。';
-  let customInstruction = '';
-  if (Array.isArray(settings?.subject_configs)) {
-    const foundConfig = settings.subject_configs.find((conf: any) => conf.id === subject);
-    if (foundConfig && foundConfig.instruction && foundConfig.instruction.length > 0) {
-      customInstruction = foundConfig.instruction;
-    }
-  }
-  if (!customInstruction && settings?.subject_instructions && settings.subject_instructions[subject]) {
-    customInstruction = settings.subject_instructions[subject];
-  }
-  if (customInstruction) msg += '\n\n' + customInstruction;
-  return msg;
-}
 
 // --- メイン処理 ---
 serve(async (req) => {
