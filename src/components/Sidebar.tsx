@@ -14,6 +14,9 @@ import { useProfile } from "@/hooks/useProfile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSettings } from "@/hooks/useSettings";
+import SidebarStatItem from "./sidebar/SidebarStatItem";
+import SidebarSectionHeader from "./sidebar/SidebarSectionHeader";
+import SidebarSubjectButton from "./sidebar/SidebarSubjectButton";
 
 interface SidebarProps {
   selectedSubject: string;
@@ -105,16 +108,12 @@ const Sidebar = ({
     setOpenCollapsibles(prev => ({ ...prev, [id]: isOpen }));
   }, []);
   
-  const CollapsibleSectionHeader = ({ title, icon: IconComponent, iconBgColor, isOpen }: { title: string, icon: React.ElementType, iconBgColor: string, isOpen: boolean }) => (
-    <div className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-gray-100 transition-colors">
-      <div className="flex items-center space-x-2">
-        <div className={`p-1 ${iconBgColor} rounded-lg`}>
-          <IconComponent className="h-4 w-4 text-white" />
-        </div>
-        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
-      </div>
-      {isOpen ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
-    </div>
+  const CollapsibleSectionHeader = (props: any) => (
+    <SidebarSectionHeader
+      {...props}
+      UpIcon={ChevronUp}
+      DownIcon={ChevronDown}
+    />
   );
 
   const StatItem = ({ label, value, unit, isLoading, icon: Icon, iconColor }: { label: string, value: number | string, unit?: string, isLoading: boolean, icon: React.ElementType, iconColor: string }) => (
@@ -196,36 +195,18 @@ const Sidebar = ({
             <CollapsibleSectionHeader title="教科選択" icon={BookOpen} iconBgColor="bg-gradient-to-r from-blue-500 to-indigo-600" isOpen={openCollapsibles['subjects']} />
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-2 space-y-2">
-            {displaySubjects.map((subjectItem) => {
-              const Icon = subjectItem.icon;
-              const isSelected = selectedSubject === subjectItem.id;
-              return (
-                <Button
-                  key={subjectItem.id}
-                  variant="ghost"
-                  className={`w-full justify-start h-auto p-4 transition-all duration-200 ${
-                    isSelected 
-                      ? `bg-gradient-to-r ${subjectItem.gradient} text-white shadow-lg transform scale-105` 
-                      : `${subjectItem.color} border border-transparent hover:border-gray-300 hover:shadow-md`
-                  }`}
-                  onClick={() => onSubjectChange(subjectItem.id)}
-                >
-                  <div className={`p-2 rounded-lg mr-3 transition-all duration-200 ${
-                    isSelected ? "bg-white/20" : "bg-white shadow-sm"
-                  }`}>
-                    <Icon className={`h-5 w-5 ${
-                      isSelected ? "text-white" : ""
-                    }`} />
-                  </div>
-                  <span className="font-medium text-sm">{subjectItem.name}</span>
-                  {isSelected && (
-                    <div className="ml-auto">
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    </div>
-                  )}
-                </Button>
-              );
-            })}
+            {displaySubjects.map((subjectItem) => (
+              <SidebarSubjectButton
+                key={subjectItem.id}
+                id={subjectItem.id}
+                name={subjectItem.name}
+                Icon={subjectItem.icon}
+                color={subjectItem.color}
+                gradient={subjectItem.gradient}
+                isSelected={selectedSubject === subjectItem.id}
+                onClick={onSubjectChange}
+              />
+            ))}
           </CollapsibleContent>
         </Collapsible>
 
@@ -277,28 +258,28 @@ const Sidebar = ({
             <CollapsibleSectionHeader title="学習統計" icon={TrendingUp} iconBgColor="bg-gradient-to-r from-green-500 to-emerald-600" isOpen={openCollapsibles['stats']} />
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-2 space-y-3">
-            <StatItem 
+            <SidebarStatItem 
               label="完全に理解した数" 
               value={understoodCount} 
               isLoading={isLoadingStats}
               icon={CheckCircle}
               iconColor="text-green-600"
             />
-            <StatItem 
+            <SidebarStatItem 
               label="本日の質問数" 
               value={dailyQuestions} 
               isLoading={isLoadingStats}
               icon={User}
               iconColor="text-blue-600"
             />
-            <StatItem 
+            <SidebarStatItem 
               label="本日のコスト" 
               value={`¥${dailyCostProp.toFixed(2)}`}
               isLoading={isLoadingStats}
               icon={Sparkles}
               iconColor="text-purple-600"
             />
-            <StatItem 
+            <SidebarStatItem 
               label="累計コスト" 
               value={`¥${totalCost.toFixed(2)}`}
               isLoading={isLoadingStats}
