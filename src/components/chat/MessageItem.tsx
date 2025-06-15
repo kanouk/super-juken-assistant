@@ -4,10 +4,11 @@ import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Bot, Copy, Clock } from 'lucide-react';
+import { Copy, Clock } from 'lucide-react';
 import LaTeXRenderer from '../LaTeXRenderer';
 import QuickActions from './QuickActions';
 import { useProfile } from '@/hooks/useProfile';
+import { useToast } from '@/hooks/use-toast';
 
 interface MessageItemProps {
   message: Message;
@@ -33,12 +34,26 @@ const MessageItem: React.FC<MessageItemProps> = ({
   disabled = false,
 }) => {
   const { profile } = useProfile();
+  const { toast } = useToast();
 
   React.useEffect(() => {
     if (message.role === 'assistant' && message.db_id) {
       onTypewriterComplete(message.db_id);
     }
   }, [message.role, message.db_id, onTypewriterComplete]);
+
+  // クリップボードへコピー
+  const handleCopy = () => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(message.content);
+      toast({
+        title: "コピーしました",
+        description: "回答がクリップボードにコピーされました",
+        duration: 1500,
+      });
+    }
+    if (onCopyToClipboard) onCopyToClipboard(message.content);
+  };
 
   if (message.role === 'user') {
     return (
@@ -51,7 +66,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   <AvatarImage src={profile.avatar_url} alt="ユーザーアバター" />
                 ) : null}
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                  <User className="h-4 w-4" />
+                  {/* User icon省略 */}
                 </AvatarFallback>
               </Avatar>
               <Card className="flex-1 min-w-0 shadow-sm bg-gradient-to-br from-blue-500 to-blue-600 border-0">
@@ -76,19 +91,19 @@ const MessageItem: React.FC<MessageItemProps> = ({
     );
   }
 
-  // AIメッセージ：文字色は黒系
+  // AIメッセージ
   return (
     <div className="w-full group">
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="max-w-4xl mx-auto px-4 py-6 relative">
           <div className="flex items-start space-x-4">
             <Avatar className="w-8 h-8 shrink-0 mt-1 ring-2 ring-green-100 shadow-sm">
               <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-                <Bot className="h-4 w-4" />
+                {/* AI bot icon省略 */}
               </AvatarFallback>
             </Avatar>
 
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 relative">
               {message.image_url && (
                 <div className="mb-4">
                   <img
@@ -101,6 +116,17 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
               {/* AIメッセージは黒基調 */}
               <LaTeXRenderer content={message.content} colorScheme="assistant" />
+              {/* コピーアイコンを右下へ小さく重ねて配置 */}
+              <button
+                type="button"
+                aria-label="回答をコピー"
+                onClick={handleCopy}
+                className="absolute right-2 bottom-2 p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600"
+                tabIndex={0}
+                style={{ fontSize: 0 }}
+              >
+                <Copy className="w-4 h-4" />
+              </button>
               {(message.cost || message.model) && (
                 <div className="mt-6 pt-4 border-t border-gray-100">
                   <div className="flex items-center justify-between text-sm text-gray-500">
@@ -114,15 +140,6 @@ const MessageItem: React.FC<MessageItemProps> = ({
                           ¥{message.cost.toFixed(4)}
                         </span>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 px-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                        onClick={() => onCopyToClipboard(message.content)}
-                      >
-                        <Copy className="h-4 w-4 mr-2" />
-                        <span className="text-sm">コピー</span>
-                      </Button>
                     </div>
                   </div>
                 </div>
@@ -151,3 +168,4 @@ const MessageItem: React.FC<MessageItemProps> = ({
 };
 
 export default MessageItem;
+
