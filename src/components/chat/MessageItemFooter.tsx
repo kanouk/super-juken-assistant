@@ -30,9 +30,7 @@ const MessageItemFooter: React.FC<MessageItemFooterProps> = ({
     if (onCopyToClipboard) onCopyToClipboard(content);
   };
 
-  // いずれかデータがある場合のみ表示
-  if (!model && cost === undefined) return null;
-
+  // === コピーボタン単独でも常にfooterごと表示 ===
   return (
     <div
       className="
@@ -67,4 +65,3 @@ const MessageItemFooter: React.FC<MessageItemFooterProps> = ({
 };
 
 export default MessageItemFooter;
-

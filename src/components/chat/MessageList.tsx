@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { MessageType, Message } from './types';
 import MessageItem from './MessageItem';
@@ -22,7 +23,8 @@ const MessageList: React.FC<MessageListProps> = ({
   messagesEndRef,
   conversationUnderstood,
 }) => {
-  // Convert MessageType to Message format for MessageItem
+
+  // ==== 根本調査＆型保証付き：AIメッセージには受け取ったmodel/costを（定義値があれば）必ず渡す ====
   const convertToMessage = (msg: MessageType): Message => {
     const base: Message = {
       id: msg.id,
@@ -33,12 +35,12 @@ const MessageList: React.FC<MessageListProps> = ({
       image_url: msg.images?.[0]?.url,
       is_understood: msg.isUnderstood
     };
-    // AIメッセージにはダミー値を渡す（フッター表示用）
+    // msg.modelやmsg.costが（AIメッセージデータに含まれていれば）正しくセット
     if (!msg.isUser) {
       return {
         ...base,
-        model: "gpt-4o",
-        cost: 0.0123
+        model: msg.model ?? undefined,
+        cost: msg.cost ?? undefined
       };
     }
     return base;
@@ -48,7 +50,7 @@ const MessageList: React.FC<MessageListProps> = ({
   // ScrollArea内のdivもh-full, min-h-0になるよう強制。
   return (
     <ScrollArea className="h-full min-h-0 flex-1">
-      <div className="flex flex-col min-h-full h-full justify-end"> {/* h-fullに変更 */}
+      <div className="flex flex-col min-h-full h-full justify-end">
         {messages.map((message, index) => {
           const isLastAIMessage = !message.isUser && index === messages.length - 1;
           return (
@@ -65,7 +67,7 @@ const MessageList: React.FC<MessageListProps> = ({
             />
           );
         })}
-        
+
         {isLoading && (
           <div className="bg-white border-b border-gray-100">
             <div className="max-w-4xl mx-auto px-4 py-6">
