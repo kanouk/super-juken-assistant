@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -129,102 +130,104 @@ const ConversationList: React.FC<ConversationListProps> = ({
           </div>
         ) : (
           <ScrollArea className="flex-1 h-full">
-            {conversations.map((conversation) => (
-              <div
-                key={conversation.id}
-                className="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group"
-                onClick={() => onSelectConversation(conversation.id)}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    {editingId === conversation.id ? (
-                      <div className="flex items-center gap-1 lg:gap-2">
-                        <Input
-                          value={editingTitle}
-                          onChange={(e) => setEditingTitle(e.target.value)}
-                          className="text-sm h-7 lg:h-8"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              handleSaveEdit(conversation.id);
-                            } else if (e.key === 'Escape') {
-                              handleCancelEdit();
-                            }
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          autoFocus
-                        />
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 lg:h-8 lg:w-8 p-0 flex-shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSaveEdit(conversation.id);
-                          }}
-                        >
-                          <Check className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 lg:h-8 lg:w-8 p-0 flex-shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCancelEdit();
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 lg:gap-2">
-                        <h3 className="font-medium text-sm truncate flex-1">
-                          {conversation.title}
-                        </h3>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover:opacity-100 shrink-0">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStartEdit(conversation);
-                            }}
-                          >
-                            <Edit2 className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm('この会話を削除してもよろしいですか？')) {
-                                handleDeleteConversation(conversation.id);
+            <div className="h-full w-full overflow-auto">
+              {conversations.map((conversation) => (
+                <div
+                  key={conversation.id}
+                  className="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group"
+                  onClick={() => onSelectConversation(conversation.id)}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      {editingId === conversation.id ? (
+                        <div className="flex items-center gap-1 lg:gap-2">
+                          <Input
+                            value={editingTitle}
+                            onChange={(e) => setEditingTitle(e.target.value)}
+                            className="text-sm h-7 lg:h-8"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleSaveEdit(conversation.id);
+                              } else if (e.key === 'Escape') {
+                                handleCancelEdit();
                               }
                             }}
-                            disabled={deletingId === conversation.id}
+                            onClick={(e) => e.stopPropagation()}
+                            autoFocus
+                          />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 lg:h-8 lg:w-8 p-0 flex-shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSaveEdit(conversation.id);
+                            }}
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Check className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 lg:h-8 lg:w-8 p-0 flex-shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelEdit();
+                            }}
+                          >
+                            <X className="h-3 w-3" />
                           </Button>
                         </div>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between mt-1">
-                      <p className="text-xs text-gray-500">
-                        {formatDate(conversation.created_at)}
-                      </p>
-                      {conversation.is_understood && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-300 text-xs px-2 py-0.5 flex items-center gap-1">
-                          <CheckCircle className="h-3 w-3" />
-                          理解済み
-                        </Badge>
+                      ) : (
+                        <div className="flex items-center gap-1 lg:gap-2">
+                          <h3 className="font-medium text-sm truncate flex-1">
+                            {conversation.title}
+                          </h3>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover:opacity-100 shrink-0">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStartEdit(conversation);
+                              }}
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm('この会話を削除してもよろしいですか？')) {
+                                  handleDeleteConversation(conversation.id);
+                                }
+                              }}
+                              disabled={deletingId === conversation.id}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
                       )}
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-xs text-gray-500">
+                          {formatDate(conversation.created_at)}
+                        </p>
+                        {conversation.is_understood && (
+                          <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-300 text-xs px-2 py-0.5 flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" />
+                            理解済み
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </ScrollArea>
         )}
       </CardContent>
@@ -233,3 +236,4 @@ const ConversationList: React.FC<ConversationListProps> = ({
 };
 
 export default ConversationList;
+
