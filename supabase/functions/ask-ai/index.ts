@@ -207,8 +207,8 @@ serve(async (req) => {
 
       // モデル名自動変換: v1beta対応のみ許可
       let geminiModel = selectedModel;
-      // 利用不可能モデルの場合は1.5-proに自動フォールバック
-      const supportedModels = ["gemini-1.5-pro", "gemini-1.5-flash"];
+      const supportedModels = ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-2.5-pro"];
+      // サポート対象でなければ1.5-proにフォールバック
       if (!supportedModels.includes(geminiModel)) {
         geminiModel = "gemini-1.5-pro";
       }
@@ -223,8 +223,14 @@ serve(async (req) => {
       }
       contentParts.push({ text: message });
 
+      // APIバージョンをモデルによって自動分岐
+      let apiVersion = "v1beta";
+      if (geminiModel === "gemini-2.5-pro") {
+        apiVersion = "v1";
+      }
+
       // リクエスト形式
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKeys.google}`;
+      const url = `https://generativelanguage.googleapis.com/${apiVersion}/models/${geminiModel}:generateContent?key=${apiKeys.google}`;
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
