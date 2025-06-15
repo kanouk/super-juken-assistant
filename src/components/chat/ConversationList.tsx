@@ -1,25 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Plus, Edit2, Check, X, Trash2, CheckCircle } from 'lucide-react';
+import { MessageSquare, Plus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
-
-interface Conversation {
-  id: string;
-  title: string;
-  created_at: string;
-  subject: string;
-  user_id: string;
-  is_understood?: boolean;
-}
+import ConversationListItem, { Conversation } from './ConversationListItem';
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -46,7 +36,6 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
   const handleSaveEdit = async (conversationId: string) => {
     if (!editingTitle.trim()) return;
-    
     try {
       const { error } = await supabase
         .from('conversations')
@@ -54,10 +43,9 @@ const ConversationList: React.FC<ConversationListProps> = ({
         .eq('id', conversationId);
 
       if (error) throw error;
-      
+
       setEditingId(null);
       setEditingTitle('');
-      
       toast({
         title: "タイトルを更新しました",
         description: "会話のタイトルが正常に更新されました。",
@@ -78,7 +66,6 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
   const handleDeleteConversation = async (conversationId: string) => {
     setDeletingId(conversationId);
-    
     try {
       onDeleteConversation(conversationId);
     } catch (error: any) {
@@ -94,9 +81,9 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
   const formatDate = (dateString: string) => {
     try {
-      return formatDistanceToNow(new Date(dateString), { 
-        addSuffix: true, 
-        locale: ja 
+      return formatDistanceToNow(new Date(dateString), {
+        addSuffix: true,
+        locale: ja
       });
     } catch {
       return '不明';
@@ -121,7 +108,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
         </div>
       </CardHeader>
       <Separator />
-      <CardContent className="p-0 flex-1 flex flex-col">
+      {/* スクロールも高さも flex-1/h-full で統一し高さの伝搬を保証 */}
+      <CardContent className="p-0 flex-1 flex flex-col min-h-0">
         {conversations.length === 0 ? (
           <div className="p-4 text-center text-gray-500 flex-1 flex flex-col justify-center">
             <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -129,103 +117,23 @@ const ConversationList: React.FC<ConversationListProps> = ({
             <p className="text-xs lg:text-sm">新規チャットを開始してください</p>
           </div>
         ) : (
-          <ScrollArea className="flex-1 h-full">
-            <div className="h-full w-full overflow-auto">
+          <ScrollArea className="flex-1 h-full min-h-0">
+            <div className="flex flex-col w-full h-full min-h-0">
               {conversations.map((conversation) => (
-                <div
+                <ConversationListItem
                   key={conversation.id}
-                  className="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group"
-                  onClick={() => onSelectConversation(conversation.id)}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      {editingId === conversation.id ? (
-                        <div className="flex items-center gap-1 lg:gap-2">
-                          <Input
-                            value={editingTitle}
-                            onChange={(e) => setEditingTitle(e.target.value)}
-                            className="text-sm h-7 lg:h-8"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                handleSaveEdit(conversation.id);
-                              } else if (e.key === 'Escape') {
-                                handleCancelEdit();
-                              }
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            autoFocus
-                          />
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 lg:h-8 lg:w-8 p-0 flex-shrink-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSaveEdit(conversation.id);
-                            }}
-                          >
-                            <Check className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 lg:h-8 lg:w-8 p-0 flex-shrink-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCancelEdit();
-                            }}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 lg:gap-2">
-                          <h3 className="font-medium text-sm truncate flex-1">
-                            {conversation.title}
-                          </h3>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover:opacity-100 shrink-0">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleStartEdit(conversation);
-                              }}
-                            >
-                              <Edit2 className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (confirm('この会話を削除してもよろしいですか？')) {
-                                  handleDeleteConversation(conversation.id);
-                                }
-                              }}
-                              disabled={deletingId === conversation.id}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-xs text-gray-500">
-                          {formatDate(conversation.created_at)}
-                        </p>
-                        {conversation.is_understood && (
-                          <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-300 text-xs px-2 py-0.5 flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3" />
-                            理解済み
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  conversation={conversation}
+                  isEditing={editingId === conversation.id}
+                  isDeleting={deletingId === conversation.id}
+                  editingTitle={editingTitle}
+                  onStartEdit={handleStartEdit}
+                  onSaveEdit={handleSaveEdit}
+                  onCancelEdit={handleCancelEdit}
+                  onSetEditingTitle={setEditingTitle}
+                  onDelete={handleDeleteConversation}
+                  onSelect={onSelectConversation}
+                  formatDate={formatDate}
+                />
               ))}
             </div>
           </ScrollArea>
@@ -236,4 +144,3 @@ const ConversationList: React.FC<ConversationListProps> = ({
 };
 
 export default ConversationList;
-
