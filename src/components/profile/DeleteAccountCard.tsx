@@ -35,7 +35,7 @@ const DeleteAccountCard: React.FC<DeleteAccountCardProps> = ({ onAccountDeleted 
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/delete-account`, {
+      const response = await fetch(`https://huyumzlevlcxsnvbtcsd.supabase.co/functions/v1/delete-account`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
