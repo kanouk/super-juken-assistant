@@ -2,11 +2,12 @@ import React from 'react';
 import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Copy, Clock } from 'lucide-react';
 import LaTeXRenderer from '../LaTeXRenderer';
 import QuickActions from './QuickActions';
 import { useProfile } from '@/hooks/useProfile';
+import MessageItemFooter from './MessageItemFooter';
+import { Button } from "@/components/ui/button";
+import { Copy, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface MessageItemProps {
@@ -54,6 +55,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     if (onCopyToClipboard) onCopyToClipboard(message.content);
   };
 
+  // ユーザーメッセージ
   if (message.role === 'user') {
     return (
       <div className="w-full px-4 py-4">
@@ -79,7 +81,6 @@ const MessageItem: React.FC<MessageItemProps> = ({
                       />
                     </div>
                   )}
-                  {/* ユーザーは常に白文字でレンダリング */}
                   <LaTeXRenderer content={message.content} className="text-white" colorScheme="user" />
                 </CardContent>
               </Card>
@@ -112,33 +113,18 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 </div>
               )}
 
-              {/* AIメッセージは黒基調 */}
               <LaTeXRenderer content={message.content} colorScheme="assistant" />
 
-              {/* モデル名・コスト・コピー：常に（モデル/コストある場合）右下に絶対配置、十分に離して */}
-              {(message.model || message.cost !== undefined) && (
-                <div className="absolute right-5 bottom-4 flex items-center gap-4 z-10 bg-white/80 px-3 py-1 rounded-lg shadow-sm">
-                  {message.model && (
-                    <span className="text-xs text-gray-400">{message.model}</span>
-                  )}
-                  {message.cost !== undefined && (
-                    <span className="text-xs text-gray-400">¥{Number(message.cost).toFixed(4)}</span>
-                  )}
-                  <button
-                    type="button"
-                    aria-label="回答をコピー"
-                    onClick={handleCopy}
-                    className="ml-6 p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600"
-                    tabIndex={0}
-                    style={{ fontSize: 0 }}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
+              {/* 新フッター：常に右下表示 */}
+              <MessageItemFooter
+                content={message.content}
+                model={message.model}
+                cost={message.cost}
+                onCopyToClipboard={onCopyToClipboard}
+              />
 
-              {/* 旧コスト・モデル表示（薄グレー/カード下部）、今後不要なら削除可 */}
-              {(message.cost || message.model) && (
+              {/* 旧コスト・モデル表示（今後不要なら削除可） */}
+              {/* {(message.cost || message.model) && (
                 <div className="mt-6 pt-4 border-t border-gray-100">
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <div className="flex items-center gap-2">
@@ -154,7 +140,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         </div>
