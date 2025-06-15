@@ -7,7 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   BookOpen, Calculator, FlaskConical, Atom, Languages, 
   Settings, GraduationCap, LogOut, MapPin, Monitor, Plus,
-  User, Clock, TrendingUp, Sparkles, ChevronDown, ChevronUp, CheckCircle, RefreshCw
+  User, Clock, TrendingUp, Sparkles, ChevronDown, ChevronUp, CheckCircle, RefreshCw,
+  Globe
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
