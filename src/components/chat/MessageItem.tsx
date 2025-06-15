@@ -115,7 +115,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
               <LaTeXRenderer content={message.content} colorScheme="assistant" />
 
-              {/* 新フッター：常に右下表示 */}
+              {/* フッター：モデル名・コスト・コピーボタン表示 */}
               <MessageItemFooter
                 content={message.content}
                 model={message.model}
