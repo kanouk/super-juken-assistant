@@ -151,7 +151,8 @@ export const useSettings = () => {
         .eq('id', user.id)
         .maybeSingle();
 
-      const settingsData = rawSettingsData as SupabaseSettingsRow | null;
+      // Type guard logic will refine below, so no need to cast to SupabaseSettingsRow here
+      const settingsData = rawSettingsData;
 
       if (settingsData) {
         const selectedProvider = typeof settingsData.selected_provider === 'string' 
