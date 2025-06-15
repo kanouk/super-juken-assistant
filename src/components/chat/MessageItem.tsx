@@ -18,6 +18,8 @@ interface MessageItemProps {
   onQuickAction: (prompt: string) => void;
   onUnderstood: () => void;
   subjectId?: string;
+  isUnderstood?: boolean;
+  disabled?: boolean;
 }
 
 const subjectColorMap: { [key: string]: string } = {
@@ -43,6 +45,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
   onQuickAction,
   onUnderstood,
   subjectId = 'other',
+  isUnderstood,
+  disabled = false,
 }) => {
   const { profile } = useProfile();
 
@@ -140,7 +144,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
           <QuickActions
             onQuickAction={onQuickAction}
             onUnderstood={onUnderstood}
-            isUnderstood={message.is_understood}
+            isUnderstood={isUnderstood || message.is_understood}
+            disabled={disabled}
           />
         </div>
       )}
