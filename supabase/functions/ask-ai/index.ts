@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -56,10 +55,11 @@ serve(async (req) => {
     const freeUserModels: Record<string, string> = adminSettingMap['free_user_models'] || {};
 
     // --- 実際に利用するAPIキーとモデル取得 ---
-    // ユーザーAPI設定 (存在しない場合や全て空の場合は管理者指定を利用)
     let apiKeys = settings?.api_keys || {};
     let models = settings?.models || {};
     let selectedProvider = settings?.selected_provider || "openai";
+    let usedFreeApi = false; // 追加：管理者APIキー/モデル利用フラグ
+
     let anyUserKeySet =
       (apiKeys.openai && apiKeys.openai.trim() !== "") ||
       (apiKeys.google && apiKeys.google.trim() !== "") ||
@@ -77,9 +77,8 @@ serve(async (req) => {
         google: freeUserModels.google || "gemini-1.5-pro",
         anthropic: freeUserModels.anthropic || "claude-3-sonnet",
       };
+      usedFreeApi = true; // 管理者API利用マーク
     }
-
-    // --- 以下は従来通り ---
 
     // Compose system message as before
     let systemMessage = settings?.common_instruction || 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。数学や化学の問題ではLaTeX記法を使って数式を表現してください。LaTeX記法を使用する際は、インライン数式は$...$、ブロック数式は$$...$$で囲んでください。';
@@ -298,6 +297,11 @@ serve(async (req) => {
       throw new Error("Unknown AI provider. Only openai, anthropic, google are supported.");
     }
     // ---- レスポンス返却 ----
+
+    // ★ 管理者APIキー・モデル利用時は cost=0 を強制 ★
+    if (usedFreeApi) {
+      cost = 0;
+    }
 
     return new Response(JSON.stringify({
       response: aiResponse,
