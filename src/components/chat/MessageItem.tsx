@@ -102,10 +102,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 </div>
               )}
               
-              <div className="prose prose-lg max-w-none break-words prose-headings:text-gray-800 prose-headings:font-semibold prose-headings:mb-4 prose-headings:mt-6 prose-strong:text-gray-800 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700 prose-li:mb-2 prose-code:bg-gray-100 prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm prose-pre:bg-gray-50 prose-pre:border prose-pre:border-gray-200 prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50 prose-blockquote:px-4 prose-blockquote:py-2">
-                <LaTeXRenderer content={message.content} className="text-base leading-relaxed" />
-              </div>
-
+              {/* LaTeXRenderer 側で色制御するのでここはクラス追加不要 */}
+              <LaTeXRenderer content={message.content} />
               {(message.cost || message.model) && (
                 <div className="mt-6 pt-4 border-t border-gray-100">
                   <div className="flex items-center justify-between text-sm text-gray-500">

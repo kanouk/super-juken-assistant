@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import 'katex/dist/katex.min.css';
 import { InlineMath, BlockMath } from 'react-katex';
@@ -61,36 +60,36 @@ const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
       
       if (part.trim()) { 
         return (
-          <div key={index} className="prose-content">
+          <div key={index} className="prose prose-lg max-w-none break-words prose-headings:text-white prose-strong:text-white prose-ul:text-white prose-ol:text-white prose-li:text-white prose-blockquote:text-white prose-code:text-white prose-pre:text-white !text-white">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                h1: ({ children }) => <h1 className="text-2xl font-bold mt-8 mb-4 text-gray-900">{children}</h1>,
-                h2: ({ children }) => <h2 className="text-xl font-semibold mt-6 mb-3 text-gray-900">{children}</h2>,
-                h3: ({ children }) => <h3 className="text-lg font-medium mt-5 mb-3 text-gray-900">{children}</h3>,
-                p: ({ children }) => <p className="mb-4 leading-7 text-gray-800">{children}</p>,
-                ul: ({ children }) => <ul className="mb-4 ml-6 space-y-2">{children}</ul>,
-                ol: ({ children }) => <ol className="mb-4 ml-6 space-y-2">{children}</ol>,
-                li: ({ children }) => <li className="text-gray-800 leading-6">{children}</li>,
+                h1: ({ children }) => <h1 className="text-2xl font-bold mt-8 mb-4 text-white">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-xl font-semibold mt-6 mb-3 text-white">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-lg font-medium mt-5 mb-3 text-white">{children}</h3>,
+                p: ({ children }) => <p className="mb-4 leading-7 text-white">{children}</p>,
+                ul: ({ children }) => <ul className="mb-4 ml-6 space-y-2 text-white">{children}</ul>,
+                ol: ({ children }) => <ol className="mb-4 ml-6 space-y-2 text-white">{children}</ol>,
+                li: ({ children }) => <li className="text-white leading-6">{children}</li>,
                 blockquote: ({ children }) => (
-                  <blockquote className="border-l-4 border-blue-500 bg-blue-50 pl-4 py-2 my-4 italic text-gray-700">
+                  <blockquote className="border-l-4 border-blue-500 bg-blue-50 pl-4 py-2 my-4 italic text-white">
                     {children}
                   </blockquote>
                 ),
                 code: ({ children, className }) => {
                   const isInline = !className;
                   if (isInline) {
-                    return <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800">{children}</code>;
+                    return <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-white">{children}</code>;
                   }
-                  return <code className={className}>{children}</code>;
+                  return <code className={`${className} text-white`}>{children}</code>;
                 },
                 pre: ({ children }) => (
-                  <pre className="bg-gray-50 border border-gray-200 rounded-lg p-4 overflow-x-auto my-4">
+                  <pre className="bg-gray-50 border border-gray-200 rounded-lg p-4 overflow-x-auto my-4 text-white">
                     {children}
                   </pre>
                 ),
-                strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
-                em: ({ children }) => <em className="italic text-gray-800">{children}</em>,
+                strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+                em: ({ children }) => <em className="italic text-white">{children}</em>,
               }}
             >
               {part}
@@ -103,7 +102,7 @@ const LaTeXRenderer = ({ content, className = '' }: LaTeXRendererProps) => {
   }, [content]);
 
   return (
-    <div className={`${className} leading-relaxed text-gray-800`}>
+    <div className={`${className} leading-relaxed text-white`}>
       {processedContent.filter(Boolean)}
     </div>
   );
