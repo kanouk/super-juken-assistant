@@ -9,9 +9,7 @@ export const MbtiInstructionsTab = ({ mbtiInstructions, updateSetting }: MbtiIns
     <Card>
       <CardHeader>
         <CardTitle>性格タイプ別カスタムインストラクション</CardTitle>
-        <CardDescription>
-          各MBTIタイプごとに、AIアシスタントの振る舞いをカスタマイズできます。
-        </CardDescription>
+        <CardDescription>各MBTIタイプごとに、AIアシスタントの振る舞いをカスタマイズできます。</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {MBTI_TYPES.map((type) => (

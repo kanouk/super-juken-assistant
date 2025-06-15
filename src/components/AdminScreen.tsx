@@ -4,10 +4,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdminSettings } from "@/hooks/useAdminSettings";
 import { AdminHeader } from './admin/AdminHeader';
 import { GeneralSettingsTab } from './admin/GeneralSettingsTab';
+import { InstructionSettingsTab } from './admin/InstructionSettingsTab';
 import { ApiKeysTab } from './admin/ApiKeysTab';
 import { ModelsSettingsTab } from './admin/ModelsSettingsTab';
 import { AdminUsersTab } from './admin/AdminUsersTab';
-import { MbtiInstructionsTab } from './admin/MbtiInstructionsTab';
 
 const AdminScreen = () => {
   const { settings, updateSetting, saveSettings, isLoading } = useAdminSettings();
@@ -40,6 +40,9 @@ const AdminScreen = () => {
             <TabsTrigger value="general" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               全般設定
             </TabsTrigger>
+            <TabsTrigger value="instructions" className="data-[state=active]:bg-amber-50 data-[state=active]:text-amber-700">
+              インストラクション
+            </TabsTrigger>
             <TabsTrigger value="api" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               APIキー設定
             </TabsTrigger>
@@ -49,13 +52,17 @@ const AdminScreen = () => {
             <TabsTrigger value="users" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               管理者ユーザー
             </TabsTrigger>
-            <TabsTrigger value="mbti" className="data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700">
-              性格タイプ
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
             <GeneralSettingsTab 
+              settings={settings}
+              updateSetting={updateSetting}
+            />
+          </TabsContent>
+
+          <TabsContent value="instructions">
+            <InstructionSettingsTab
               settings={settings}
               updateSetting={updateSetting}
             />
@@ -77,13 +84,6 @@ const AdminScreen = () => {
 
           <TabsContent value="users">
             <AdminUsersTab />
-          </TabsContent>
-
-          <TabsContent value="mbti">
-            <MbtiInstructionsTab 
-              mbtiInstructions={settings.mbti_instructions || {}}
-              updateSetting={updateSetting}
-            />
           </TabsContent>
         </Tabs>
       </div>
