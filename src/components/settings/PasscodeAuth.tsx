@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { InputOTP, InputOTPGroup } from "@/components/ui/input-otp";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Lock } from "lucide-react";
 
 interface PasscodeAuthProps {
@@ -15,20 +15,13 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
   const [isShaking, setIsShaking] = useState(false);
 
   const otpGroupRef = useRef<HTMLDivElement>(null);
-  // input refs
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // 初回表示時に先頭inputへ自動フォーカス
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (otpGroupRef.current) {
-        const inputField = otpGroupRef.current.querySelector('input');
-        inputField?.focus();
-      }
-      if (inputRefs.current[0]) {
-        inputRefs.current[0].focus();
-      }
-    }, 30);
+      const input = otpGroupRef.current?.querySelector('input');
+      input?.focus();
+    }, 20);
     return () => clearTimeout(timer);
   }, []);
 
@@ -47,21 +40,12 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
         }
         setTimeout(() => {
           setIsShaking(false);
-          if (inputRefs.current[0]) {
-            inputRefs.current[0].focus();
-          }
+          const input = otpGroupRef.current?.querySelector('input');
+          input?.focus();
         }, 500);
       }
     }
   }, [expectedPasscode, onAuthenticated]);
-
-  // 1文字入力ごとに次inputへ移動
-  const handleInput = (e: React.FormEvent<HTMLInputElement>, idx: number) => {
-    const input = e.target as HTMLInputElement;
-    if (input.value && idx < 5) {
-      inputRefs.current[idx + 1]?.focus();
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
@@ -83,35 +67,15 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
               maxLength={6}
               value={passcodeInput}
               onChange={handlePasscodeChange}
-              key={passcodeInput.length === 0 ? Math.random() : "otp"}
+              containerClassName=""
               render={({ slots }) => (
                 <InputOTPGroup ref={otpGroupRef} className="gap-2">
                   {slots.map((slot, index) => (
-                    <div
+                    <InputOTPSlot
                       key={index}
-                      className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg"
-                    >
-                      <input
-                        {...slot.inputProps}
-                        ref={el => inputRefs.current[index] = el}
-                        type="tel"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={1}
-                        autoFocus={index === 0}
-                        tabIndex={0}
-                        className="w-full h-full text-center bg-transparent focus:outline-none text-white text-2xl font-bold selection:bg-blue-100"
-                        onInput={e => handleInput(e, index)}
-                        aria-label={`パスコード桁${index + 1}`}
-                        autoComplete="one-time-code"
-                      />
-                      {/* カーソルなどslotの視覚情報は保持 */}
-                      {slot.hasFakeCaret && (
-                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                          <div className="h-4 w-px animate-caret-blink bg-white duration-1000" />
-                        </div>
-                      )}
-                    </div>
+                      index={index}
+                      className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold"
+                    />
                   ))}
                 </InputOTPGroup>
               )}
