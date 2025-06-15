@@ -255,7 +255,8 @@ export function useChatScreen(props: UseChatScreenProps) {
            .eq('content', message.content)
            .eq('role', 'assistant');
          if (!error) {
-           // サイドバー用の統計管理はMainAppが担うためここでinvalidateは不要
+           // ChatStatsを再取得してサイドバーの統計を更新
+           refetchChatStats();
          }
        }
        setShowConfetti(true);
