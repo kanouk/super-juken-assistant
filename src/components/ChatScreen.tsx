@@ -17,7 +17,7 @@ const ChatScreen = (props: ChatScreenProps) => {
       showConfetti,
       showConversations,
       selectedConversationId,
-      selectedModel,
+      currentModel,
       conversations,
       messagesEndRef,
       conversationUnderstood,
@@ -41,7 +41,7 @@ const ChatScreen = (props: ChatScreenProps) => {
       <ConversationHistoryView
         subject={subject}
         subjectName={subjectName}
-        currentModel={selectedModel}
+        currentModel={currentModel}
         onBackToList={handleBackToChat}
         onToggleSidebar={onToggleSidebar}
         isMobile={props.isMobile}
@@ -57,7 +57,7 @@ const ChatScreen = (props: ChatScreenProps) => {
     <ChatMainView
       subject={subject}
       subjectName={subjectName}
-      currentModel={selectedModel}
+      currentModel={currentModel}
       messages={messages}
       isLoading={isLoading}
       selectedImages={selectedImages}

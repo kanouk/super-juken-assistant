@@ -24,7 +24,7 @@ interface Settings {
     google: string;
     anthropic: string;
   };
-  selectedModel: string;
+  selectedProvider: string;
   commonInstruction: string;
   subjectInstructions: {
     [key: string]: string;
@@ -88,11 +88,11 @@ export const useSettings = () => {
       anthropic: ''
     },
     models: {
-      openai: 'gpt-4o',
+      openai: 'gpt-4.1-2025-04-14',
       google: 'gemini-1.5-pro',
       anthropic: 'claude-3-sonnet'
     },
-    selectedModel: 'gpt-4o',
+    selectedProvider: 'openai',
     commonInstruction: 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。数学や化学の問題ではLaTeX記法を使って数式を表現してください。',
     subjectInstructions: {
       math: '数学の問題は段階的に解法を示し、公式の説明も含めてください。LaTeX記法を使って数式を美しく表示してください。',
@@ -108,6 +108,12 @@ export const useSettings = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  // 現在選択されているモデルを取得する関数
+  const getCurrentModel = () => {
+    const provider = settings.selectedProvider as keyof typeof settings.models;
+    return settings.models[provider];
+  };
 
   const loadSettings = async () => {
     try {
@@ -132,17 +138,16 @@ export const useSettings = () => {
         .single();
 
       if (settingsData) {
-        // Since selected_model doesn't exist in the database yet, we'll use the default
-        const selectedModel = typeof (settingsData as any).selected_model === 'string' 
-          ? (settingsData as any).selected_model 
-          : 'gpt-4o';
+        const selectedProvider = typeof (settingsData as any).selected_provider === 'string' 
+          ? (settingsData as any).selected_provider 
+          : 'openai';
 
         setSettings(prev => ({
           ...prev,
           passcode: profileData?.passcode || prev.passcode,
           apiKeys: isApiKeys(settingsData.api_keys) ? settingsData.api_keys : prev.apiKeys,
           models: isModels(settingsData.models) ? settingsData.models : prev.models,
-          selectedModel: selectedModel,
+          selectedProvider: selectedProvider,
           commonInstruction: typeof settingsData.common_instruction === 'string' 
             ? settingsData.common_instruction 
             : prev.commonInstruction,
@@ -174,12 +179,13 @@ export const useSettings = () => {
 
       if (profileError) throw profileError;
 
-      // 設定を設定テーブルに保存 (selected_model is not in the database schema, so we skip it for now)
+      // 設定を設定テーブルに保存
       const { error: settingsError } = await supabase
         .from('settings')
         .update({
           api_keys: newSettings.apiKeys,
           models: newSettings.models,
+          selected_provider: newSettings.selectedProvider,
           common_instruction: newSettings.commonInstruction,
           subject_instructions: newSettings.subjectInstructions,
           subject_configs: newSettings.subjectConfigs as any
@@ -211,5 +217,5 @@ export const useSettings = () => {
     loadSettings();
   }, []);
 
-  return { settings, setSettings, saveSettings, isLoading };
+  return { settings, setSettings, saveSettings, isLoading, getCurrentModel };
 };

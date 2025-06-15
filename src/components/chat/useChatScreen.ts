@@ -3,34 +3,30 @@ import { useState, useEffect } from 'react';
 import { useChatStats } from "@/hooks/useChatStats";
 import { useConversations } from './useConversations';
 import { useMessages } from './useMessages';
+import { useSettings } from '@/hooks/useSettings';
 import { ImageData } from './types';
 
 export interface UseChatScreenProps {
   subject: string;
   subjectName: string;
-  currentModel: string;
   userId: string | undefined;
   onSubjectChange?: (subject: string) => void;
   onToggleSidebar: () => void;
   isMobile: boolean;
-  availableModels?: {
-    openai?: { label: string; value: string };
-    google?: { label: string; value: string };
-    anthropic?: { label: string; value: string };
-  };
-  onModelChange?: (value: string) => void;
 }
 
 export function useChatScreen(props: UseChatScreenProps) {
   const { 
-    subject, subjectName, currentModel, userId, 
-    onToggleSidebar, isMobile, availableModels,
-    onModelChange 
+    subject, subjectName, userId, 
+    onToggleSidebar, isMobile
   } = props;
 
-  const [selectedModel, setSelectedModel] = useState(currentModel);
   const [selectedImages, setSelectedImages] = useState<ImageData[]>([]);
   const [showConversations, setShowConversations] = useState(false);
+
+  // 設定から現在のモデルを取得
+  const { getCurrentModel } = useSettings();
+  const currentModel = getCurrentModel();
 
   // Use conversation management hook
   const {
@@ -62,7 +58,7 @@ export function useChatScreen(props: UseChatScreenProps) {
     conversationUnderstood,
     setConversationUnderstood,
     refetchConversations,
-    selectedModel,
+    selectedModel: currentModel,
   });
 
   // Chat stats for sidebar
@@ -74,13 +70,6 @@ export function useChatScreen(props: UseChatScreenProps) {
     setShowConversations(false);
     setConversationUnderstood(false);
   }, [subject]);
-
-  const handleModelChange = (value: string) => {
-    setSelectedModel(value);
-    if (onModelChange) {
-      onModelChange(value);
-    }
-  };
 
   const handleNewChat = () => {
     setMessages([]);
@@ -113,7 +102,7 @@ export function useChatScreen(props: UseChatScreenProps) {
       showConfetti,
       showConversations,
       selectedConversationId,
-      selectedModel,
+      currentModel,
       conversations,
       understoodCount,
       dailyCost,
@@ -126,7 +115,6 @@ export function useChatScreen(props: UseChatScreenProps) {
     },
     handlers: {
       setSelectedImages,
-      handleModelChange,
       handleSendMessage,
       handleUnderstood,
       handleNewChat,

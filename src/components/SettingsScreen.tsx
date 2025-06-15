@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSettings } from "@/hooks/useSettings";
@@ -131,7 +130,7 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
           <TabsContent value="models">
             <ModelsTab 
               models={settings.models}
-              selectedModel={settings.selectedModel}
+              selectedProvider={settings.selectedProvider}
               updateSetting={updateSetting}
             />
           </TabsContent>
