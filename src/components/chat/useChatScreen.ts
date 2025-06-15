@@ -207,14 +207,27 @@ export function useChatScreen(props: UseChatScreenProps) {
 
       setMessages(prev => [...prev, aiMessage]);
 
-      await supabase
+      const { data: aiMessageData, error: aiMessageError } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
           content: data.response,
           role: 'assistant',
           created_at: new Date().toISOString()
-        });
+        })
+        .select()
+        .single();
+
+      if (aiMessageError) throw aiMessageError;
+
+      // AIメッセージのIDをデータベースのIDに更新
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === aiMessage.id 
+            ? { ...msg, id: aiMessageData.id.toString() }
+            : msg
+        )
+      );
 
       refetchConversations();
 
@@ -235,44 +248,63 @@ export function useChatScreen(props: UseChatScreenProps) {
     }
   };
 
-  // 理解した！ハンドラ（スクロールを発生させない）
+  // 理解した！ハンドラ（データベースIDを使用）
   const handleUnderstood = async (messageId: string) => {
-     if (!userId) return;
-     try {
-       setMessages(prev => 
-         prev.map(msg => 
-           msg.id === messageId 
-             ? { ...msg, isUnderstood: true }
-             : msg
-         )
-       );
-       const message = messages.find(msg => msg.id === messageId);
-       if (message && selectedConversationId) {
-         const { error } = await supabase
-           .from('messages')
-           .update({ is_understood: true })
-           .eq('conversation_id', selectedConversationId)
-           .eq('content', message.content)
-           .eq('role', 'assistant');
-         if (!error) {
-           // ChatStatsを再取得してサイドバーの統計を更新
-           refetchChatStats();
-         }
-       }
-       setShowConfetti(true);
-       setTimeout(() => setShowConfetti(false), 3000);
-       toast({
-         title: "完全に理解！",
-         description: "理解度がカウントされました！",
-       });
-     } catch (error: any) {
-       toast({
-         title: "エラー",
-         description: "理解度の更新に失敗しました。",
-         variant: "destructive",
-       });
-     }
-   };
+    if (!userId) return;
+    
+    console.log('Understanding message with ID:', messageId);
+    
+    try {
+      // まずUIを更新
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, isUnderstood: true }
+            : msg
+        )
+      );
+
+      // データベースを直接IDで更新
+      const { error } = await supabase
+        .from('messages')
+        .update({ is_understood: true })
+        .eq('id', messageId);
+
+      if (error) {
+        console.error('Database update error:', error);
+        // エラーの場合はUIを元に戻す
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === messageId 
+              ? { ...msg, isUnderstood: false }
+              : msg
+          )
+        );
+        throw error;
+      }
+
+      console.log('Successfully updated database for message:', messageId);
+      
+      // ChatStatsを再取得してサイドバーの統計を更新
+      refetchChatStats();
+      
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3000);
+      
+      toast({
+        title: "完全に理解！",
+        description: "理解度がカウントされました！",
+      });
+
+    } catch (error: any) {
+      console.error('Error updating understood status:', error);
+      toast({
+        title: "エラー",
+        description: "理解度の更新に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleNewChat = () => {
     setMessages([]);
@@ -298,14 +330,16 @@ export function useChatScreen(props: UseChatScreenProps) {
 
       if (error) throw error;
 
-      const formattedMessages: MessageType[] = messagesData.map((msg, index) => ({
-        id: `${msg.id}_${index}`, // ユニークなIDを生成
+      const formattedMessages: MessageType[] = messagesData.map((msg) => ({
+        id: msg.id.toString(), // データベースのIDを使用
         content: msg.content,
         isUser: msg.role === 'user',
         timestamp: new Date(msg.created_at),
         images: msg.image_url ? [{ url: msg.image_url }] : undefined,
-        isUnderstood: msg.is_understood || false, // データベースの状態を正しく反映
+        isUnderstood: msg.is_understood || false,
       }));
+
+      console.log('Loaded messages with understood status:', formattedMessages.map(m => ({ id: m.id, isUnderstood: m.isUnderstood })));
 
       setMessages(formattedMessages);
       setSelectedConversationId(conversationId);
