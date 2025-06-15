@@ -4,7 +4,6 @@ import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { User, Bot, Copy, Clock } from 'lucide-react';
 import LaTeXRenderer from '../LaTeXRenderer';
 import QuickActions from './QuickActions';
@@ -43,36 +42,38 @@ const MessageItem: React.FC<MessageItemProps> = ({
   }, [message.role, message.db_id, onTypewriterComplete]);
 
   if (message.role === 'user') {
-    // ユーザーメッセージ：バブル表示
+    // ユーザーメッセージ：バブル表示（右寄せ、余白追加）
     return (
-      <div className="w-full group mb-6">
-        <div className="flex justify-end">
-          <div className="flex items-start space-x-3 max-w-2xl flex-row-reverse space-x-reverse">
-            <Avatar className="w-8 h-8 shrink-0 mt-1 ring-2 ring-gray-100 shadow-sm">
-              {profile?.avatar_url ? (
-                <AvatarImage src={profile.avatar_url} alt="ユーザーアバター" />
-              ) : null}
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            </Avatar>
+      <div className="w-full px-4 py-4 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-end">
+            <div className="flex items-start space-x-3 max-w-2xl flex-row-reverse space-x-reverse">
+              <Avatar className="w-8 h-8 shrink-0 mt-1 ring-2 ring-gray-100 shadow-sm">
+                {profile?.avatar_url ? (
+                  <AvatarImage src={profile.avatar_url} alt="ユーザーアバター" />
+                ) : null}
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
 
-            <Card className="flex-1 min-w-0 shadow-sm bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
-              <CardContent className="p-4">
-                {message.image_url && (
-                  <div className="mb-3">
-                    <img
-                      src={message.image_url}
-                      alt="Attached image"
-                      className="max-w-full sm:max-w-xs rounded-lg shadow-md border border-gray-200"
-                    />
+              <Card className="flex-1 min-w-0 shadow-sm bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
+                <CardContent className="p-4">
+                  {message.image_url && (
+                    <div className="mb-3">
+                      <img
+                        src={message.image_url}
+                        alt="Attached image"
+                        className="max-w-full sm:max-w-xs rounded-lg shadow-md border border-white/20"
+                      />
+                    </div>
+                  )}
+                  <div className="prose prose-sm max-w-none prose-invert break-words">
+                    <LaTeXRenderer content={message.content} className="text-sm leading-relaxed text-white" />
                   </div>
-                )}
-                <div className="prose prose-sm max-w-none prose-invert break-words">
-                  <LaTeXRenderer content={message.content} className="text-sm leading-relaxed" />
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
@@ -81,7 +82,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
   // AIメッセージ：画面全体に表示
   return (
-    <div className="w-full group mb-8">
+    <div className="w-full group">
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-start space-x-4">
@@ -138,8 +139,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
       </div>
       
       {showQuickActions && (
-        <div className="bg-gray-50 border-b border-gray-100">
-          <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="bg-gradient-to-b from-white to-gray-50">
+          <div className="max-w-4xl mx-auto px-4 py-6">
             <div className="ml-12">
               <QuickActions
                 onQuickAction={onQuickAction}

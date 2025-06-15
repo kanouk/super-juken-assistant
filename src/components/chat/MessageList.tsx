@@ -35,7 +35,7 @@ const MessageList: React.FC<MessageListProps> = ({
   });
 
   return (
-    <ScrollArea className="flex-1 bg-gray-50">
+    <ScrollArea className="flex-1">
       <div className="min-h-full">
         {messages.map((message, index) => {
           const isLastAIMessage = !message.isUser && index === messages.length - 1;
