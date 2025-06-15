@@ -51,7 +51,7 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
   conversationUnderstood,
 }) => {
   return (
-    <div className="flex-1 flex flex-col bg-white h-full min-h-0 overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 bg-white"> {/* h-full, min-h-0 を指定 */}
       {showConfetti && <ConfettiComponent trigger={showConfetti} />}
       <ChatHeader
         subjectName={subjectName}
@@ -64,14 +64,15 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
         onToggleSidebar={onToggleSidebar}
         isMobile={isMobile}
       />
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      {/* ここからチャット本体、スクロールエリアはこの中だけ */}
+      <div className="flex-1 min-h-0 h-0 flex flex-col overflow-hidden">
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col overflow-hidden">
             <ChatEmptyState subjectName={subjectName} />
           </div>
         ) : (
-          // flex-1, h-0, min-h-0 =>「内部だけがスクロールする」レイアウト
-          <div className="flex-1 min-h-0 h-0">
+          // flex-1, h-full, min-h-0 で内部スクロールを有効化
+          <div className="flex-1 h-full min-h-0">
             <MessageList
               messages={messages}
               isLoading={isLoading}

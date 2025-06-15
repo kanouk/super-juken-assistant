@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { MessageType, Message } from './types';
 import MessageItem from './MessageItem';
@@ -33,13 +34,13 @@ const MessageList: React.FC<MessageListProps> = ({
     is_understood: msg.isUnderstood
   });
 
-  // 高さを親から受けて、内部がスクロールエリアになるようh-full,min-h-0
+  // --- Height: make sure this area expands to parent ---
+  // ScrollArea内のdivもh-full, min-h-0になるよう強制。
   return (
     <ScrollArea className="h-full min-h-0 flex-1">
-      <div className="min-h-full flex flex-col">
+      <div className="flex flex-col min-h-full h-full justify-end"> {/* h-fullに変更 */}
         {messages.map((message, index) => {
           const isLastAIMessage = !message.isUser && index === messages.length - 1;
-          
           return (
             <MessageItem
               key={message.id}
@@ -75,7 +76,7 @@ const MessageList: React.FC<MessageListProps> = ({
             </div>
           </div>
         )}
-        
+        {/* 必ずBottomに現れるようabsoluteでなくrefで確実にページ末尾 */}
         <div ref={messagesEndRef} />
       </div>
     </ScrollArea>

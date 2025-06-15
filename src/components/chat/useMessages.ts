@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,10 +33,13 @@ export function useMessages({
   const { toast } = useToast();
   const { refetch: refetchChatStats } = useChatStats(userId);
 
+  // --- SCROLL FIX: 末尾メッセージへのスクロール ---
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // scrollIntoViewをblock: "end"で必ず表示
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
+  // メッセージが変わるたびに必ず下にスクロール
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => {
