@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MessageType, Message } from './types';
 import MessageItem from './MessageItem';
@@ -34,9 +33,10 @@ const MessageList: React.FC<MessageListProps> = ({
     is_understood: msg.isUnderstood
   });
 
+  // 高さを親から受けて、内部がスクロールエリアになるようh-full,min-h-0
   return (
-    <ScrollArea className="flex-1">
-      <div className="min-h-full">
+    <ScrollArea className="h-full min-h-0 flex-1">
+      <div className="min-h-full flex flex-col">
         {messages.map((message, index) => {
           const isLastAIMessage = !message.isUser && index === messages.length - 1;
           

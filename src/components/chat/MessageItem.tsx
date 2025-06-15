@@ -42,7 +42,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   }, [message.role, message.db_id, onTypewriterComplete]);
 
   if (message.role === 'user') {
-    // ユーザーメッセージ：バブル表示（右寄せ、背景なし）
+    // ユーザーメッセージ：バブル表示（右寄せ、背景はグラデのみ、テキストは白）
     return (
       <div className="w-full px-4 py-4">
         <div className="max-w-4xl mx-auto">
@@ -57,7 +57,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 </AvatarFallback>
               </Avatar>
 
-              <Card className="flex-1 min-w-0 shadow-sm bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
+              <Card className="flex-1 min-w-0 shadow-sm bg-gradient-to-br from-blue-500 to-blue-600 border-0">
                 <CardContent className="p-4">
                   {message.image_url && (
                     <div className="mb-3">
@@ -68,7 +68,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                       />
                     </div>
                   )}
-                  <div className="prose prose-sm max-w-none prose-invert break-words">
+                  <div className="prose prose-sm max-w-none prose-invert break-words text-white">
                     <LaTeXRenderer content={message.content} className="text-sm leading-relaxed text-white" />
                   </div>
                 </CardContent>

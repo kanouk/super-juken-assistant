@@ -51,7 +51,7 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
   conversationUnderstood,
 }) => {
   return (
-    <div className="flex-1 flex flex-col bg-white h-full overflow-hidden">
+    <div className="flex-1 flex flex-col bg-white h-full min-h-0 overflow-hidden">
       {showConfetti && <ConfettiComponent trigger={showConfetti} />}
       <ChatHeader
         subjectName={subjectName}
@@ -70,14 +70,17 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
             <ChatEmptyState subjectName={subjectName} />
           </div>
         ) : (
-          <MessageList
-            messages={messages}
-            isLoading={isLoading}
-            onUnderstood={onUnderstood}
-            onQuickAction={onQuickAction}
-            messagesEndRef={messagesEndRef}
-            conversationUnderstood={conversationUnderstood}
-          />
+          // flex-1, h-0, min-h-0 =>「内部だけがスクロールする」レイアウト
+          <div className="flex-1 min-h-0 h-0">
+            <MessageList
+              messages={messages}
+              isLoading={isLoading}
+              onUnderstood={onUnderstood}
+              onQuickAction={onQuickAction}
+              messagesEndRef={messagesEndRef}
+              conversationUnderstood={conversationUnderstood}
+            />
+          </div>
         )}
         <MessageInput
           onSendMessage={onSendMessage}
