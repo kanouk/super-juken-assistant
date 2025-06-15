@@ -66,9 +66,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
                       />
                     </div>
                   )}
-                  {/* 完全にtext-whiteを維持 */}
-                  <div className="prose prose-sm max-w-none break-words prose-invert text-white">
-                    <LaTeXRenderer content={message.content} className="text-sm leading-relaxed text-white" />
+                  {/* 強制的に text-white で子要素まで上書き */}
+                  <div className="text-white text-sm leading-relaxed break-words">
+                    <LaTeXRenderer content={message.content} className="text-white" />
                   </div>
                 </CardContent>
               </Card>
