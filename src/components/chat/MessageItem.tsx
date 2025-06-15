@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,7 +8,7 @@ import QuickActions from './QuickActions';
 import { useProfile } from '@/hooks/useProfile';
 import MessageItemFooter from './MessageItemFooter';
 import { Button } from "@/components/ui/button";
-import { Copy, Clock, Bot } from 'lucide-react';
+import { Copy, Clock, Bot, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface MessageItemProps {
@@ -69,7 +70,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   <AvatarImage src={profile.avatar_url} alt="ユーザーアバター" />
                 ) : null}
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                  {/* User icon省略 */}
+                  <User className="h-4 w-4" />
                 </AvatarFallback>
               </Avatar>
               <Card className="flex-1 min-w-0 shadow-sm bg-gradient-to-br from-blue-500 to-blue-600 border-0">

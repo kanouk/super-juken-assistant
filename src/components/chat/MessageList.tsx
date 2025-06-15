@@ -77,7 +77,7 @@ const MessageList: React.FC<MessageListProps> = ({
                     <Bot className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
+                <div className="flex-1 flex items-center">
                   <div className="flex space-x-1">
                     <div className="w-3 h-3 bg-blue-400 rounded-full animate-bounce"></div>
                     <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
