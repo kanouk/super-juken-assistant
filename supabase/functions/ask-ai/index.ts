@@ -42,6 +42,8 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
+    console.log("Current user ID:", user.id);
+
     // 設定取得
     const { data: settings } = await supabaseClient
       .from('settings')
@@ -49,10 +51,16 @@ serve(async (req) => {
       .eq('id', user.id)
       .single();
 
-    // 管理者デフォルト取得
-    const { data: adminRows } = await supabaseClient
+    console.log("User settings fetched:", settings ? "found" : "not found");
+
+    // 管理者デフォルト取得 - より詳細なログを追加
+    console.log("Attempting to fetch admin_settings...");
+    const { data: adminRows, error: adminError } = await supabaseClient
       .from('admin_settings')
       .select('setting_key, setting_value');
+
+    console.log("Admin settings query error:", adminError);
+    console.log("Admin settings data:", adminRows);
 
     // デバッグログの追加
     console.log("adminRows fetched (debug):", adminRows);
@@ -63,6 +71,8 @@ serve(async (req) => {
         adminSettingMap[row.setting_key] = row.setting_value;
       }
     }
+
+    console.log("Processed adminSettingMap:", adminSettingMap);
 
     // --- APIキー・モデルどちらを使うか決定
     const { apiKeys, models, selectedProvider, usedFreeApi } = getApiConfig(settings, adminSettingMap, user.id);
