@@ -49,6 +49,16 @@ export const ModelsTab = ({
     return [];
   };
 
+  // プレースホルダー用: 管理者指定モデル名 or 通常値
+  const getModelPlaceholder = (provider: string) => {
+    if (!userKeys[provider as keyof typeof userKeys] && freeUserModels?.[provider]) {
+      // 管理者指定モデル（無料ユーザー用デフォルト）
+      const found = availableModels?.[provider]?.find(m => m.value === freeUserModels[provider]);
+      return found ? `（無料設定モデル: ${found.label}）` : "無料設定モデル";
+    }
+    return "モデルを選択";
+  };
+
   return (
     <Card className="shadow-lg border-2 border-gray-100 bg-white/80 backdrop-blur-sm">
       <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50 border-b border-gray-100">
@@ -70,9 +80,6 @@ export const ModelsTab = ({
             onValueChange={(value) => updateSetting('selectedProvider', value)}
             className="space-y-3"
           >
-            {/* プロバイダー選択
-              ※APIキーない場合は選択不可
-              UI上disableは行わず選択のみ */}
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="openai" id="openai" />
               <Label htmlFor="openai" className="font-medium">OpenAI</Label>
@@ -109,10 +116,10 @@ export const ModelsTab = ({
                   disabled={!userKeys[provider as keyof typeof userKeys]}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="モデルを選択" />
+                    <SelectValue placeholder={getModelPlaceholder(provider)} />
                   </SelectTrigger>
                   <SelectContent>
-                    {getAllowedModels(provider).map((option, i) => (
+                    {getAllowedModels(provider).map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
@@ -127,4 +134,3 @@ export const ModelsTab = ({
     </Card>
   );
 };
-

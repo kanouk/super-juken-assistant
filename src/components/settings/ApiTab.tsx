@@ -30,8 +30,7 @@ export const ApiTab = ({ apiKeys, updateSetting, freeUserApiKeys }: ApiTabProps)
       <CardContent className="p-4 lg:p-6 space-y-4 lg:space-y-6">
         {!userKeySet && (
           <div className="text-xs text-gray-600 bg-emerald-50 border border-emerald-200 rounded px-3 py-2 mb-2">
-            ※ APIキーを登録しなくても最低限のチャット利用ができます（管理者が指定したデフォルトAPIキーが自動で適用されます）。<br />
-            より多くのモデルや最新モデルを使いたい場合は、ご自身のAPIキーを入力してください。
+            ※ APIキーを登録しなくても最低限のチャット利用ができますが、より多くのモデルや最新モデルを使いたい場合は、ご自身のAPIキーを入力してください。
           </div>
         )}
         <div>
@@ -77,4 +76,3 @@ export const ApiTab = ({ apiKeys, updateSetting, freeUserApiKeys }: ApiTabProps)
     </Card>
   );
 };
-
