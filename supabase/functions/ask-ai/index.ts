@@ -54,6 +54,9 @@ serve(async (req) => {
       .from('admin_settings')
       .select('setting_key, setting_value');
 
+    // デバッグログの追加
+    console.log("adminRows fetched (debug):", adminRows);
+
     const adminSettingMap: Record<string, any> = {};
     if (adminRows) {
       for (const row of adminRows) {
