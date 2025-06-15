@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Lock } from "lucide-react";
@@ -12,20 +13,30 @@ interface PasscodeAuthProps {
 export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: PasscodeAuthProps) => {
   const [passcodeInput, setPasscodeInput] = useState('');
   const [isShaking, setIsShaking] = useState(false);
+
   const otpGroupRef = useRef<HTMLDivElement>(null);
+  // 最新input要素へのref
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // パスコードリセット時も一番左に自動focus
+  // 表示時に先頭inputへ自動フォーカス
   useEffect(() => {
+    // setTimeout必要: 初回マウント後にinputが描画されるため
     const timer = setTimeout(() => {
+      // div配下のinput全てを取得
       if (otpGroupRef.current) {
-        const firstInput = otpGroupRef.current.querySelector('input');
-        firstInput?.focus();
+        const inputField = otpGroupRef.current.querySelector('input');
+        inputField?.focus();
       }
-    }, 10);
+      // 必ず先頭input要素にrefで直接focus
+      if (inputRefs.current[0]) {
+        inputRefs.current[0].focus();
+      }
+    }, 30);
     return () => clearTimeout(timer);
-  }, [passcodeInput]);
+  }, []);
 
-  const handlePasscodeChange = (value: string) => {
+  // 入力時のフォーカス制御＋バリデーション
+  const handlePasscodeChange = useCallback((value: string) => {
     setPasscodeInput(value);
 
     if (value.length === 6) {
@@ -39,8 +50,21 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
         }
         setTimeout(() => {
           setIsShaking(false);
+          // 失敗時は必ず1文字目に戻す
+          if (inputRefs.current[0]) {
+            inputRefs.current[0].focus();
+          }
         }, 500);
       }
+    }
+  }, [expectedPasscode, onAuthenticated]);
+
+  // 個々のslotへrefをセット、Enterなどで最後以外なら次inputへ
+  const handleInput = (e: React.FormEvent<HTMLInputElement>, idx: number) => {
+    const input = e.target as HTMLInputElement;
+    if (input.value && idx < 5) {
+      // 1文字入力したら自動的に次のinputをfocus
+      inputRefs.current[idx + 1]?.focus();
     }
   };
 
@@ -65,16 +89,30 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
               value={passcodeInput}
               onChange={handlePasscodeChange}
               key={passcodeInput.length === 0 ? Math.random() : "otp"}
-            >
-              <InputOTPGroup ref={otpGroupRef} className="gap-2">
-                <InputOTPSlot index={0} className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"/>
-                <InputOTPSlot index={1} className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"/>
-                <InputOTPSlot index={2} className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"/>
-                <InputOTPSlot index={3} className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"/>
-                <InputOTPSlot index={4} className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"/>
-                <InputOTPSlot index={5} className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"/>
-              </InputOTPGroup>
-            </InputOTP>
+              // input要素にイベントを渡すためにrender prop活用
+              render={({ slots }) => (
+                <InputOTPGroup ref={otpGroupRef} className="gap-2">
+                  {[0,1,2,3,4,5].map((index) => (
+                    <InputOTPSlot
+                      key={index}
+                      index={index}
+                      className="w-12 h-12 text-white border-white/30 bg-white/10 backdrop-blur-xl"
+                      ref={el => inputRefs.current[index] = el as HTMLInputElement}
+                      // 入力時
+                      inputProps={{
+                        type: 'tel',
+                        pattern: '[0-9]*',
+                        inputMode: 'numeric',
+                        onInput: (e: React.FormEvent<HTMLInputElement>) => handleInput(e, index),
+                        tabIndex: 0, // tab周りも正常化
+                        maxLength: 1,
+                        autoFocus: index === 0 // 1個目だけautoFocus
+                      }}
+                    />
+                  ))}
+                </InputOTPGroup>
+              )}
+            />
           </div>
           <div className="flex justify-center">
             <Button
@@ -90,3 +128,4 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
     </div>
   );
 };
+
