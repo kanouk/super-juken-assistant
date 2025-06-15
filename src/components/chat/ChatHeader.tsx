@@ -137,9 +137,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               </Button>
             )}
           </div>
-          {/* モデル表示: より統一感あるpillデザイン */}
-          <div className="flex items-center gap-2 ml-2">
-            <div className="flex items-center gap-1 text-[13px] px-3 py-1 rounded-l-full bg-gray-50 border border-gray-200 font-semibold text-gray-500 select-none h-8 shadow-sm">
+          {/* モデル表示: pillが一体化し、より洗練されたデザイン */}
+          <div className="flex items-center gap-0 ml-0">
+            <div className="flex items-center gap-1 text-[13px] px-3 py-1 rounded-l-full bg-gray-50 border border-gray-200 font-semibold text-gray-500 select-none h-8 shadow-sm border-r-0">
               <Cpu className="w-4 h-4 mr-1 opacity-70" />
               <span className="tracking-wide">モデル</span>
             </div>
@@ -149,6 +149,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                 rounded-r-full border-l-0 px-3 h-8 flex items-center font-mono text-xs font-extrabold text-gray-900 tracking-tight shadow-sm
                 select-none
               `}
+              style={{
+                borderLeft: "none",
+                marginLeft: "-1px", // しっかりpillが繋がる調整
+                letterSpacing: "0.02em"
+              }}
             >
               {getModelDisplayName(currentModel)}
             </span>
@@ -160,4 +165,3 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 };
 
 export default ChatHeader;
-
