@@ -90,6 +90,8 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
           isLoading={isLoading || conversationUnderstood}
           selectedImages={selectedImages}
           onImagesChange={setSelectedImages}
+          conversationUnderstood={conversationUnderstood}
+          onNewChat={onNewChat}
         />
       </div>
     </div>

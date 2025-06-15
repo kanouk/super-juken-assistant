@@ -1,7 +1,8 @@
 
 import React, { useRef } from 'react';
 import { Textarea } from "@/components/ui/textarea";
-import { Paperclip } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Paperclip, Plus } from 'lucide-react';
 import { ImageData } from './types';
 
 interface MessageInputProps {
@@ -9,6 +10,8 @@ interface MessageInputProps {
   isLoading: boolean;
   selectedImages: ImageData[];
   onImagesChange: (images: ImageData[]) => void;
+  conversationUnderstood?: boolean;
+  onNewChat?: () => void;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({
@@ -16,12 +19,16 @@ const MessageInput: React.FC<MessageInputProps> = ({
   isLoading,
   selectedImages,
   onImagesChange,
+  conversationUnderstood = false,
+  onNewChat,
 }) => {
   const [inputText, setInputText] = React.useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (conversationUnderstood) return;
+    
     if (inputText.trim() || selectedImages.length > 0) {
       onSendMessage(inputText, selectedImages);
       setInputText('');
@@ -29,10 +36,13 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (conversationUnderstood) return;
     setInputText(e.target.value);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (conversationUnderstood) return;
+    
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       if (inputText.trim() || selectedImages.length > 0) {
@@ -43,12 +53,40 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (conversationUnderstood) return;
+    
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
       onImagesChange([...selectedImages, { url, alt: file.name }]);
     }
   };
+
+  if (conversationUnderstood) {
+    return (
+      <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 border-t border-green-200">
+        <div className="max-w-2xl mx-auto text-center space-y-3">
+          <div className="flex items-center justify-center space-x-2 text-green-700">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="font-medium">この質問は完全に理解しました！</span>
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          </div>
+          <p className="text-sm text-gray-600">
+            別の質問がある場合は、新規チャットを開始してください。
+          </p>
+          {onNewChat && (
+            <Button 
+              onClick={onNewChat}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              新規チャットを開始
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 bg-white border-t border-gray-200">
