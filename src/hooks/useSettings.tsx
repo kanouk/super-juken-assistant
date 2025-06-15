@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +29,7 @@ interface Settings {
     [key: string]: string;
   };
   subjectConfigs: SubjectConfig[];
+  mbtiInstructions?: { [key: string]: string }; // 追加: 性格タイプ別カスタム指示
 }
 
 // 型ガード関数
@@ -104,7 +104,8 @@ export const useSettings = () => {
       information: '情報の内容はプログラミングやデータ処理について具体例を交えて説明してください。',
       other: 'その他の教科についても基礎から応用まで幅広く対応します。具体例を交えて分かりやすく説明してください。'
     },
-    subjectConfigs: defaultSubjectConfigs
+    subjectConfigs: defaultSubjectConfigs,
+    mbtiInstructions: {} // 追加（空で初期化）
   });
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -156,7 +157,10 @@ export const useSettings = () => {
             : prev.subjectInstructions,
           subjectConfigs: isSubjectConfigs(settingsData.subject_configs) 
             ? settingsData.subject_configs 
-            : prev.subjectConfigs
+            : prev.subjectConfigs,
+          mbtiInstructions: typeof settingsData.mbti_instructions === 'object' && settingsData.mbti_instructions !== null
+            ? settingsData.mbti_instructions
+            : {},
         }));
       }
     } catch (error) {
@@ -179,7 +183,7 @@ export const useSettings = () => {
 
       if (profileError) throw profileError;
 
-      // 設定を設定テーブルに保存
+      // 設定を設定テーブルに保存（mbti_instructionsも含める）
       const { error: settingsError } = await supabase
         .from('settings')
         .update({
@@ -188,7 +192,8 @@ export const useSettings = () => {
           selected_provider: newSettings.selectedProvider,
           common_instruction: newSettings.commonInstruction,
           subject_instructions: newSettings.subjectInstructions,
-          subject_configs: newSettings.subjectConfigs as any
+          subject_configs: newSettings.subjectConfigs as any,
+          mbti_instructions: newSettings.mbtiInstructions || {},
         })
         .eq('id', user.id);
 
