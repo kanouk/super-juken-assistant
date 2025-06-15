@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile, ExamSettings, isValidExamSettings } from '@/types/profile';
@@ -32,8 +33,11 @@ export const useProfile = () => {
 
         // exam_settingsの型安全な処理
         let examSettings = defaultExamSettings;
+        // === 修正: nullや不正な場合はデフォルト採用 ===
         if (data.exam_settings && isValidExamSettings(data.exam_settings)) {
           examSettings = data.exam_settings as ExamSettings; // Cast after validation
+        } else if (data.exam_settings === null) {
+          examSettings = defaultExamSettings;
         }
 
         setProfile({
@@ -90,12 +94,9 @@ export const useProfile = () => {
 
       if (updateError) {
         console.error('Profile update error after avatar upload:', updateError);
-        // Optionally, try to remove the uploaded avatar if profile update fails
-        // await supabase.storage.from('avatars').remove([filePath]);
         throw updateError;
       }
       
-      // Update local profile state
       setProfile(prevProfile => prevProfile ? { ...prevProfile, avatar_url: publicUrlData.publicUrl } : null);
 
       return publicUrlData.publicUrl;
