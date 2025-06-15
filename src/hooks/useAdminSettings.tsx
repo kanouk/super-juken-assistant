@@ -3,6 +3,15 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// 追加：MBTIタイプ一覧
+export const MBTI_TYPES = [
+  "ISTJ", "ISFJ", "INFJ", "INTJ",
+  "ISTP", "ISFP", "INFP", "INTP",
+  "ESTP", "ESFP", "ENFP", "ENTP",
+  "ESTJ", "ESFJ", "ENFJ", "ENTJ",
+  "不明"
+];
+
 interface AdminSettings {
   default_pin: string;
   default_common_instruction: string;
@@ -10,6 +19,7 @@ interface AdminSettings {
   free_user_api_keys: Record<string, string>;
   available_models: Record<string, Array<{label: string, value: string}>>;
   free_user_models: Record<string, string>;
+  mbti_instructions: Record<string, string>; // MBTIタイプ別
 }
 
 export const useAdminSettings = () => {
@@ -20,6 +30,7 @@ export const useAdminSettings = () => {
     free_user_api_keys: {},
     available_models: {},
     free_user_models: {},
+    mbti_instructions: {}, // 追加
   });
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
