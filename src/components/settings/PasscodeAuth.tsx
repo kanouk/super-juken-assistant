@@ -66,38 +66,16 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
               value={passcodeInput}
               onChange={handlePasscodeChange}
               containerClassName=""
-              render={({ slots }) => {
-                // ログ出力でslotsの値を必ず確認
-                console.log("InputOTP:slots", slots);
-
-                // slotsが配列で、長さ6なら正常処理
-                if (Array.isArray(slots) && slots.length === 6) {
-                  return (
-                    <InputOTPGroup ref={otpGroupRef} className="gap-2">
-                      {slots.map((_, index) => (
-                        <InputOTPSlot
-                          key={index}
-                          index={index}
-                          className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold"
-                        />
-                      ))}
-                    </InputOTPGroup>
-                  );
-                } else {
-                  // 異常な場合は必ず6スロット分のダミーを描画
-                  return (
-                    <InputOTPGroup ref={otpGroupRef} className="gap-2">
-                      {Array.from({ length: 6 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold opacity-50"
-                        >*</div>
-                      ))}
-                    </InputOTPGroup>
-                  );
-                }
-              }}
-            />
+            >
+              <InputOTPGroup ref={otpGroupRef} className="gap-2">
+                <InputOTPSlot index={0} className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold" />
+                <InputOTPSlot index={1} className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold" />
+                <InputOTPSlot index={2} className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold" />
+                <InputOTPSlot index={3} className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold" />
+                <InputOTPSlot index={4} className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold" />
+                <InputOTPSlot index={5} className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold" />
+              </InputOTPGroup>
+            </InputOTP>
           </div>
           <div className="flex justify-center">
             <Button
