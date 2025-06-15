@@ -1,4 +1,3 @@
-
 export interface Message {
   id: string;
   db_id?: string;
@@ -28,6 +27,8 @@ export type MessageType = {
   timestamp: Date;
   images?: ImageData[];
   isUnderstood?: boolean;
+  cost?: number;
+  model?: string;
 };
 
 export interface ImageData {
