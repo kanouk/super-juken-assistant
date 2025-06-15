@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableHead, TableRow, TableBody, TableCell } from "@/components/ui/table";
@@ -49,11 +50,14 @@ export const AdminUsersTab = () => {
   // ユーザー本体一覧
   const loadAccountUsers = async () => {
     try {
-      const session = JSON.parse(localStorage.getItem("supabase-auth-token") || "{}");
-      const jwt = session?.currentSession?.access_token || session?.access_token;
+      // 最新のセッション取得
+      const { data: sessionData } = await supabase.auth.getSession();
+      const jwt = sessionData?.session?.access_token;
+      if (!jwt) throw new Error("未認証またはセッションが失効しています");
+
       const res = await fetch("https://huyumzlevlcxsnvbtcsd.supabase.co/functions/v1/list-users", {
         headers: {
-          Authorization: `Bearer ${jwt ?? ""}`,
+          Authorization: `Bearer ${jwt}`,
         }
       });
       const result = await res.json();
