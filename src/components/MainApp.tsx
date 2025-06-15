@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import ChatScreen from './ChatScreen';
@@ -143,7 +142,6 @@ const MainApp = () => {
           <ChatScreen
             subject={selectedSubject}
             subjectName={subjectNames[selectedSubject]}
-            currentModel="GPT-4o"
             userId={currentUser?.id}
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
             isMobile={isMobile}
