@@ -14,15 +14,15 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
   const [passcodeInput, setPasscodeInput] = useState('');
   const [isShaking, setIsShaking] = useState(false);
 
-  const otpGroupRef = useRef<HTMLDivElement>(null);
+  // 1つ目のinput要素へのref
+  const firstInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const input = otpGroupRef.current?.querySelector('input');
-      input?.focus();
-    }, 20);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!passcodeInput && firstInputRef.current) {
+      // 初期表示やリセット時に自動で最初のinputへフォーカス
+      firstInputRef.current.focus();
+    }
+  }, [passcodeInput]);
 
   const handlePasscodeChange = useCallback((value: string) => {
     setPasscodeInput(value);
@@ -38,8 +38,7 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
         }
         setTimeout(() => {
           setIsShaking(false);
-          const input = otpGroupRef.current?.querySelector('input');
-          input?.focus();
+          // setPasscodeInput('') によりuseEffectで自動フォーカス
         }, 500);
       }
     }
@@ -67,8 +66,12 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
               onChange={handlePasscodeChange}
               containerClassName=""
             >
-              <InputOTPGroup ref={otpGroupRef} className="gap-2">
-                <InputOTPSlot index={0} className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold" />
+              <InputOTPGroup className="gap-2">
+                <InputOTPSlot
+                  index={0}
+                  className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold"
+                  ref={firstInputRef}
+                />
                 <InputOTPSlot index={1} className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold" />
                 <InputOTPSlot index={2} className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold" />
                 <InputOTPSlot index={3} className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold" />
