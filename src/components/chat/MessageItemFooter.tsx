@@ -31,7 +31,7 @@ const MessageItemFooter: React.FC<MessageItemFooterProps> = ({
     if (onCopyToClipboard) onCopyToClipboard(content);
   };
 
-  // 常にfooter自体は表示・整列: 下部右寄せ&本文に重ならない・PC/スマホ対応
+  // フッターは必ず表示。model/costがなければ非表示テキストなし/空欄
   return (
     <div
       className="
@@ -50,11 +50,17 @@ const MessageItemFooter: React.FC<MessageItemFooterProps> = ({
       "
       style={{ position: "static" }}
     >
-      {model && (
-        <span className="text-xs text-gray-400 font-mono min-w-[90px] select-text">{getModelDisplayName(model)}</span>
+      {model ? (
+        <span className="text-xs text-gray-400 font-mono min-w-[90px] select-text">
+          {getModelDisplayName(model)}
+        </span>
+      ) : (
+        <span className="text-xs text-gray-200 font-mono min-w-[90px] select-text">&nbsp;</span>
       )}
-      {cost !== undefined && (
+      {typeof cost !== 'undefined' ? (
         <span className="text-xs text-gray-400 font-mono select-text">¥{Number(cost).toFixed(4)}</span>
+      ) : (
+        <span className="text-xs text-gray-200 font-mono select-text">&nbsp;</span>
       )}
       <button
         type="button"
@@ -71,3 +77,4 @@ const MessageItemFooter: React.FC<MessageItemFooterProps> = ({
 };
 
 export default MessageItemFooter;
+

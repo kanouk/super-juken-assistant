@@ -31,7 +31,6 @@ export function useConversations(userId: string | undefined, subject: string) {
 
   const handleSelectConversation = async (conversationId: string) => {
     try {
-      // 会話の詳細を取得
       const { data: conversationData, error: conversationError } = await supabase
         .from('conversations')
         .select('is_understood')
@@ -48,17 +47,21 @@ export function useConversations(userId: string | undefined, subject: string) {
 
       if (error) throw error;
 
+      // ここでmodel, costも含めて整形
       const formattedMessages: MessageType[] = messagesData.map((msg) => ({
-        id: msg.id.toString(),
+        id: msg.id?.toString?.() ?? '',
         content: msg.content,
         isUser: msg.role === 'user',
         timestamp: new Date(msg.created_at),
         images: msg.image_url ? [{ url: msg.image_url }] : undefined,
+        model: msg.model || undefined,
+        cost: typeof msg.cost === 'number' ? msg.cost : undefined,
+        isUnderstood: msg.is_understood,
       }));
 
       setSelectedConversationId(conversationId);
       setConversationUnderstood(conversationData.is_understood || false);
-      
+
       return formattedMessages;
     } catch (error: any) {
       toast({
@@ -111,3 +114,4 @@ export function useConversations(userId: string | undefined, subject: string) {
     handleDeleteConversation,
   };
 }
+

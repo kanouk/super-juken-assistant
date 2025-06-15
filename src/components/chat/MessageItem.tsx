@@ -114,8 +114,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
               )}
 
               <LaTeXRenderer content={message.content} colorScheme="assistant" />
-
-              {/* フッター：モデル名・コスト・コピーボタン表示 本文下・右寄せ */}
+              
+              {/* フッター：モデル名・コスト・コピーボタンは常に表示 */}
               <div className="flex w-full">
                 <MessageItemFooter
                   content={message.content}
