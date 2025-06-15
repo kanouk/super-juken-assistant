@@ -16,7 +16,6 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
 
   const otpGroupRef = useRef<HTMLDivElement>(null);
 
-  // 初回表示時に先頭inputへ自動フォーカス
   useEffect(() => {
     const timer = setTimeout(() => {
       const input = otpGroupRef.current?.querySelector('input');
@@ -25,7 +24,6 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
     return () => clearTimeout(timer);
   }, []);
 
-  // 入力＆バリデーション
   const handlePasscodeChange = useCallback((value: string) => {
     setPasscodeInput(value);
 
@@ -68,27 +66,37 @@ export const PasscodeAuth = ({ expectedPasscode, onAuthenticated, onBack }: Pass
               value={passcodeInput}
               onChange={handlePasscodeChange}
               containerClassName=""
-              render={({ slots }) => (
-                <InputOTPGroup ref={otpGroupRef} className="gap-2">
-                  {/* slotsへの安全なアクセス */}
-                  {Array.isArray(slots) && slots.length === 6
-                    ? slots.map((_, index) => (
+              render={({ slots }) => {
+                // ログ出力でslotsの値を必ず確認
+                console.log("InputOTP:slots", slots);
+
+                // slotsが配列で、長さ6なら正常処理
+                if (Array.isArray(slots) && slots.length === 6) {
+                  return (
+                    <InputOTPGroup ref={otpGroupRef} className="gap-2">
+                      {slots.map((_, index) => (
                         <InputOTPSlot
                           key={index}
                           index={index}
                           className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold"
                         />
-                      ))
-                    // slots配列が異常なら空スロットで埋める（ライブラリ異常系対応）
-                    : Array.from({ length: 6 }).map((_, index) => (
+                      ))}
+                    </InputOTPGroup>
+                  );
+                } else {
+                  // 異常な場合は必ず6スロット分のダミーを描画
+                  return (
+                    <InputOTPGroup ref={otpGroupRef} className="gap-2">
+                      {Array.from({ length: 6 }).map((_, index) => (
                         <div
                           key={index}
                           className="relative flex h-12 w-12 items-center justify-center border-y border-r border-white/30 text-xl rounded-lg bg-white/10 backdrop-blur-xl first:rounded-l-lg last:rounded-r-lg text-white text-2xl font-bold opacity-50"
                         >*</div>
-                      ))
-                  }
-                </InputOTPGroup>
-              )}
+                      ))}
+                    </InputOTPGroup>
+                  );
+                }
+              }}
             />
           </div>
           <div className="flex justify-center">
