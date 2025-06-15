@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, History, Menu, Cpu } from 'lucide-react';
@@ -71,8 +72,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   return (
     <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
-      <div className="p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+      <div className="flex items-center justify-between px-4 py-3 gap-2 min-h-[72px] max-w-[100vw]">
+        <div className="flex items-center gap-4 min-w-0 flex-1">
           {isMobile && onToggleSidebar && (
             <Button
               variant="ghost"
@@ -94,46 +95,63 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               履歴に戻る
             </Button>
           )}
+          {/* 教科名 & サブタイトル */}
           <div className="min-w-0 flex-1">
-            <h1 className={`text-xl font-bold text-gray-900 truncate bg-gradient-to-r ${colorGradient} bg-clip-text text-transparent`}>
+            <h1
+              className={`
+                text-2xl font-extrabold bg-gradient-to-r ${colorGradient} bg-clip-text text-transparent leading-tight tracking-tight
+                mb-1
+              `}
+            >
               {subjectName}
             </h1>
-            <p className="text-sm text-gray-500 hidden sm:block font-medium">AI学習アシスタント</p>
+            <p className="text-xs sm:text-sm text-slate-400 font-semibold tracking-wide uppercase">
+              AI学習アシスタント
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0 h-[60px]">
-          {showHistoryButton && onShowHistory && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onShowHistory}
-              className="gap-2 hidden sm:flex hover:bg-gray-50 border-gray-300 transition-colors shadow-sm h-[44px]"
-              style={{ alignSelf: 'center' }}
-            >
-              <History className="h-4 w-4" />
-              <span className="hidden md:inline">履歴</span>
-            </Button>
-          )}
-          {showNewChatButton && onNewChat && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onNewChat}
-              className="gap-2 hover:bg-blue-50 border-blue-300 text-blue-700 transition-colors shadow-sm h-[44px]"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">新規チャット</span>
-            </Button>
-          )}
-          {/* モデル表示（選択不可） */}
-          <div className="flex flex-col justify-center h-[44px]">
-            <div className="flex items-center gap-1.5 text-sm text-gray-600 font-medium mb-1">
-              <Cpu className="h-3 w-3" />
-              モデル
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* ボタン部・モデル部まとめてスタイリッシュに */}
+          <div className="flex items-center gap-1">
+            {showHistoryButton && onShowHistory && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onShowHistory}
+                className="gap-2 hover:bg-gray-50 border-gray-200/80 transition-colors shadow-sm rounded-lg px-3 h-10 text-sm font-semibold"
+                style={{ alignSelf: 'center' }}
+              >
+                <History className="h-4 w-4" />
+                <span className="hidden md:inline">履歴</span>
+              </Button>
+            )}
+            {showNewChatButton && onNewChat && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onNewChat}
+                className="gap-2 border-blue-300 bg-white text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all shadow-sm rounded-lg px-3 h-10 font-semibold text-sm"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">新規チャット</span>
+              </Button>
+            )}
+          </div>
+          {/* モデル表示: より統一感あるpillデザイン */}
+          <div className="flex items-center gap-2 ml-2">
+            <div className="flex items-center gap-1 text-[13px] px-3 py-1 rounded-l-full bg-gray-50 border border-gray-200 font-semibold text-gray-500 select-none h-8 shadow-sm">
+              <Cpu className="w-4 h-4 mr-1 opacity-70" />
+              <span className="tracking-wide">モデル</span>
             </div>
-            <div className={`text-xs font-mono h-8 bg-white border ${colorBorder} rounded-md px-3 py-1.5 flex items-center`}>
+            <span
+              className={`
+                bg-white border ${colorBorder}
+                rounded-r-full border-l-0 px-3 h-8 flex items-center font-mono text-xs font-extrabold text-gray-900 tracking-tight shadow-sm
+                select-none
+              `}
+            >
               {getModelDisplayName(currentModel)}
-            </div>
+            </span>
           </div>
         </div>
       </div>
@@ -142,3 +160,4 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 };
 
 export default ChatHeader;
+
