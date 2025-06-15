@@ -121,30 +121,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
               <div className="flex w-full">
                 <MessageItemFooter
                   content={message.content}
-                  model={message.model ?? currentModel}
+                  model={message.model}
                   cost={message.cost}
                   onCopyToClipboard={onCopyToClipboard}
                 />
               </div>
-
-              {/* 旧コスト・モデル表示（今後不要なら削除可） */}
-              {/* {(message.cost || message.model) && (
-                <div className="mt-6 pt-4 border-t border-gray-100">
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      <span className="font-medium">{message.model || 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {message.cost && (
-                        <span className="bg-gray-100 px-3 py-1 rounded-full font-medium text-gray-700">
-                          ¥{message.cost.toFixed(4)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )} */}
             </div>
           </div>
         </div>
