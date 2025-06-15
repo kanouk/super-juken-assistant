@@ -38,8 +38,8 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onQuickAction, onUnderstood
         onClick={onUnderstood} 
         className={`h-8 px-3 text-xs transition-all duration-200 shadow-sm ${
           isUnderstood 
-            ? 'bg-green-50 border-green-300 text-green-700' 
-            : 'bg-white border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300'
+            ? 'bg-green-50 border-green-300 text-green-700 cursor-not-allowed opacity-75' 
+            : 'bg-white border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 cursor-pointer'
         }`}
         disabled={isUnderstood}
       >

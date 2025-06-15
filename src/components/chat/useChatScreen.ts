@@ -298,13 +298,13 @@ export function useChatScreen(props: UseChatScreenProps) {
 
       if (error) throw error;
 
-      const formattedMessages: MessageType[] = messagesData.map(msg => ({
-        id: msg.id.toString(),
+      const formattedMessages: MessageType[] = messagesData.map((msg, index) => ({
+        id: `${msg.id}_${index}`, // ユニークなIDを生成
         content: msg.content,
         isUser: msg.role === 'user',
         timestamp: new Date(msg.created_at),
         images: msg.image_url ? [{ url: msg.image_url }] : undefined,
-        isUnderstood: msg.is_understood || false,
+        isUnderstood: msg.is_understood || false, // データベースの状態を正しく反映
       }));
 
       setMessages(formattedMessages);
