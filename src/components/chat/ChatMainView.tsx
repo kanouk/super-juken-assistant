@@ -50,8 +50,12 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
   messagesEndRef,
   conversationUnderstood,
 }) => {
+  // モバイル下部固定入力欄のために高さ分余白を確保
+  const inputBarHeight = 98; // Input部分 + padding想定。微調整可
+  const isMobile = isMobile || false;
+
   return (
-    <div className="flex flex-col h-full min-h-0 bg-white"> {/* h-full, min-h-0 を指定 */}
+    <div className="flex flex-col h-full min-h-0 bg-white">
       {showConfetti && <ConfettiComponent trigger={showConfetti} />}
       <ChatHeader
         subjectName={subjectName}
@@ -64,14 +68,13 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
         onToggleSidebar={onToggleSidebar}
         isMobile={isMobile}
       />
-      {/* ここからチャット本体、スクロールエリアはこの中だけ */}
-      <div className="flex-1 min-h-0 h-0 flex flex-col overflow-hidden">
+      {/* ↓入力欄高さ分のpbを動的に確保 */}
+      <div className={`flex-1 min-h-0 h-0 flex flex-col overflow-hidden ${isMobile ? `pb-[${inputBarHeight}px]` : ''}`}>
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col overflow-hidden">
             <ChatEmptyState subjectName={subjectName} />
           </div>
         ) : (
-          // flex-1, h-full, min-h-0 で内部スクロールを有効化
           <div className="flex-1 h-full min-h-0">
             <MessageList
               messages={messages}
@@ -83,6 +86,7 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
             />
           </div>
         )}
+        {/* MessageInputはモバイル時は下部固定で出る */}
         <MessageInput
           onSendMessage={onSendMessage}
           isLoading={isLoading || conversationUnderstood}
