@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MessageType, Message } from './types';
 import MessageItem from './MessageItem';
@@ -24,15 +23,26 @@ const MessageList: React.FC<MessageListProps> = ({
   conversationUnderstood,
 }) => {
   // Convert MessageType to Message format for MessageItem
-  const convertToMessage = (msg: MessageType): Message => ({
-    id: msg.id,
-    content: msg.content,
-    role: msg.isUser ? 'user' : 'assistant',
-    created_at: msg.timestamp.toISOString(),
-    subject: '', // Default empty subject for legacy messages
-    image_url: msg.images?.[0]?.url,
-    is_understood: msg.isUnderstood
-  });
+  const convertToMessage = (msg: MessageType): Message => {
+    const base: Message = {
+      id: msg.id,
+      content: msg.content,
+      role: msg.isUser ? 'user' : 'assistant',
+      created_at: msg.timestamp.toISOString(),
+      subject: '', // Default empty subject for legacy messages
+      image_url: msg.images?.[0]?.url,
+      is_understood: msg.isUnderstood
+    };
+    // AIメッセージにはダミー値を渡す（フッター表示用）
+    if (!msg.isUser) {
+      return {
+        ...base,
+        model: "gpt-4o",
+        cost: 0.0123
+      };
+    }
+    return base;
+  };
 
   // --- Height: make sure this area expands to parent ---
   // ScrollArea内のdivもh-full, min-h-0になるよう強制。
