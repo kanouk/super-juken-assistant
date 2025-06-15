@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -30,8 +31,8 @@ interface Settings {
     [key: string]: string;
   };
   subjectConfigs: SubjectConfig[];
-  mbtiInstructions?: { [key: string]: string }; // 追加: 性格タイプ別カスタム指示
-  adminDefaults?: any; // 新たに管理者設定をローカルに保持
+  mbtiInstructions?: { [key: string]: string };
+  adminDefaults?: any;
   availableModels?: any;
   freeUserModels?: any;
   freeUserApiKeys?: any;
@@ -179,6 +180,7 @@ export const useSettings = () => {
         setIsLoading(false);
         return;
       }
+      
       // プロフィールからパスコードを取得
       const { data: profileData } = await supabase
         .from('profiles')
@@ -203,34 +205,38 @@ export const useSettings = () => {
           ? settingsData.selected_provider
           : 'openai';
 
-        setSettings(prev => {
-          // apiKeys, modelsが空ならadminデフォルトで補完
-          const needFallback = (obj: any) => !obj || (typeof obj === 'object' && Object.values(obj).every(v => !v));
+        // ユーザーのAPIキーが空の場合のみ管理者デフォルトを参照（セキュリティ向上）
+        const userApiKeys = isApiKeys(settingsData.api_keys) ? settingsData.api_keys : {
+          openai: '',
+          google: '',
+          anthropic: ''
+        };
+        
+        // ユーザーが自分のAPIキーを設定していない場合のみ管理者デフォルトを使用
+        const hasUserApiKeys = userApiKeys.openai || userApiKeys.google || userApiKeys.anthropic;
 
-          return {
-            ...prev,
-            passcode: profileData?.passcode || prev.passcode,
-            apiKeys: isApiKeys(settingsData.api_keys) ? settingsData.api_keys :
-              (adminDefaults.freeUserApiKeys ? { ...adminDefaults.freeUserApiKeys } : prev.apiKeys),
-            models: isModels(settingsData.models) ? settingsData.models :
-              (adminDefaults.freeUserModels ? { ...adminDefaults.freeUserModels } : prev.models),
-            selectedProvider: selectedProvider,
-            commonInstruction: typeof settingsData.common_instruction === 'string'
-              ? settingsData.common_instruction
-              : prev.commonInstruction,
-            subjectInstructions: isSubjectInstructions(settingsData.subject_instructions)
-              ? settingsData.subject_instructions
-              : prev.subjectInstructions,
-            subjectConfigs: isSubjectConfigs(settingsData.subject_configs)
-              ? settingsData.subject_configs
-              : prev.subjectConfigs,
-            mbtiInstructions: normalizeMbtiInstructions(settingsData.mbti_instructions),
-            adminDefaults,
-            freeUserApiKeys: adminDefaults.freeUserApiKeys,
-            availableModels: adminDefaults.availableModels,
-            freeUserModels: adminDefaults.freeUserModels,
-          };
-        });
+        setSettings(prev => ({
+          ...prev,
+          passcode: profileData?.passcode || prev.passcode,
+          apiKeys: userApiKeys, // ユーザー自身のAPIキーのみ使用
+          models: isModels(settingsData.models) ? settingsData.models :
+            (adminDefaults.freeUserModels ? { ...adminDefaults.freeUserModels } : prev.models),
+          selectedProvider: selectedProvider,
+          commonInstruction: typeof settingsData.common_instruction === 'string'
+            ? settingsData.common_instruction
+            : prev.commonInstruction,
+          subjectInstructions: isSubjectInstructions(settingsData.subject_instructions)
+            ? settingsData.subject_instructions
+            : prev.subjectInstructions,
+          subjectConfigs: isSubjectConfigs(settingsData.subject_configs)
+            ? settingsData.subject_configs
+            : prev.subjectConfigs,
+          mbtiInstructions: normalizeMbtiInstructions(settingsData.mbti_instructions),
+          adminDefaults,
+          freeUserApiKeys: adminDefaults.freeUserApiKeys,
+          availableModels: adminDefaults.availableModels,
+          freeUserModels: adminDefaults.freeUserModels,
+        }));
       }
     } catch (error) {
       console.error('Settings loading error:', error);
