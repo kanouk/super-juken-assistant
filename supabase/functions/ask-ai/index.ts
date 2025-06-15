@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -38,21 +39,58 @@ serve(async (req) => {
       .eq('id', user.id)
       .single();
 
-    // Determine which provider to use
-    const provider = settings?.selected_provider || "openai";
-    const apiKeys = settings?.api_keys || {};
-    const models = settings?.models || {};
+    // --- 管理者デフォルト取得 ---
+    const { data: adminRows } = await supabaseClient
+      .from('admin_settings')
+      .select('setting_key, setting_value');
+
+    const adminSettingMap: Record<string, any> = {};
+    if (adminRows) {
+      for (const row of adminRows) {
+        adminSettingMap[row.setting_key] = row.setting_value;
+      }
+    }
+
+    // 管理者デフォルト: 無料ユーザーAPIキー & モデル
+    const freeUserApiKeys: { openai?: string; google?: string; anthropic?: string } = adminSettingMap['free_user_api_keys'] || {};
+    const freeUserModels: Record<string, string> = adminSettingMap['free_user_models'] || {};
+
+    // --- 実際に利用するAPIキーとモデル取得 ---
+    // ユーザーAPI設定 (存在しない場合や全て空の場合は管理者指定を利用)
+    let apiKeys = settings?.api_keys || {};
+    let models = settings?.models || {};
+    let selectedProvider = settings?.selected_provider || "openai";
+    let anyUserKeySet =
+      (apiKeys.openai && apiKeys.openai.trim() !== "") ||
+      (apiKeys.google && apiKeys.google.trim() !== "") ||
+      (apiKeys.anthropic && apiKeys.anthropic.trim() !== "");
+
+    // ユーザーのAPIキーが何もセットされていなければ、管理者無料ユーザーキーパスに完全に切り替え
+    if (!anyUserKeySet) {
+      apiKeys = {
+        openai: freeUserApiKeys.openai || "",
+        google: freeUserApiKeys.google || "",
+        anthropic: freeUserApiKeys.anthropic || "",
+      };
+      models = {
+        openai: freeUserModels.openai || "gpt-4o",
+        google: freeUserModels.google || "gemini-1.5-pro",
+        anthropic: freeUserModels.anthropic || "claude-3-sonnet",
+      };
+    }
+
+    // --- 以下は従来通り ---
 
     // Compose system message as before
-    let systemMessage = settings.common_instruction || 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。数学や化学の問題ではLaTeX記法を使って数式を表現してください。LaTeX記法を使用する際は、インライン数式は$...$、ブロック数式は$$...$$で囲んでください。';
+    let systemMessage = settings?.common_instruction || 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。数学や化学の問題ではLaTeX記法を使って数式を表現してください。LaTeX記法を使用する際は、インライン数式は$...$、ブロック数式は$$...$$で囲んでください。';
     let customInstruction = '';
-    if (Array.isArray(settings.subject_configs)) {
+    if (Array.isArray(settings?.subject_configs)) {
       const foundConfig = settings.subject_configs.find((conf: any) => conf.id === subject);
       if (foundConfig && foundConfig.instruction && foundConfig.instruction.length > 0) {
         customInstruction = foundConfig.instruction;
       }
     }
-    if (!customInstruction && settings.subject_instructions && settings.subject_instructions[subject]) {
+    if (!customInstruction && settings?.subject_instructions && settings.subject_instructions[subject]) {
       customInstruction = settings.subject_instructions[subject];
     }
     if (customInstruction) {
@@ -61,7 +99,7 @@ serve(async (req) => {
 
     // Prepare conversation history (up to 10 latest entries)
     let messages = [];
-    if (provider === "openai") {
+    if (selectedProvider === "openai") {
       messages.push({ role: 'system', content: systemMessage });
       if (conversationHistory && Array.isArray(conversationHistory)) {
         const recentHistory = conversationHistory.slice(-10);
@@ -86,11 +124,11 @@ serve(async (req) => {
     // Determine selected model
     let selectedModel =
       model ||
-      (provider === "openai"
+      (selectedProvider === "openai"
         ? models.openai
-        : provider === "anthropic"
+        : selectedProvider === "anthropic"
         ? models.anthropic
-        : provider === "google"
+        : selectedProvider === "google"
         ? models.google
         : "gpt-4o");
 
@@ -102,7 +140,7 @@ serve(async (req) => {
     let cost = 0;
 
     // ---- 1. OpenAI ----
-    if (provider === "openai") {
+    if (selectedProvider === "openai") {
       if (!apiKeys.openai) throw new Error("OpenAI API key not configured");
 
       // モデル名正規化（OpenAI用のみ）
@@ -146,7 +184,7 @@ serve(async (req) => {
 
     }
     // ---- 2. Anthropic（Claude） ----
-    else if (provider === "anthropic") {
+    else if (selectedProvider === "anthropic") {
       if (!apiKeys.anthropic) throw new Error("Anthropic API key not configured");
 
       // Claude: systemプロンプトはトップレベル、messagesはuser/assistantのみ
@@ -202,7 +240,7 @@ serve(async (req) => {
       usedModel = selectedModel;
     }
     // ---- 3. Google Gemini ----
-    else if (provider === "google") {
+    else if (selectedProvider === "google") {
       if (!apiKeys.google) throw new Error("Google Gemini API key not configured");
 
       // モデル名自動変換: v1beta対応のみ許可
