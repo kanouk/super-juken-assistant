@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +10,6 @@ import BasicInfoCard from './profile/BasicInfoCard';
 import MbtiCard from './profile/MbtiCard';
 import DisplaySettingsCard from './profile/DisplaySettingsCard';
 import ExamSettingsCard from './profile/ExamSettingsCard';
-import DeleteAccountCard from './profile/DeleteAccountCard';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -125,11 +125,6 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     }));
   };
 
-  const handleAccountDeleted = () => {
-    // ログアウト後にメイン画面に戻る
-    onBack();
-  };
-
   if (isProfileLoading && !loadedProfile) { // Show loading indicator if profile is loading for the first time
     return (
       <div className="flex items-center justify-center h-full">
@@ -157,7 +152,6 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
           examSettings={profileData.exam_settings} 
           onExamSettingChange={updateExamSetting} 
         />
-        <DeleteAccountCard onAccountDeleted={handleAccountDeleted} />
       </div>
     </div>
   );

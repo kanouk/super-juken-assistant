@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSettings } from "@/hooks/useSettings";
@@ -8,6 +9,7 @@ import { ApiTab } from './settings/ApiTab';
 import { ModelsTab } from './settings/ModelsTab';
 import { GeneralTab } from './settings/GeneralTab';
 import { SubjectsTab } from './settings/SubjectsTab';
+import DeleteAccountCard from './profile/DeleteAccountCard';
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -67,6 +69,11 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
     }));
   };
 
+  const handleAccountDeleted = () => {
+    // アカウント削除後にメイン画面に戻る
+    onBack();
+  };
+
   // --- 新: 管理者デフォルト設定をpropsで渡す ---
   const adminDefaults = {
     availableModels: settings.availableModels,
@@ -102,7 +109,7 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
         />
 
         <Tabs defaultValue="security" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-5 bg-white shadow-sm border-2 border-gray-100">
+          <TabsList className="grid w-full grid-cols-6 bg-white shadow-sm border-2 border-gray-100">
             <TabsTrigger value="security" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               セキュリティ
             </TabsTrigger>
@@ -117,6 +124,9 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             </TabsTrigger>
             <TabsTrigger value="subjects" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               教科設定
+            </TabsTrigger>
+            <TabsTrigger value="account" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              アカウント
             </TabsTrigger>
           </TabsList>
 
@@ -159,6 +169,10 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
               updateSubjectConfig={updateSubjectConfig}
               moveSubject={moveSubject}
             />
+          </TabsContent>
+
+          <TabsContent value="account">
+            <DeleteAccountCard onAccountDeleted={handleAccountDeleted} />
           </TabsContent>
         </Tabs>
       </div>
