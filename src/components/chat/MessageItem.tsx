@@ -7,7 +7,7 @@ import QuickActions from './QuickActions';
 import { useProfile } from '@/hooks/useProfile';
 import MessageItemFooter from './MessageItemFooter';
 import { Button } from "@/components/ui/button";
-import { Copy, Clock } from 'lucide-react';
+import { Copy, Clock, Bot } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface MessageItemProps {
@@ -99,7 +99,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
           <div className="flex items-start space-x-4">
             <Avatar className="w-8 h-8 shrink-0 mt-1 ring-2 ring-green-100 shadow-sm">
               <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-                {/* AI bot icon省略 */}
+                <Bot className="h-4 w-4" />
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0 relative">
