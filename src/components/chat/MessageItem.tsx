@@ -116,12 +116,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
               {/* AIメッセージは黒基調 */}
               <LaTeXRenderer content={message.content} colorScheme="assistant" />
-              {/* コピーアイコンを右下へ小さく重ねて配置 */}
+              {/* コピーアイコンを右下へ小さく重ねて配置し、回答との間に余白を追加 */}
               <button
                 type="button"
                 aria-label="回答をコピー"
                 onClick={handleCopy}
-                className="absolute right-2 bottom-2 p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600"
+                className="absolute right-2 bottom-2 p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600 mb-2"
                 tabIndex={0}
                 style={{ fontSize: 0 }}
               >
