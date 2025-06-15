@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { Json } from "@/integrations/supabase/types";
 
 interface SubjectConfig {
   id: string;
@@ -79,6 +80,18 @@ const defaultSubjectConfigs: SubjectConfig[] = [
   { id: 'other', name: '全般', visible: true, order: 12, instruction: 'その他の教科についても基礎から応用まで幅広く対応します。具体例を交えて分かりやすく説明してください。', color: 'yellow' }
 ];
 
+// === Add the following type for type-safety ===
+type SupabaseSettingsRow = {
+  id: string;
+  api_keys: { openai: string; google: string; anthropic: string } | null;
+  common_instruction: string | null;
+  models: { openai: string; google: string; anthropic: string } | null;
+  selected_provider: string | null;
+  subject_configs: SubjectConfig[] | null;
+  subject_instructions: { [key: string]: string } | null;
+  mbti_instructions?: { [key: string]: string } | null; // Added here
+};
+
 export const useSettings = () => {
   const [settings, setSettings] = useState<Settings>({
     passcode: '999999',
@@ -132,15 +145,17 @@ export const useSettings = () => {
         .single();
 
       // 設定データを取得
-      const { data: settingsData } = await supabase
+      const { data: rawSettingsData } = await supabase
         .from('settings')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
+
+      const settingsData = rawSettingsData as SupabaseSettingsRow | null;
 
       if (settingsData) {
-        const selectedProvider = typeof (settingsData as any).selected_provider === 'string' 
-          ? (settingsData as any).selected_provider 
+        const selectedProvider = typeof settingsData.selected_provider === 'string' 
+          ? settingsData.selected_provider 
           : 'openai';
 
         setSettings(prev => ({
@@ -158,7 +173,7 @@ export const useSettings = () => {
           subjectConfigs: isSubjectConfigs(settingsData.subject_configs) 
             ? settingsData.subject_configs 
             : prev.subjectConfigs,
-          mbtiInstructions: typeof settingsData.mbti_instructions === 'object' && settingsData.mbti_instructions !== null
+          mbtiInstructions: (typeof settingsData.mbti_instructions === 'object' && settingsData.mbti_instructions !== null)
             ? settingsData.mbti_instructions
             : {},
         }));

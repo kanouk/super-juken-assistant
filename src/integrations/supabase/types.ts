@@ -177,6 +177,7 @@ export type Database = {
           api_keys: Json | null
           common_instruction: string | null
           id: string
+          mbti_instructions: Json | null
           models: Json | null
           selected_provider: string | null
           subject_configs: Json | null
@@ -186,6 +187,7 @@ export type Database = {
           api_keys?: Json | null
           common_instruction?: string | null
           id: string
+          mbti_instructions?: Json | null
           models?: Json | null
           selected_provider?: string | null
           subject_configs?: Json | null
@@ -195,6 +197,7 @@ export type Database = {
           api_keys?: Json | null
           common_instruction?: string | null
           id?: string
+          mbti_instructions?: Json | null
           models?: Json | null
           selected_provider?: string | null
           subject_configs?: Json | null
