@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,7 +34,6 @@ const MessageItem: React.FC<MessageItemProps> = ({
 }) => {
   const { profile } = useProfile();
 
-  // AIメッセージが表示された時に即座にコールバックを呼び出す
   React.useEffect(() => {
     if (message.role === 'assistant' && message.db_id) {
       onTypewriterComplete(message.db_id);
@@ -41,7 +41,6 @@ const MessageItem: React.FC<MessageItemProps> = ({
   }, [message.role, message.db_id, onTypewriterComplete]);
 
   if (message.role === 'user') {
-    // ユーザーメッセージ：バブル表示（右寄せ、バブルはグラデのみ、テキストは白）
     return (
       <div className="w-full px-4 py-4">
         <div className="max-w-4xl mx-auto">
@@ -66,10 +65,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
                       />
                     </div>
                   )}
-                  {/* 強制的に text-white で子要素まで上書き */}
-                  <div className="text-white text-sm leading-relaxed break-words">
-                    <LaTeXRenderer content={message.content} className="text-white" />
-                  </div>
+                  {/* ユーザーは常に白文字でレンダリング */}
+                  <LaTeXRenderer content={message.content} className="text-white" colorScheme="user" />
                 </CardContent>
               </Card>
             </div>
@@ -79,7 +76,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     );
   }
 
-  // AIメッセージ：画面全体に表示
+  // AIメッセージ：文字色は黒系
   return (
     <div className="w-full group">
       <div className="bg-white border-b border-gray-100">
@@ -101,9 +98,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   />
                 </div>
               )}
-              
-              {/* LaTeXRenderer 側で色制御するのでここはクラス追加不要 */}
-              <LaTeXRenderer content={message.content} />
+
+              {/* AIメッセージは黒基調 */}
+              <LaTeXRenderer content={message.content} colorScheme="assistant" />
               {(message.cost || message.model) && (
                 <div className="mt-6 pt-4 border-t border-gray-100">
                   <div className="flex items-center justify-between text-sm text-gray-500">
@@ -134,7 +131,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
           </div>
         </div>
       </div>
-      
+
       {showQuickActions && (
         <div className="bg-gradient-to-b from-white to-gray-50">
           <div className="max-w-4xl mx-auto px-4 py-6">
