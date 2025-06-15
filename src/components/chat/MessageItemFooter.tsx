@@ -2,6 +2,7 @@
 import React from 'react';
 import { Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getModelDisplayName } from './getModelDisplayName';
 
 interface MessageItemFooterProps {
   content: string;
@@ -30,25 +31,30 @@ const MessageItemFooter: React.FC<MessageItemFooterProps> = ({
     if (onCopyToClipboard) onCopyToClipboard(content);
   };
 
-  // === コピーボタン単独でも常にfooterごと表示 ===
+  // 常にfooter自体は表示・整列: 下部右寄せ&本文に重ならない・PC/スマホ対応
   return (
     <div
       className="
-        absolute right-4 bottom-4
         flex items-center gap-4 
+        justify-end
+        mt-4
+        pr-2
         z-20
         bg-white/95 backdrop-blur
-        px-3 py-1
         rounded-xl
         shadow-lg
         border border-gray-100
+        w-fit
+        ml-auto
+        px-3 py-1
       "
+      style={{ position: "static" }}
     >
       {model && (
-        <span className="text-xs text-gray-400">{model}</span>
+        <span className="text-xs text-gray-400 font-mono min-w-[90px] select-text">{getModelDisplayName(model)}</span>
       )}
       {cost !== undefined && (
-        <span className="text-xs text-gray-400">¥{Number(cost).toFixed(4)}</span>
+        <span className="text-xs text-gray-400 font-mono select-text">¥{Number(cost).toFixed(4)}</span>
       )}
       <button
         type="button"

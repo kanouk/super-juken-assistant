@@ -115,13 +115,15 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
               <LaTeXRenderer content={message.content} colorScheme="assistant" />
 
-              {/* フッター：モデル名・コスト・コピーボタン表示 */}
-              <MessageItemFooter
-                content={message.content}
-                model={message.model}
-                cost={message.cost}
-                onCopyToClipboard={onCopyToClipboard}
-              />
+              {/* フッター：モデル名・コスト・コピーボタン表示 本文下・右寄せ */}
+              <div className="flex w-full">
+                <MessageItemFooter
+                  content={message.content}
+                  model={message.model}
+                  cost={message.cost}
+                  onCopyToClipboard={onCopyToClipboard}
+                />
+              </div>
 
               {/* 旧コスト・モデル表示（今後不要なら削除可） */}
               {/* {(message.cost || message.model) && (
