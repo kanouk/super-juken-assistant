@@ -55,6 +55,7 @@ export function useChatScreen(props: UseChatScreenProps) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showConversations, setShowConversations] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [conversationUnderstood, setConversationUnderstood] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -94,6 +95,7 @@ export function useChatScreen(props: UseChatScreenProps) {
     setMessages([]);
     setSelectedConversationId(null);
     setShowConversations(false);
+    setConversationUnderstood(false);
   }, [subject]);
 
   const scrollToBottom = () => {
@@ -130,6 +132,16 @@ export function useChatScreen(props: UseChatScreenProps) {
       return;
     }
 
+    // 会話が理解済みの場合は新しいメッセージを送信できない
+    if (conversationUnderstood) {
+      toast({
+        title: "この質問は理解済みです",
+        description: "新しい質問を始めるには「新規チャット」を押してください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const userMessage: MessageType = {
       id: Date.now().toString(),
       content,
@@ -153,7 +165,8 @@ export function useChatScreen(props: UseChatScreenProps) {
             user_id: userId,
             subject: subject,
             title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            is_understood: false
           })
           .select()
           .single();
@@ -161,6 +174,7 @@ export function useChatScreen(props: UseChatScreenProps) {
         if (conversationError) throw conversationError;
         conversationId = newConversation.id;
         setSelectedConversationId(conversationId);
+        setConversationUnderstood(false);
         refetchConversations();
       }
 
@@ -249,51 +263,40 @@ export function useChatScreen(props: UseChatScreenProps) {
   };
 
   // 理解した！ハンドラ（データベースIDを使用）
-  const handleUnderstood = async (messageId: string) => {
-    if (!userId) return;
+  const handleUnderstood = async () => {
+    if (!userId || !selectedConversationId) return;
     
-    console.log('Understanding message with ID:', messageId);
+    console.log('Understanding conversation with ID:', selectedConversationId);
     
     try {
       // まずUIを更新
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, isUnderstood: true }
-            : msg
-        )
-      );
+      setConversationUnderstood(true);
 
-      // データベースを直接IDで更新
+      // データベースの会話を理解済みに更新
       const { error } = await supabase
-        .from('messages')
+        .from('conversations')
         .update({ is_understood: true })
-        .eq('id', messageId);
+        .eq('id', selectedConversationId);
 
       if (error) {
         console.error('Database update error:', error);
         // エラーの場合はUIを元に戻す
-        setMessages(prev => 
-          prev.map(msg => 
-            msg.id === messageId 
-              ? { ...msg, isUnderstood: false }
-              : msg
-          )
-        );
+        setConversationUnderstood(false);
         throw error;
       }
 
-      console.log('Successfully updated database for message:', messageId);
+      console.log('Successfully updated conversation as understood:', selectedConversationId);
       
       // ChatStatsを再取得してサイドバーの統計を更新
       refetchChatStats();
+      refetchConversations();
       
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
       
       toast({
         title: "完全に理解！",
-        description: "理解度がカウントされました！",
+        description: "この質問は理解済みになりました！",
       });
 
     } catch (error: any) {
@@ -310,6 +313,7 @@ export function useChatScreen(props: UseChatScreenProps) {
     setMessages([]);
     setSelectedConversationId(null);
     setShowConversations(false);
+    setConversationUnderstood(false);
   };
 
   const handleShowHistory = () => {
@@ -322,6 +326,15 @@ export function useChatScreen(props: UseChatScreenProps) {
 
   const handleSelectConversation = async (conversationId: string) => {
     try {
+      // 会話の詳細を取得
+      const { data: conversationData, error: conversationError } = await supabase
+        .from('conversations')
+        .select('is_understood')
+        .eq('id', conversationId)
+        .single();
+
+      if (conversationError) throw conversationError;
+
       const { data: messagesData, error } = await supabase
         .from('messages')
         .select('*')
@@ -331,18 +344,16 @@ export function useChatScreen(props: UseChatScreenProps) {
       if (error) throw error;
 
       const formattedMessages: MessageType[] = messagesData.map((msg) => ({
-        id: msg.id.toString(), // データベースのIDを使用
+        id: msg.id.toString(),
         content: msg.content,
         isUser: msg.role === 'user',
         timestamp: new Date(msg.created_at),
         images: msg.image_url ? [{ url: msg.image_url }] : undefined,
-        isUnderstood: msg.is_understood || false,
       }));
-
-      console.log('Loaded messages with understood status:', formattedMessages.map(m => ({ id: m.id, isUnderstood: m.isUnderstood })));
 
       setMessages(formattedMessages);
       setSelectedConversationId(conversationId);
+      setConversationUnderstood(conversationData.is_understood || false);
       setShowConversations(false);
     } catch (error: any) {
       toast({
@@ -402,8 +413,7 @@ export function useChatScreen(props: UseChatScreenProps) {
       showConfetti,
       showConversations,
       selectedConversationId,
-      // 🔽 model変更を子へ正しく伝搬
-      selectedModel, // ← ここ
+      selectedModel,
       displayModelOptions,
       conversations,
       understoodCount,
@@ -413,10 +423,11 @@ export function useChatScreen(props: UseChatScreenProps) {
       isLoadingStats,
       chatStatsError,
       messagesEndRef,
+      conversationUnderstood,
     },
     handlers: {
       setSelectedImages,
-      handleModelChange, // ← ここ
+      handleModelChange,
       handleSendMessage,
       handleUnderstood,
       handleNewChat,

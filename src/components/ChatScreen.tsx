@@ -1,9 +1,9 @@
+
 import React from 'react';
 import ChatMainView from "./chat/ChatMainView";
 import ConversationHistoryView from "./chat/ConversationHistoryView";
 import { useChatScreen, UseChatScreenProps } from "./chat/useChatScreen";
 
-// チャット画面のProps
 interface ChatScreenProps extends UseChatScreenProps {}
 
 const ChatScreen = (props: ChatScreenProps) => {
@@ -21,7 +21,7 @@ const ChatScreen = (props: ChatScreenProps) => {
       displayModelOptions,
       conversations,
       messagesEndRef,
-      // ...other stats
+      conversationUnderstood,
     },
     handlers: {
       setSelectedImages,
@@ -78,6 +78,7 @@ const ChatScreen = (props: ChatScreenProps) => {
       onToggleSidebar={onToggleSidebar}
       isMobile={props.isMobile}
       messagesEndRef={messagesEndRef}
+      conversationUnderstood={conversationUnderstood}
     />
   );
 };
