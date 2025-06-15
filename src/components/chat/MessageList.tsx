@@ -4,6 +4,7 @@ import { MessageType, Message } from './types';
 import MessageItem from './MessageItem';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bot } from 'lucide-react';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface MessageListProps {
   messages: MessageType[];
@@ -34,7 +35,7 @@ const MessageList: React.FC<MessageListProps> = ({
   });
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <ScrollArea className="flex-1">
       <div className="min-h-full">
         {messages.map((message, index) => {
           const isLastAIMessage = !message.isUser && index === messages.length - 1;
@@ -77,7 +78,7 @@ const MessageList: React.FC<MessageListProps> = ({
         
         <div ref={messagesEndRef} />
       </div>
-    </div>
+    </ScrollArea>
   );
 };
 

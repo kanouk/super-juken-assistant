@@ -42,9 +42,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
   }, [message.role, message.db_id, onTypewriterComplete]);
 
   if (message.role === 'user') {
-    // ユーザーメッセージ：バブル表示（右寄せ、余白追加）
+    // ユーザーメッセージ：バブル表示（右寄せ、背景なし）
     return (
-      <div className="w-full px-4 py-4 bg-gray-50">
+      <div className="w-full px-4 py-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-end">
             <div className="flex items-start space-x-3 max-w-2xl flex-row-reverse space-x-reverse">
@@ -139,7 +139,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
       </div>
       
       {showQuickActions && (
-        <div className="bg-gradient-to-b from-white to-gray-50 border-b border-gray-100">
+        <div className="bg-gradient-to-b from-white to-gray-50">
           <div className="max-w-4xl mx-auto px-4 py-6">
             <div className="ml-12">
               <QuickActions
