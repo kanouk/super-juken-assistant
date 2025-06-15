@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -150,20 +149,17 @@ serve(async (req) => {
     else if (provider === "anthropic") {
       if (!apiKeys.anthropic) throw new Error("Anthropic API key not configured");
 
-      // Claude v4/3/Haiku などAPIエンドポイント・headers用途共通
-      // モデル名は設定値をそのまま使用
-      // Claudeは system prompt ではなく systemプロパティで渡す
-      // 会話履歴作成
+      // Claude: systemプロンプトはトップレベル、messagesはuser/assistantのみ
       const clMessages: any[] = [];
-      if (systemMessage) {
-        clMessages.push({ role: "system", content: systemMessage });
-      }
       if (conversationHistory && Array.isArray(conversationHistory)) {
         conversationHistory.slice(-10).forEach((m: any) => {
-          clMessages.push({
-            role: m.role,
-            content: m.content
-          });
+          // ClaudeのAPIはrole: "user" か "assistant" のみを許容
+          if (m.role === "user" || m.role === "assistant") {
+            clMessages.push({
+              role: m.role,
+              content: m.content
+            });
+          }
         });
       }
       clMessages.push({
@@ -171,9 +167,10 @@ serve(async (req) => {
         content: message
       });
 
-      // 注意：Anthropic API の正式仕様にあわせて system/prompt 配置
+      // system promptはトップレベルで渡す！
       const anthropicReq = {
         model: selectedModel,
+        system: systemMessage,
         max_tokens: 2048,
         messages: clMessages,
         temperature: 0.7,
@@ -203,7 +200,6 @@ serve(async (req) => {
       cost = (inputTokens * 0.000015) + (outputTokens * 0.000045);
 
       usedModel = selectedModel;
-
     }
     // ---- 3. Google Gemini ----
     else if (provider === "google") {
