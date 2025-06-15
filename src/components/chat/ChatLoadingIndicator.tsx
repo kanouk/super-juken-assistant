@@ -8,17 +8,35 @@ const ChatLoadingIndicator: React.FC = () => {
   return (
     <div className="flex justify-start pt-4">
       <div className="flex items-start space-x-3 max-w-2xl">
-        {/* ロボットアイコン＋重ねたドット */}
+        {/* ロボットアイコン＋中央ドット */}
         <div className="relative w-8 h-8 shrink-0">
           <Avatar className="w-8 h-8 shrink-0">
-            <AvatarFallback className="bg-green-100 text-green-700 relative">
-              <Bot className="h-4 w-4" />
-              {/* ドットアニメーションをアイコン中央に絶対配置 */}
-              <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span className="flex space-x-0.5">
-                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+            <AvatarFallback className="bg-green-500 text-white relative">
+              <Bot className="h-5 w-5" />
+              {/* ドットアニメーションをアイコン中央に */}
+              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+                <span className="flex space-x-1">
+                  <span
+                    className="w-2 h-2 rounded-full animate-bounce"
+                    style={{
+                      backgroundColor: "#4880ff", // 青
+                      animationDelay: "0ms",
+                    }}
+                  ></span>
+                  <span
+                    className="w-2 h-2 rounded-full animate-bounce"
+                    style={{
+                      backgroundColor: "#9777fa", // 紫
+                      animationDelay: "160ms",
+                    }}
+                  ></span>
+                  <span
+                    className="w-2 h-2 rounded-full animate-bounce"
+                    style={{
+                      backgroundColor: "#4fe389", // 緑
+                      animationDelay: "320ms",
+                    }}
+                  ></span>
                 </span>
               </span>
             </AvatarFallback>
@@ -26,7 +44,7 @@ const ChatLoadingIndicator: React.FC = () => {
         </div>
         <Card className="bg-gray-100 border-gray-200 text-gray-900">
           <CardContent className="p-3">
-            {/* 従来通りでも問題ないが、上で重ねてあるのでここは空 */}
+            {/* ドットは上で重ねるのでここは空 */}
             <span className="sr-only">考え中...</span>
           </CardContent>
         </Card>
