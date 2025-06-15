@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -102,12 +101,14 @@ export function useChatScreen(props: UseChatScreenProps) {
   };
 
   useEffect(() => {
-    const lastMessage = messages[messages.length - 1];
-    // 新しいメッセージが追加された時のみスクロール（理解済み状態の変更は除く）
-    if (lastMessage && !lastMessage.isUnderstood) {
-      scrollToBottom();
+    // メッセージが追加された時は常にスクロール
+    if (messages.length > 0) {
+      // 少し遅延を入れてDOMの更新を待つ
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     }
-  }, [messages.length]); // messages.lengthの変更時のみ実行
+  }, [messages.length]);
 
   // モデル変更
   const handleModelChange = (value: string) => {
@@ -216,6 +217,11 @@ export function useChatScreen(props: UseChatScreenProps) {
         });
 
       refetchConversations();
+
+      // メッセージ送信後、確実にスクロール
+      setTimeout(() => {
+        scrollToBottom();
+      }, 200);
 
     } catch (error: any) {
       console.error('Error sending message:', error);
@@ -345,6 +351,10 @@ export function useChatScreen(props: UseChatScreenProps) {
 
   const handleQuickAction = (prompt: string) => {
     handleSendMessage(prompt);
+    // QuickAction実行後も確実にスクロール
+    setTimeout(() => {
+      scrollToBottom();
+    }, 300);
   };
 
   return {
