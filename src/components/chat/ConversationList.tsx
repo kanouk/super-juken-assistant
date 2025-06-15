@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -104,7 +103,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
   };
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader className="pb-3 px-3 lg:px-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base lg:text-lg truncate">会話履歴</CardTitle>
@@ -121,15 +120,15 @@ const ConversationList: React.FC<ConversationListProps> = ({
         </div>
       </CardHeader>
       <Separator />
-      <CardContent className="p-0">
+      <CardContent className="p-0 flex-1 flex flex-col">
         {conversations.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">
+          <div className="p-4 text-center text-gray-500 flex-1 flex flex-col justify-center">
             <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm lg:text-base">まだ会話がありません</p>
             <p className="text-xs lg:text-sm">新規チャットを開始してください</p>
           </div>
         ) : (
-          <ScrollArea className="h-64 lg:h-96">
+          <ScrollArea className="flex-1 h-full">
             {conversations.map((conversation) => (
               <div
                 key={conversation.id}
