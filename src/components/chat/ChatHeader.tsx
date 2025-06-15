@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, History, Menu, Cpu } from 'lucide-react';
@@ -95,7 +94,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   isMobile = false
 }) => {
   const subjectColors = subjectColorMap[currentSubjectId] || subjectColorMap['math']; // fallback
-  // 濃いグラデはタイトル、ボーダーはPill/ボタン、bgはヘッダ背景用
   const colorGradient = subjectColors.grad;
   const colorBorder = subjectColors.border;
   const colorBg = subjectColors.bg;
@@ -168,7 +166,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={onShowHistory}
-                className={`gap-2 hover:bg-gray-50 ${colorBorder} transition-colors shadow-sm rounded-lg px-3 h-10 text-sm font-semibold`}
+                className="gap-2 border-blue-400 text-blue-700 font-bold bg-white hover:bg-blue-50 hover:border-blue-500 transition-all shadow-sm rounded-lg px-3 h-10 text-sm"
                 style={{ alignSelf: 'center' }}
               >
                 <History className="h-4 w-4" />
@@ -189,13 +187,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           </div>
           {/* モデル表示:pill */}
           <div className="flex items-center gap-0 ml-0">
-            <div className="flex items-center gap-1 text-[13px] px-3 py-1 rounded-l-full bg-gray-50 border border-gray-200 font-semibold text-gray-500 select-none h-8 shadow-sm border-r-0">
+            <div className="flex items-center gap-1 text-[13px] px-3 py-1 rounded-l-full bg-gray-100 border border-gray-200 font-semibold text-gray-500 select-none h-8 shadow-sm border-r-0">
               <Cpu className="w-4 h-4 mr-1 opacity-70" />
               <span className="tracking-wide">モデル</span>
             </div>
             <span
               className={`
-                bg-white ${colorBorder}
+                bg-white border-gray-200
                 rounded-r-full border border-l-0 px-3 h-8 flex items-center font-mono text-xs font-extrabold text-gray-900 tracking-tight shadow-sm
                 select-none
               `}
