@@ -147,7 +147,7 @@ export function useMessages({
         .insert({
           conversation_id: conversationId,
           content: data.response,
-          role: 'assistant',/
+          role: 'assistant',
           created_at: new Date().toISOString()
         })
         .select()
