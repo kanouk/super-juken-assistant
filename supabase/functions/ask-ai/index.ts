@@ -16,12 +16,10 @@ function sanitize(str: any): string {
   return typeof str === "string" ? str.trim() : "";
 }
 
-// --- APIキー＆モデル決定 ---
 function getApiConfig(settings: any, adminSettingMap: any, userId: string) {
   // 管理者API: 無料ユーザー用
   const freeUserApiKeys = adminSettingMap['free_user_api_keys'] || {};
   const freeUserModels = adminSettingMap['free_user_models'] || {};
-  // APIキー
   let apiKeys = settings?.api_keys || {};
   let models = settings?.models || {};
   let selectedProvider = settings?.selected_provider || "openai";
@@ -46,10 +44,12 @@ function getApiConfig(settings: any, adminSettingMap: any, userId: string) {
     usedFreeApi = true;
   }
 
+  // 追加ログ
+  console.log("getApiConfig result", { apiKeys, models, selectedProvider, usedFreeApi });
+
   return { apiKeys, models, selectedProvider, usedFreeApi };
 }
 
-// --- システムメッセージ組み立て ---
 function buildSystemMessage(settings: any, subject: string) {
   let msg = settings?.common_instruction || 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。数学や化学の問題ではLaTeX記法を使って数式を表現してください。LaTeX記法を使用する際は、インライン数式は$...$、ブロック数式は$$...$$で囲んでください。';
   let customInstruction = '';
@@ -66,7 +66,7 @@ function buildSystemMessage(settings: any, subject: string) {
   return msg;
 }
 
-// --- ここからメイン処理 ---
+// --- メイン処理 ---
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -114,6 +114,9 @@ serve(async (req) => {
     // --- APIキー・モデルどちらを使うか決定
     const { apiKeys, models, selectedProvider, usedFreeApi } = getApiConfig(settings, adminSettingMap, user.id);
 
+    // 追加ログ
+    console.log("apiKeys to be used", apiKeys, "selectedProvider", selectedProvider);
+
     // システムメッセージ
     const systemMessage = buildSystemMessage(settings, subject);
 
@@ -122,7 +125,10 @@ serve(async (req) => {
     let baseCost = 0;
 
     if (selectedProvider === "openai") {
-      if (!apiKeys.openai) throw new Error("OpenAI API key not configured");
+      if (!apiKeys.openai) {
+        console.error("OpenAI API key not configured (apiKeys)", apiKeys);
+        throw new Error("OpenAI API key not configured");
+      }
       const messages = [];
       messages.push({ role: 'system', content: systemMessage });
       if (conversationHistory && Array.isArray(conversationHistory)) {
@@ -143,6 +149,8 @@ serve(async (req) => {
             ]
           : message
       });
+      // 追加ログ
+      console.log("OpenAI apiRequest", { model: model || models.openai, messages });
       const result = await requestOpenAI({
         apiKey: apiKeys.openai,
         model: model || models.openai,
@@ -153,7 +161,11 @@ serve(async (req) => {
       baseCost = result.cost;
     }
     else if (selectedProvider === "anthropic") {
-      if (!apiKeys.anthropic) throw new Error("Anthropic API key not configured");
+      if (!apiKeys.anthropic) {
+        console.error("Anthropic API key not configured (apiKeys)", apiKeys);
+        throw new Error("Anthropic API key not configured");
+      }
+      console.log("Anthropic apiRequest", { model: model || models.anthropic, message });
       const result = await requestAnthropic({
         apiKey: apiKeys.anthropic,
         model: model || models.anthropic,
@@ -166,7 +178,11 @@ serve(async (req) => {
       baseCost = result.cost;
     }
     else if (selectedProvider === "google") {
-      if (!apiKeys.google) throw new Error("Google Gemini API key not configured");
+      if (!apiKeys.google) {
+        console.error("Google Gemini API key not configured (apiKeys)", apiKeys);
+        throw new Error("Google Gemini API key not configured");
+      }
+      console.log("Google apiRequest", { model: model || models.google, message });
       const result = await requestGoogle({
         apiKey: apiKeys.google,
         model: model || models.google,
@@ -183,6 +199,9 @@ serve(async (req) => {
     }
 
     const displayCost = getDisplayCost({ usedFreeApi, baseCost });
+
+    // 追加ログ
+    console.log("AI Response", { aiResponse, usedModel, baseCost, displayCost });
 
     return new Response(JSON.stringify({
       response: aiResponse,
