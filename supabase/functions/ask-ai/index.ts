@@ -1,5 +1,4 @@
 
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -79,7 +78,21 @@ serve(async (req) => {
     });
 
     // Use the model passed from frontend, fallback to settings or default
-    const selectedModel = model || settings.models?.openai || 'gpt-4o';
+    // モデル名を小文字に正規化
+    let selectedModel = model || settings.models?.openai || 'gpt-4o';
+    selectedModel = selectedModel.toLowerCase();
+    
+    // 正しいOpenAIモデル名にマッピング
+    const modelMapping: { [key: string]: string } = {
+      'gpt-4.1-2025-04-14': 'gpt-4.1-2025-04-14',
+      'o3-2025-04-16': 'o3-2025-04-16',
+      'o4-mini-2025-04-16': 'o4-mini-2025-04-16',
+      'gpt-4o': 'gpt-4o',
+      'gpt-4': 'gpt-4',
+      'gpt-4-turbo': 'gpt-4-turbo'
+    };
+    
+    selectedModel = modelMapping[selectedModel] || 'gpt-4o';
     console.log('Sending request to OpenAI with model:', selectedModel);
 
     // Call OpenAI API
@@ -131,4 +144,3 @@ serve(async (req) => {
     });
   }
 });
-
