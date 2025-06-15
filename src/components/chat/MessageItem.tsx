@@ -116,20 +116,20 @@ const MessageItem: React.FC<MessageItemProps> = ({
               {/* AIメッセージは黒基調 */}
               <LaTeXRenderer content={message.content} colorScheme="assistant" />
 
-              {/* モデル名・コスト・コピーボタンを横並びで下部右寄せ表示 */}
+              {/* モデル名・コスト・コピー：どちらか一方でもあれば表示。右下絶対配置で重なりなし */}
               {(message.model || message.cost !== undefined) && (
-                <div className="flex items-center justify-end gap-2 mt-5">
+                <div className="absolute bottom-4 right-5 flex items-center gap-3 z-10">
                   {message.model && (
                     <span className="text-xs text-gray-400">{message.model}</span>
                   )}
                   {message.cost !== undefined && (
-                    <span className="text-xs text-gray-400 ml-1">¥{Number(message.cost).toFixed(4)}</span>
+                    <span className="text-xs text-gray-400">¥{Number(message.cost).toFixed(4)}</span>
                   )}
                   <button
                     type="button"
                     aria-label="回答をコピー"
                     onClick={handleCopy}
-                    className="p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600 ml-4"
+                    className="p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600 ml-3"
                     tabIndex={0}
                     style={{ fontSize: 0 }}
                   >
@@ -180,3 +180,4 @@ const MessageItem: React.FC<MessageItemProps> = ({
 };
 
 export default MessageItem;
+
