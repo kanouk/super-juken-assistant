@@ -91,7 +91,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
   };
 
   return (
-    <Card className="h-full flex flex-col">
+    // カードがflexコンテナ。中身を縦配置、履歴部分（CardContent部分）が伸びる
+    <Card className="h-full flex flex-col min-h-0">
       <CardHeader className="pb-3 px-3 lg:px-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base lg:text-lg truncate">会話履歴</CardTitle>
@@ -108,7 +109,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
         </div>
       </CardHeader>
       <Separator />
-      <CardContent className="p-0 flex-1 flex flex-col min-h-0">
+      {/* flex-1, min-h-0 で親から高さ継承。履歴0件もスクロールエリアの外で表示 */}
+      <CardContent className="flex-1 flex flex-col min-h-0 p-0">
         {conversations.length === 0 ? (
           <div className="p-4 text-center text-gray-500 flex-1 flex flex-col justify-center">
             <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -116,9 +118,9 @@ const ConversationList: React.FC<ConversationListProps> = ({
             <p className="text-xs lg:text-sm">新規チャットを開始してください</p>
           </div>
         ) : (
-          // ここでScrollArea→divラップの二重構造をやめ、ScrollArea直下にリストを描画
+          // ScrollArea: flex-1, min-h-0で"完全"に親の高さを使う
           <ScrollArea className="flex-1 min-h-0 h-full w-full">
-            <div className="flex flex-col w-full min-h-0">
+            <div className="flex flex-col w-full">
               {conversations.map((conversation) => (
                 <ConversationListItem
                   key={conversation.id}
@@ -144,4 +146,3 @@ const ConversationList: React.FC<ConversationListProps> = ({
 };
 
 export default ConversationList;
-
