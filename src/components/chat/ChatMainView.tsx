@@ -1,4 +1,3 @@
-
 import React from "react";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
@@ -11,8 +10,6 @@ interface ChatMainViewProps {
   subject: string;
   subjectName: string;
   currentModel: string;
-  modelOptions: { label: string; value: string }[];
-  onModelChange?: (model: string) => void;
   messages: MessageType[];
   isLoading: boolean;
   selectedImages: ImageData[];
@@ -35,8 +32,6 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
   subject,
   subjectName,
   currentModel,
-  modelOptions,
-  onModelChange,
   messages,
   isLoading,
   selectedImages,
@@ -60,8 +55,6 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
       <ChatHeader
         subjectName={subjectName}
         currentModel={currentModel}
-        modelOptions={modelOptions}
-        onModelChange={onModelChange}
         currentSubjectId={subject}
         onNewChat={onNewChat}
         onShowHistory={onShowHistory}

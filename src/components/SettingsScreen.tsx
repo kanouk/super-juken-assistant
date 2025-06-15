@@ -131,6 +131,7 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
           <TabsContent value="models">
             <ModelsTab 
               models={settings.models}
+              selectedModel={settings.selectedModel}
               updateSetting={updateSetting}
             />
           </TabsContent>

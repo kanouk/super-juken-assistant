@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +24,7 @@ interface Settings {
     google: string;
     anthropic: string;
   };
+  selectedModel: string;
   commonInstruction: string;
   subjectInstructions: {
     [key: string]: string;
@@ -90,6 +92,7 @@ export const useSettings = () => {
       google: 'gemini-1.5-pro',
       anthropic: 'claude-3-sonnet'
     },
+    selectedModel: 'gpt-4o',
     commonInstruction: 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。数学や化学の問題ではLaTeX記法を使って数式を表現してください。',
     subjectInstructions: {
       math: '数学の問題は段階的に解法を示し、公式の説明も含めてください。LaTeX記法を使って数式を美しく表示してください。',
@@ -134,6 +137,9 @@ export const useSettings = () => {
           passcode: profileData?.passcode || prev.passcode,
           apiKeys: isApiKeys(settingsData.api_keys) ? settingsData.api_keys : prev.apiKeys,
           models: isModels(settingsData.models) ? settingsData.models : prev.models,
+          selectedModel: typeof settingsData.selected_model === 'string' 
+            ? settingsData.selected_model 
+            : prev.selectedModel,
           commonInstruction: typeof settingsData.common_instruction === 'string' 
             ? settingsData.common_instruction 
             : prev.commonInstruction,
@@ -171,6 +177,7 @@ export const useSettings = () => {
         .update({
           api_keys: newSettings.apiKeys,
           models: newSettings.models,
+          selected_model: newSettings.selectedModel,
           common_instruction: newSettings.commonInstruction,
           subject_instructions: newSettings.subjectInstructions,
           subject_configs: newSettings.subjectConfigs as any

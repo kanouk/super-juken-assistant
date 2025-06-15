@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, History, Menu, Cpu } from 'lucide-react';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 // 柔らかい色味に修正した教科色マップ
 const subjectColorMap: { [key: string]: string } = {
@@ -23,8 +21,6 @@ const subjectColorMap: { [key: string]: string } = {
 interface ChatHeaderProps {
   subjectName: string;
   currentModel: string;
-  modelOptions: { label: string; value: string }[];
-  onModelChange?: (model: string) => void;
   currentSubjectId: string;
   onBackToList?: () => void;
   onNewChat?: () => void;
@@ -39,8 +35,6 @@ interface ChatHeaderProps {
 const ChatHeader: React.FC<ChatHeaderProps> = ({
   subjectName,
   currentModel,
-  modelOptions,
-  onModelChange,
   currentSubjectId,
   onBackToList,
   onNewChat,
@@ -53,6 +47,27 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 }) => {
   const colorGradient = subjectColorMap[currentSubjectId] || 'from-sky-100 to-indigo-100';
   const colorBorder = colorGradient.split(' ')[0].replace('from-', 'border-') || 'border-sky-100';
+
+  // モデル表示名を取得
+  const getModelDisplayName = (modelValue: string) => {
+    const modelMap: { [key: string]: string } = {
+      "gpt-4.1-2025-04-14": "GPT-4.1",
+      "o3-2025-04-16": "O3",
+      "o4-mini-2025-04-16": "O4 Mini",
+      "gpt-4o": "GPT-4o",
+      "gemini-2.5-pro": "Gemini 2.5 Pro",
+      "gemini-1.5-pro": "Gemini 1.5 Pro",
+      "gemini-1.5-flash": "Gemini 1.5 Flash",
+      "claude-sonnet-4-20250514": "Sonnet 4",
+      "claude-opus-4-20250514": "Opus 4",
+      "claude-3-5-haiku-20241022": "Claude 3.5 Haiku",
+      "claude-3-7-sonnet-20250219": "Claude 3.7 Sonnet",
+      "claude-3-sonnet": "Claude 3 Sonnet",
+      "claude-3-haiku": "Claude 3 Haiku",
+      "claude-3-opus": "Claude 3 Opus",
+    };
+    return modelMap[modelValue] || modelValue;
+  };
 
   return (
     <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
@@ -110,25 +125,15 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               <span className="hidden sm:inline">新規チャット</span>
             </Button>
           )}
-          {/* モデル切替ドロップダウン */}
+          {/* モデル表示（選択不可） */}
           <div className="flex flex-col justify-center h-[44px]">
             <div className="flex items-center gap-1.5 text-sm text-gray-600 font-medium mb-1">
               <Cpu className="h-3 w-3" />
               モデル
             </div>
-            <Select value={currentModel} onValueChange={onModelChange}>
-              <SelectTrigger className={`text-xs font-mono h-8 bg-white border ${colorBorder} rounded-md focus:ring-2 focus:ring-blue-300`}>
-                <SelectValue />
-              </SelectTrigger>
-              {/* 設定で選択済みのモデルリストのみ描画 */}
-              <SelectContent align="end" className="z-40 bg-white">
-                {modelOptions.map(({ label, value }) => (
-                  <SelectItem key={value} value={value} className="text-xs">
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className={`text-xs font-mono h-8 bg-white border ${colorBorder} rounded-md px-3 py-1.5 flex items-center`}>
+              {getModelDisplayName(currentModel)}
+            </div>
           </div>
         </div>
       </div>
@@ -137,4 +142,3 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 };
 
 export default ChatHeader;
-
