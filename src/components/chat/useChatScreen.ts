@@ -101,8 +101,12 @@ export function useChatScreen(props: UseChatScreenProps) {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const lastMessage = messages[messages.length - 1];
+    // 新しいメッセージが追加された時のみスクロール
+    if (lastMessage && !lastMessage.isUnderstood) {
+      scrollToBottom();
+    }
+  }, [messages.length]); // messages.lengthの変更時のみ実行
 
   // モデル変更
   const handleModelChange = (value: string) => {
@@ -221,7 +225,7 @@ export function useChatScreen(props: UseChatScreenProps) {
     }
   };
 
-  // 理解した！ハンドラ
+  // 理解した！ハンドラ（スクロールを発生させない）
   const handleUnderstood = async (messageId: string) => {
      if (!userId) return;
      try {
