@@ -29,8 +29,14 @@ export const ApiTab = ({ apiKeys, updateSetting, freeUserApiKeys }: ApiTabProps)
       </CardHeader>
       <CardContent className="p-4 lg:p-6 space-y-4 lg:space-y-6">
         {!userKeySet && (
-          <div className="text-xs text-gray-600 bg-emerald-50 border border-emerald-200 rounded px-3 py-2 mb-2">
-            ※ APIキーを登録しなくても最低限のチャット利用ができますが、より多くのモデルや最新モデルを使いたい場合は、ご自身のAPIキーを入力してください。
+          <div className="text-sm text-gray-600 bg-emerald-50 border border-emerald-200 rounded px-3 py-2 mb-2">
+            💡 <strong>APIキーを登録しなくても最低限のチャット利用ができます。</strong>
+            <br />
+            より多くのモデルや最新モデルを使いたい場合は、ご自身のAPIキーを入力してください。
+            <br />
+            <span className="text-xs text-emerald-700 mt-1 block">
+              ※ APIキーを設定すると、モデル設定画面でプロバイダーとモデルの選択が可能になります。
+            </span>
           </div>
         )}
         <div>
