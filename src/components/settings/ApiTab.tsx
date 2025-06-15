@@ -1,8 +1,12 @@
 
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Key } from "lucide-react";
+import { Key, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ApiTabProps {
   apiKeys: {
@@ -14,10 +18,87 @@ interface ApiTabProps {
   freeUserApiKeys?: { openai?: string; google?: string; anthropic?: string };
 }
 
+type VerificationStatus = 'idle' | 'loading' | 'success' | 'error';
+
 export const ApiTab = ({ apiKeys, updateSetting, freeUserApiKeys }: ApiTabProps) => {
+  const { toast } = useToast();
+  const [verificationStatus, setVerificationStatus] = useState<{
+    openai: VerificationStatus;
+    google: VerificationStatus;
+    anthropic: VerificationStatus;
+  }>({
+    openai: 'idle',
+    google: 'idle',
+    anthropic: 'idle'
+  });
+
   // APIキーが1つもセットされていなければ管理者デフォルトを使っている状態
   const userKeySet =
     !!apiKeys.openai || !!apiKeys.google || !!apiKeys.anthropic;
+
+  const verifyApiKey = async (provider: string) => {
+    const apiKey = apiKeys[provider as keyof typeof apiKeys];
+    if (!apiKey?.trim()) {
+      toast({
+        title: "エラー",
+        description: "APIキーが入力されていません",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setVerificationStatus(prev => ({ ...prev, [provider]: 'loading' }));
+
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-api-key', {
+        body: { provider, apiKey }
+      });
+
+      if (error) throw error;
+
+      if (data.valid) {
+        setVerificationStatus(prev => ({ ...prev, [provider]: 'success' }));
+        toast({
+          title: "検証成功",
+          description: `${provider.toUpperCase()} APIキーは有効です`,
+        });
+      } else {
+        setVerificationStatus(prev => ({ ...prev, [provider]: 'error' }));
+        toast({
+          title: "検証失敗",
+          description: data.error || "APIキーが無効です",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      setVerificationStatus(prev => ({ ...prev, [provider]: 'error' }));
+      toast({
+        title: "検証エラー",
+        description: "APIキーの検証中にエラーが発生しました",
+        variant: "destructive",
+      });
+      console.error('API key verification error:', error);
+    }
+  };
+
+  const getStatusIcon = (status: VerificationStatus) => {
+    switch (status) {
+      case 'loading':
+        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
+      case 'success':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const providers = [
+    { id: 'openai', name: 'OpenAI APIキー', placeholder: 'sk-...' },
+    { id: 'google', name: 'Google AI APIキー', placeholder: 'AI...' },
+    { id: 'anthropic', name: 'Anthropic APIキー', placeholder: 'sk-ant-...' }
+  ];
 
   return (
     <Card className="shadow-lg border-2 border-gray-100 bg-white/80 backdrop-blur-sm">
@@ -39,45 +120,39 @@ export const ApiTab = ({ apiKeys, updateSetting, freeUserApiKeys }: ApiTabProps)
             </span>
           </div>
         )}
-        <div>
-          <Label htmlFor="openai-key" className="text-sm font-medium text-gray-700">
-            OpenAI APIキー
-          </Label>
-          <Input
-            id="openai-key"
-            type="password"
-            value={apiKeys.openai}
-            onChange={(e) => updateSetting('apiKeys.openai', e.target.value)}
-            placeholder={freeUserApiKeys?.openai ? "管理者デフォルトキー適用中" : "sk-..."}
-            className="mt-2 border-2 border-gray-200 focus:border-green-500 text-sm lg:text-base"
-          />
-        </div>
-        <div>
-          <Label htmlFor="google-key" className="text-sm font-medium text-gray-700">
-            Google AI APIキー
-          </Label>
-          <Input
-            id="google-key"
-            type="password"
-            value={apiKeys.google}
-            onChange={(e) => updateSetting('apiKeys.google', e.target.value)}
-            placeholder={freeUserApiKeys?.google ? "管理者デフォルトキー適用中" : "AI..."}
-            className="mt-2 border-2 border-gray-200 focus:border-green-500 text-sm lg:text-base"
-          />
-        </div>
-        <div>
-          <Label htmlFor="anthropic-key" className="text-sm font-medium text-gray-700">
-            Anthropic APIキー
-          </Label>
-          <Input
-            id="anthropic-key"
-            type="password"
-            value={apiKeys.anthropic}
-            onChange={(e) => updateSetting('apiKeys.anthropic', e.target.value)}
-            placeholder={freeUserApiKeys?.anthropic ? "管理者デフォルトキー適用中" : "sk-ant-..."}
-            className="mt-2 border-2 border-gray-200 focus:border-green-500 text-sm lg:text-base"
-          />
-        </div>
+        
+        {providers.map((provider) => (
+          <div key={provider.id}>
+            <Label htmlFor={`${provider.id}-key`} className="text-sm font-medium text-gray-700">
+              {provider.name}
+            </Label>
+            <div className="flex gap-2 mt-2">
+              <Input
+                id={`${provider.id}-key`}
+                type="password"
+                value={apiKeys[provider.id as keyof typeof apiKeys]}
+                onChange={(e) => {
+                  updateSetting(`apiKeys.${provider.id}`, e.target.value);
+                  // Reset verification status when key changes
+                  setVerificationStatus(prev => ({ ...prev, [provider.id]: 'idle' }));
+                }}
+                placeholder={freeUserApiKeys?.[provider.id as keyof typeof freeUserApiKeys] ? "管理者デフォルトキー適用中" : provider.placeholder}
+                className="flex-1 border-2 border-gray-200 focus:border-green-500 text-sm lg:text-base"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => verifyApiKey(provider.id)}
+                disabled={!apiKeys[provider.id as keyof typeof apiKeys]?.trim() || verificationStatus[provider.id as keyof typeof verificationStatus] === 'loading'}
+                className="min-w-[80px] flex items-center gap-2"
+              >
+                {getStatusIcon(verificationStatus[provider.id as keyof typeof verificationStatus])}
+                検証
+              </Button>
+            </div>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );
