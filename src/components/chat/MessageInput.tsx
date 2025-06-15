@@ -90,7 +90,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
             value={inputText}
             onChange={handleTextareaChange}
             placeholder="質問してください... (Enterで送信、Shift+Enterで改行)"
-            className="min-h-[90px] max-h-40 resize-none pr-12 border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl"
+            className="min-h-[90px] max-h-40 resize-none pr-12 border-gray-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 outline-none rounded-xl transition-all duration-150"
             onKeyDown={handleKeyDown}
             disabled={isLoading}
           />
