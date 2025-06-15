@@ -1,7 +1,11 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+import { requestOpenAI } from "./providers/openai.ts";
+import { requestAnthropic } from "./providers/anthropic.ts";
+import { requestGoogle } from "./providers/google.ts";
+import { getDisplayCost } from "./utils/cost.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -62,132 +66,8 @@ function buildSystemMessage(settings: any, subject: string) {
   return msg;
 }
 
-// --- OpenAIへのリクエスト ---
-async function requestOpenAI(apiKey: string, model: string, messages: any[]) {
-  const modelMapping: { [key: string]: string } = {
-    'gpt-4.1-2025-04-14': 'gpt-4.1-2025-04-14',
-    'o3-2025-04-16': 'o3-2025-04-16',
-    'o4-mini-2025-04-16': 'o4-mini-2025-04-16',
-    'gpt-4o': 'gpt-4o',
-    'gpt-4': 'gpt-4',
-    'gpt-4-turbo': 'gpt-4-turbo',
-  };
-  const usedModel = modelMapping[model] || 'gpt-4o';
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: usedModel,
-      messages,
-      temperature: 0.7,
-      max_tokens: 2000,
-    }),
-  });
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.error('OpenAI API error:', errorData);
-    throw new Error(`OpenAI API error: ${response.status}`);
-  }
-  const data = await response.json();
-  const aiResponse = data.choices[0].message.content;
-  // コスト計算（暫定値）
-  const inputTokens = JSON.stringify(messages).length / 4;
-  const outputTokens = aiResponse.length / 4;
-  const cost = (inputTokens * 0.00001) + (outputTokens * 0.00003);
-  return { aiResponse, usedModel, cost };
-}
-
-// --- Anthropicへのリクエスト ---
-async function requestAnthropic(apiKey: string, model: string, systemMessage: string, conversationHistory: any[], message: string) {
-  const clMessages: any[] = [];
-  if (conversationHistory && Array.isArray(conversationHistory)) {
-    conversationHistory.slice(-10).forEach((m: any) => {
-      if (m.role === "user" || m.role === "assistant") {
-        clMessages.push({
-          role: m.role,
-          content: m.content
-        });
-      }
-    });
-  }
-  clMessages.push({
-    role: "user",
-    content: message
-  });
-  const anthropicReq = {
-    model,
-    system: systemMessage,
-    max_tokens: 2048,
-    messages: clMessages,
-    temperature: 0.7,
-  };
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json"
-    },
-    body: JSON.stringify(anthropicReq)
-  });
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Anthropic API error:', errorData);
-    throw new Error(`Anthropic API error: ${response.status}`);
-  }
-  const data = await response.json();
-  const aiResponse = data.content[0]?.text ?? "";
-  const inputTokens = JSON.stringify(clMessages).length / 4;
-  const outputTokens = aiResponse.length / 4;
-  const cost = (inputTokens * 0.000015) + (outputTokens * 0.000045);
-  return { aiResponse, usedModel: model, cost };
-}
-
-// --- Google Geminiへのリクエスト ---
-async function requestGoogle(apiKey: string, model: string, systemMessage: string, conversationHistory: any[], message: string) {
-  let geminiModel = model;
-  const supportedModels = ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-2.5-pro"];
-  if (!supportedModels.includes(geminiModel)) {
-    geminiModel = "gemini-1.5-pro";
-  }
-  const contentParts: any[] = [];
-  if (systemMessage) contentParts.push({ text: systemMessage });
-  if (conversationHistory && Array.isArray(conversationHistory)) {
-    conversationHistory.slice(-10).forEach((m: any) => {
-      contentParts.push({ text: (m.content || "") });
-    });
-  }
-  contentParts.push({ text: message });
-  let apiVersion = "v1beta";
-  if (geminiModel === "gemini-2.5-pro") {
-    apiVersion = "v1";
-  }
-  const url = `https://generativelanguage.googleapis.com/${apiVersion}/models/${geminiModel}:generateContent?key=${apiKey}`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: contentParts }]
-    })
-  });
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Google Gemini API error:', errorData);
-    throw new Error(`Google Gemini API error: ${response.status}`);
-  }
-  const data = await response.json();
-  const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  const inputTokens = JSON.stringify(contentParts).length / 4;
-  const outputTokens = aiResponse.length / 4;
-  const cost = (inputTokens * 0.000008) + (outputTokens * 0.000032);
-  return { aiResponse, usedModel: geminiModel, cost };
-}
-
+// --- ここからメイン処理 ---
 serve(async (req) => {
-  // CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -237,9 +117,13 @@ serve(async (req) => {
     // システムメッセージ
     const systemMessage = buildSystemMessage(settings, subject);
 
-    // --- 履歴+画像: OpenAIだけ特別対応 ---
-    let messages = [];
+    let aiResponse = "";
+    let usedModel = "";
+    let baseCost = 0;
+
     if (selectedProvider === "openai") {
+      if (!apiKeys.openai) throw new Error("OpenAI API key not configured");
+      const messages = [];
       messages.push({ role: 'system', content: systemMessage });
       if (conversationHistory && Array.isArray(conversationHistory)) {
         const recentHistory = conversationHistory.slice(-10);
@@ -259,56 +143,50 @@ serve(async (req) => {
             ]
           : message
       });
+      const result = await requestOpenAI({
+        apiKey: apiKeys.openai,
+        model: model || models.openai,
+        messages,
+      });
+      aiResponse = result.aiResponse;
+      usedModel = result.usedModel;
+      baseCost = result.cost;
     }
-
-    // モデル決定
-    let selectedModel =
-      model ||
-      (selectedProvider === "openai"
-        ? models.openai
-        : selectedProvider === "anthropic"
-        ? models.anthropic
-        : selectedProvider === "google"
-        ? models.google
-        : "gpt-4o");
-    if (typeof selectedModel !== "string") selectedModel = "gpt-4o";
-    selectedModel = selectedModel.toLowerCase();
-
-    let aiResponse = "";
-    let usedModel = selectedModel;
-    let cost = 0;
-
-    // プロバイダー分岐
-    if (selectedProvider === "openai") {
-      if (!apiKeys.openai) throw new Error("OpenAI API key not configured");
-      const result = await requestOpenAI(apiKeys.openai, selectedModel, messages);
-      aiResponse = result.aiResponse;
-      usedModel = result.usedModel;
-      cost = result.cost;
-    } else if (selectedProvider === "anthropic") {
+    else if (selectedProvider === "anthropic") {
       if (!apiKeys.anthropic) throw new Error("Anthropic API key not configured");
-      const result = await requestAnthropic(apiKeys.anthropic, selectedModel, systemMessage, conversationHistory, message);
+      const result = await requestAnthropic({
+        apiKey: apiKeys.anthropic,
+        model: model || models.anthropic,
+        systemMessage,
+        conversationHistory,
+        message,
+      });
       aiResponse = result.aiResponse;
       usedModel = result.usedModel;
-      cost = result.cost;
-    } else if (selectedProvider === "google") {
+      baseCost = result.cost;
+    }
+    else if (selectedProvider === "google") {
       if (!apiKeys.google) throw new Error("Google Gemini API key not configured");
-      const result = await requestGoogle(apiKeys.google, selectedModel, systemMessage, conversationHistory, message);
+      const result = await requestGoogle({
+        apiKey: apiKeys.google,
+        model: model || models.google,
+        systemMessage,
+        conversationHistory,
+        message,
+      });
       aiResponse = result.aiResponse;
       usedModel = result.usedModel;
-      cost = result.cost;
-    } else {
+      baseCost = result.cost;
+    }
+    else {
       throw new Error("Unknown AI provider. Only openai, anthropic, google are supported.");
     }
 
-    // 管理者APIキー・モデル利用時は cost=0 を強制
-    if (usedFreeApi) {
-      cost = 0;
-    }
+    const displayCost = getDisplayCost({ usedFreeApi, baseCost });
 
     return new Response(JSON.stringify({
       response: aiResponse,
-      cost: cost,
+      cost: displayCost,
       model: usedModel
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
