@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -43,11 +42,23 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Prepare system message with instructions
+    // 新しい: subject_configs から教科ごとのinstructionを探して利用する
     let systemMessage = settings.common_instruction || 'あなたは大学受験生の学習をサポートするAIアシスタントです。わかりやすく丁寧に説明してください。数学や化学の問題ではLaTeX記法を使って数式を表現してください。LaTeX記法を使用する際は、インライン数式は$...$、ブロック数式は$$...$$で囲んでください。';
     
-    if (settings.subject_instructions && settings.subject_instructions[subject]) {
-      systemMessage += '\n\n' + settings.subject_instructions[subject];
+    let customInstruction = '';
+    // subject_configs（配列）から取得
+    if (Array.isArray(settings.subject_configs)) {
+      const foundConfig = settings.subject_configs.find((conf: any) => conf.id === subject);
+      if (foundConfig && foundConfig.instruction && foundConfig.instruction.length > 0) {
+        customInstruction = foundConfig.instruction;
+      }
+    }
+    // フォールバック → subject_instructions（連想配列）
+    if (!customInstruction && settings.subject_instructions && settings.subject_instructions[subject]) {
+      customInstruction = settings.subject_instructions[subject];
+    }
+    if (customInstruction) {
+      systemMessage += '\n\n' + customInstruction;
     }
 
     // Prepare messages for OpenAI with conversation history

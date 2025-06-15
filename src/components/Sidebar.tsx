@@ -63,7 +63,7 @@ const Sidebar = ({
     .filter(config => config.visible)
     .sort((a, b) => a.order - b.order);
 
-  // Legacy subject data for backward compatibility
+  // レガシーデータ：旧教科定義
   const legacySubjects = [
     { id: 'math', name: '数学', icon: Calculator, color: 'bg-blue-100 text-blue-700 hover:bg-blue-200', gradient: 'from-blue-400 to-blue-600' },
     { id: 'chemistry', name: '化学', icon: FlaskConical, color: 'bg-purple-100 text-purple-700 hover:bg-purple-200', gradient: 'from-purple-400 to-purple-600' },
@@ -73,14 +73,19 @@ const Sidebar = ({
     { id: 'geography', name: '地理', icon: MapPin, color: 'bg-teal-100 text-teal-700 hover:bg-teal-200', gradient: 'from-teal-400 to-teal-600' },
     { id: 'information', name: '情報', icon: Monitor, color: 'bg-gray-100 text-gray-700 hover:bg-gray-200', gradient: 'from-gray-400 to-gray-600' },
     { id: 'other', name: '全般', icon: Plus, color: 'bg-orange-100 text-orange-700 hover:bg-orange-200', gradient: 'from-orange-400 to-orange-600' },
+    // 新しく追加された科目もここで用意しておく
+    { id: 'physics', name: '物理', icon: Atom, color: 'bg-orange-100 text-orange-700 hover:bg-orange-200', gradient: 'from-orange-400 to-orange-600' },
+    { id: 'japanese_history', name: '日本史', icon: BookOpen, color: 'bg-pink-100 text-pink-700 hover:bg-pink-200', gradient: 'from-pink-400 to-pink-600' },
+    { id: 'world_history', name: '世界史', icon: BookOpen, color: 'bg-amber-100 text-amber-700 hover:bg-amber-200', gradient: 'from-amber-400 to-amber-600' },
+    { id: 'earth_science', name: '地学', icon: Globe, color: 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200', gradient: 'from-cyan-400 to-cyan-600' },
   ];
 
-  // Map visible subjects to display format
+  // どの教科も必ずnameとiconを取れるようにする
   const displaySubjects = visibleSubjects.map(config => {
     const legacyData = legacySubjects.find(s => s.id === config.id);
     return {
       id: config.id,
-      name: config.name,
+      name: config.name && config.name.length > 0 ? config.name : (legacyData?.name || config.id),
       icon: legacyData?.icon || Plus,
       color: legacyData?.color || 'bg-gray-100 text-gray-700 hover:bg-gray-200',
       gradient: legacyData?.gradient || 'from-gray-400 to-gray-600'
