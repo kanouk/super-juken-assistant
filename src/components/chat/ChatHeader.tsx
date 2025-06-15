@@ -3,20 +3,20 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, History, Menu, Cpu } from 'lucide-react';
 
-// 柔らかい色味に修正した教科色マップ
+// サイドバー選択時の濃い教科色マップに修正（Sidebarと同じ値）
 const subjectColorMap: { [key: string]: string } = {
-  math: 'from-sky-200 to-indigo-100',
-  chemistry: 'from-purple-100 to-pink-100',
-  biology: 'from-green-200 to-emerald-100',
-  english: 'from-indigo-100 to-blue-100',
-  japanese: 'from-rose-100 to-red-100',
-  physics: 'from-orange-100 to-yellow-100',
-  earth_science: 'from-cyan-100 to-blue-100',
-  world_history: 'from-yellow-100 to-amber-50',
-  japanese_history: 'from-pink-100 to-red-100',
-  geography: 'from-teal-100 to-green-100',
-  information: 'from-gray-100 to-slate-100',
-  other: 'from-orange-100 to-pink-50',
+  math: 'from-blue-400 to-blue-600',
+  chemistry: 'from-purple-400 to-purple-600',
+  biology: 'from-green-400 to-green-600',
+  english: 'from-indigo-400 to-indigo-600',
+  japanese: 'from-red-400 to-red-600',
+  physics: 'from-orange-400 to-orange-600',
+  earth_science: 'from-cyan-400 to-cyan-600',
+  world_history: 'from-amber-400 to-amber-600',
+  japanese_history: 'from-pink-400 to-pink-600',
+  geography: 'from-teal-400 to-teal-600',
+  information: 'from-gray-400 to-gray-600',
+  other: 'from-orange-400 to-orange-600',
 };
 
 interface ChatHeaderProps {
@@ -46,8 +46,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   showHistoryButton = false,
   isMobile = false
 }) => {
-  const colorGradient = subjectColorMap[currentSubjectId] || 'from-sky-100 to-indigo-100';
-  const colorBorder = colorGradient.split(' ')[0].replace('from-', 'border-') || 'border-sky-100';
+  // 色をサイドバー選択時のグラデーションに統一
+  const colorGradient = subjectColorMap[currentSubjectId] || 'from-blue-400 to-blue-600';
+  const colorBorder = colorGradient.split(' ')[0].replace('from-', 'border-') || 'border-blue-400';
 
   // モデル表示名を取得
   const getModelDisplayName = (modelValue: string) => {
