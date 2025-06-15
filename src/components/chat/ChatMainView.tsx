@@ -53,7 +53,7 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
   messagesEndRef,
 }) => {
   return (
-    <div className="flex-1 flex flex-col bg-white h-screen">
+    <div className="flex-1 flex flex-col bg-white h-full overflow-hidden">
       {showConfetti && <ConfettiComponent trigger={showConfetti} />}
       <ChatHeader
         subjectName={subjectName}

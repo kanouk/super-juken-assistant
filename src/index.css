@@ -98,10 +98,16 @@
     @apply border-border;
   }
 
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
   body {
     @apply bg-background text-foreground;
     /* confettiによるスクロールを防ぐ */
     overflow-x: hidden;
+    overflow-y: hidden;
   }
 
   /* canvasエレメント（confetti）がレイアウトに影響しないようにする */

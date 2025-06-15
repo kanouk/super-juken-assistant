@@ -106,7 +106,7 @@ const MainApp = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 relative">
+    <div className="flex h-screen bg-gray-50 relative overflow-hidden">
       {/* Mobile Overlay */}
       {isMobile && sidebarOpen && (
         <div 
@@ -121,6 +121,7 @@ const MainApp = () => {
         ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
         transition-transform duration-300 ease-in-out
         lg:translate-x-0 lg:static lg:inset-0
+        h-full
       `}>
         <Sidebar
           selectedSubject={selectedSubject}
@@ -137,7 +138,7 @@ const MainApp = () => {
       </div>
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {currentView === 'chat' ? (
           <ChatScreen
             subject={selectedSubject}
