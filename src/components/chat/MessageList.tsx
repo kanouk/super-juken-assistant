@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MessageType, Message } from './types';
 import MessageItem from './MessageItem';
@@ -71,13 +70,13 @@ const MessageList: React.FC<MessageListProps> = ({
         {isLoading && (
           <div className="bg-white border-b border-gray-100">
             <div className="max-w-4xl mx-auto px-4 py-6">
-              <div className="flex items-start space-x-4">
-                <Avatar className="w-8 h-8 shrink-0 mt-1 ring-2 ring-green-100 shadow-sm">
+              <div className="flex items-center space-x-4">
+                <Avatar className="w-8 h-8 shrink-0 ring-2 ring-green-100 shadow-sm">
                   <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-600 text-white">
                     <Bot className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 flex items-center">
+                <div className="flex items-center">
                   <div className="flex space-x-1">
                     <div className="w-3 h-3 bg-blue-400 rounded-full animate-bounce"></div>
                     <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
