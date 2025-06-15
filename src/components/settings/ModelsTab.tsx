@@ -13,31 +13,41 @@ interface ModelsTabProps {
   };
   selectedProvider: string;
   updateSetting: (path: string, value: any) => void;
+  availableModels?: Record<string, { label: string; value: string }[]>;
+  freeUserModels?: Record<string, string>;
+  apiKeys?: { openai?: string; google?: string; anthropic?: string }
 }
 
-export const ModelsTab = ({ models, selectedProvider, updateSetting }: ModelsTabProps) => {
-  const openaiOptions = [
-    { label: "GPT-4.1 (2025-04-14)", value: "gpt-4.1-2025-04-14" },
-    { label: "O3 (2025-04-16)", value: "o3-2025-04-16" },
-    { label: "O4 Mini (2025-04-16)", value: "o4-mini-2025-04-16" },
-    { label: "GPT-4o（旧モデル）", value: "gpt-4o" },
-  ];
+export const ModelsTab = ({
+  models,
+  selectedProvider,
+  updateSetting,
+  availableModels,
+  freeUserModels,
+  apiKeys
+}: ModelsTabProps) => {
+  // APIキーが空なら管理者指定モデルのみ可
+  const userKeys = {
+    openai: !!apiKeys?.openai,
+    google: !!apiKeys?.google,
+    anthropic: !!apiKeys?.anthropic
+  };
 
-  const googleOptions = [
-    { label: "Gemini 2.5 Pro", value: "gemini-2.5-pro" },
-    { label: "Gemini 1.5 Pro", value: "gemini-1.5-pro" },
-    { label: "Gemini 1.5 Flash", value: "gemini-1.5-flash" },
-  ];
+  const keySet = userKeys.openai || userKeys.google || userKeys.anthropic;
 
-  const anthropicOptions = [
-    { label: "Sonnet 4 (2025-05-14)", value: "claude-sonnet-4-20250514" },
-    { label: "Opus 4 (2025-05-14)", value: "claude-opus-4-20250514" },
-    { label: "3.5 Haiku (2024-10-22)", value: "claude-3-5-haiku-20241022" },
-    { label: "3.7 Sonnet (2025-02-19)", value: "claude-3-7-sonnet-20250219" },
-    { label: "3 Sonnet（旧モデル）", value: "claude-3-sonnet" },
-    { label: "3 Haiku（旧モデル）", value: "claude-3-haiku" },
-    { label: "3 Opus（旧モデル）", value: "claude-3-opus" },
-  ];
+  // デフォルト選択肢
+  const getAllowedModels = (provider: string) => {
+    if (userKeys[provider as keyof typeof userKeys]) {
+      return availableModels?.[provider] ?? [];
+    }
+    // ユーザーAPI未登録時は管理者指定デフォルトのみ
+    if (freeUserModels?.[provider] && availableModels?.[provider]) {
+      return availableModels[provider].filter(
+        m => m.value === freeUserModels[provider]
+      );
+    }
+    return [];
+  };
 
   return (
     <Card className="shadow-lg border-2 border-gray-100 bg-white/80 backdrop-blur-sm">
@@ -48,6 +58,11 @@ export const ModelsTab = ({ models, selectedProvider, updateSetting }: ModelsTab
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-8">
+        {!keySet && (
+          <div className="text-xs text-gray-700 bg-purple-50 border border-purple-200 rounded px-3 py-2 mb-2">
+            ※ 管理者が指定したデフォルトモデルのみ利用できます。他のモデルを利用したい場合はAPIキーを登録してください。
+          </div>
+        )}
         <div>
           <Label className="text-base font-semibold mb-4 block">使用するプロバイダー</Label>
           <RadioGroup
@@ -55,6 +70,9 @@ export const ModelsTab = ({ models, selectedProvider, updateSetting }: ModelsTab
             onValueChange={(value) => updateSetting('selectedProvider', value)}
             className="space-y-3"
           >
+            {/* プロバイダー選択
+              ※APIキーない場合は選択不可
+              UI上disableは行わず選択のみ */}
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="openai" id="openai" />
               <Label htmlFor="openai" className="font-medium">OpenAI</Label>
@@ -71,68 +89,42 @@ export const ModelsTab = ({ models, selectedProvider, updateSetting }: ModelsTab
         </div>
 
         <div className="border-t pt-6">
-          <Label className="text-base font-semibold mb-4 block">各プロバイダーのモデル選択</Label>
-          
+          <Label className="text-base font-semibold mb-4 block">選択可能なモデル</Label>
+
           <div className="space-y-4">
-            <div>
-              <Label>OpenAI モデル</Label>
-              <Select
-                value={models.openai}
-                onValueChange={(value) => updateSetting('models.openai', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="モデルを選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  {openaiOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Google Gemini モデル</Label>
-              <Select
-                value={models.google}
-                onValueChange={(value) => updateSetting('models.google', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="モデルを選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  {googleOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Anthropic Claude モデル</Label>
-              <Select
-                value={models.anthropic}
-                onValueChange={(value) => updateSetting('models.anthropic', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="モデルを選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  {anthropicOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {["openai", "google", "anthropic"].map(provider => (
+              <div key={provider}>
+                <Label>
+                  {provider === "openai"
+                    ? "OpenAI モデル"
+                    : provider === "google"
+                      ? "Google Gemini モデル"
+                      : "Anthropic Claude モデル"}
+                </Label>
+                <Select
+                  value={models[provider as keyof typeof models] || ""}
+                  onValueChange={(value) =>
+                    updateSetting(`models.${provider}`, value)
+                  }
+                  disabled={!userKeys[provider as keyof typeof userKeys]}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="モデルを選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAllowedModels(provider).map((option, i) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
           </div>
         </div>
       </CardContent>
     </Card>
   );
 };
+

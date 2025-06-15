@@ -31,6 +31,10 @@ interface Settings {
   };
   subjectConfigs: SubjectConfig[];
   mbtiInstructions?: { [key: string]: string }; // 追加: 性格タイプ別カスタム指示
+  adminDefaults?: any; // 新たに管理者設定をローカルに保持
+  availableModels?: any;
+  freeUserModels?: any;
+  freeUserApiKeys?: any;
 }
 
 // 型ガード関数
@@ -132,7 +136,11 @@ export const useSettings = () => {
       other: 'その他の教科についても基礎から応用まで幅広く対応します。具体例を交えて分かりやすく説明してください。'
     },
     subjectConfigs: defaultSubjectConfigs,
-    mbtiInstructions: {} // 追加（空で初期化）
+    mbtiInstructions: {},
+    adminDefaults: undefined,
+    availableModels: undefined,
+    freeUserModels: undefined,
+    freeUserApiKeys: undefined,
   });
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -141,6 +149,27 @@ export const useSettings = () => {
   const getCurrentModel = () => {
     const provider = settings.selectedProvider as keyof typeof settings.models;
     return settings.models[provider];
+  };
+
+  const fetchAdminSettings = async () => {
+    try {
+      const { data: adminRows } = await supabase.from('admin_settings').select('setting_key, setting_value');
+      if (!adminRows) return {};
+
+      const settingMap: Record<string, any> = {};
+      adminRows.forEach(row => {
+        settingMap[row.setting_key] = row.setting_value;
+      });
+
+      return {
+        freeUserApiKeys: settingMap['free_user_api_keys'] || {},
+        availableModels: settingMap['available_models'] || {},
+        freeUserModels: settingMap['free_user_models'] || {},
+      };
+    } catch (err) {
+      console.error('Admin defaults fetch error', err);
+      return {};
+    }
   };
 
   const loadSettings = async () => {
@@ -157,6 +186,10 @@ export const useSettings = () => {
         .eq('id', user.id)
         .single();
 
+      // 管理者デフォルト取得
+      const adminDefaults = await fetchAdminSettings();
+
+      // 設定を設定テーブルから取得
       const { data: rawSettingsData } = await supabase
         .from('settings')
         .select('*')
@@ -170,23 +203,34 @@ export const useSettings = () => {
           ? settingsData.selected_provider
           : 'openai';
 
-        setSettings(prev => ({
-          ...prev,
-          passcode: profileData?.passcode || prev.passcode,
-          apiKeys: isApiKeys(settingsData.api_keys) ? settingsData.api_keys : prev.apiKeys,
-          models: isModels(settingsData.models) ? settingsData.models : prev.models,
-          selectedProvider: selectedProvider,
-          commonInstruction: typeof settingsData.common_instruction === 'string'
-            ? settingsData.common_instruction
-            : prev.commonInstruction,
-          subjectInstructions: isSubjectInstructions(settingsData.subject_instructions)
-            ? settingsData.subject_instructions
-            : prev.subjectInstructions,
-          subjectConfigs: isSubjectConfigs(settingsData.subject_configs)
-            ? settingsData.subject_configs
-            : prev.subjectConfigs,
-          mbtiInstructions: normalizeMbtiInstructions(settingsData.mbti_instructions),
-        }));
+        setSettings(prev => {
+          // apiKeys, modelsが空ならadminデフォルトで補完
+          const needFallback = (obj: any) => !obj || (typeof obj === 'object' && Object.values(obj).every(v => !v));
+
+          return {
+            ...prev,
+            passcode: profileData?.passcode || prev.passcode,
+            apiKeys: isApiKeys(settingsData.api_keys) ? settingsData.api_keys :
+              (adminDefaults.freeUserApiKeys ? { ...adminDefaults.freeUserApiKeys } : prev.apiKeys),
+            models: isModels(settingsData.models) ? settingsData.models :
+              (adminDefaults.freeUserModels ? { ...adminDefaults.freeUserModels } : prev.models),
+            selectedProvider: selectedProvider,
+            commonInstruction: typeof settingsData.common_instruction === 'string'
+              ? settingsData.common_instruction
+              : prev.commonInstruction,
+            subjectInstructions: isSubjectInstructions(settingsData.subject_instructions)
+              ? settingsData.subject_instructions
+              : prev.subjectInstructions,
+            subjectConfigs: isSubjectConfigs(settingsData.subject_configs)
+              ? settingsData.subject_configs
+              : prev.subjectConfigs,
+            mbtiInstructions: normalizeMbtiInstructions(settingsData.mbti_instructions),
+            adminDefaults,
+            freeUserApiKeys: adminDefaults.freeUserApiKeys,
+            availableModels: adminDefaults.availableModels,
+            freeUserModels: adminDefaults.freeUserModels,
+          };
+        });
       }
     } catch (error) {
       console.error('Settings loading error:', error);

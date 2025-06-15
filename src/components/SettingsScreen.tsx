@@ -67,6 +67,13 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
     }));
   };
 
+  // --- 新: 管理者デフォルト設定をpropsで渡す ---
+  const adminDefaults = {
+    availableModels: settings.availableModels,
+    freeUserModels: settings.freeUserModels,
+    freeUserApiKeys: settings.freeUserApiKeys,
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -124,6 +131,7 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             <ApiTab 
               apiKeys={settings.apiKeys}
               updateSetting={updateSetting}
+              freeUserApiKeys={adminDefaults.freeUserApiKeys}
             />
           </TabsContent>
 
@@ -132,6 +140,9 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
               models={settings.models}
               selectedProvider={settings.selectedProvider}
               updateSetting={updateSetting}
+              availableModels={adminDefaults.availableModels}
+              freeUserModels={adminDefaults.freeUserModels}
+              apiKeys={settings.apiKeys}
             />
           </TabsContent>
 
