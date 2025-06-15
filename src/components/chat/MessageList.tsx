@@ -10,9 +10,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface MessageListProps {
   messages: MessageType[];
   isLoading: boolean;
-  onUnderstood: (messageId: string) => void;
+  onUnderstood: () => void;
   onQuickAction: (prompt: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  conversationUnderstood: boolean;
 }
 
 const MessageList: React.FC<MessageListProps> = ({
@@ -21,6 +22,7 @@ const MessageList: React.FC<MessageListProps> = ({
   onUnderstood,
   onQuickAction,
   messagesEndRef,
+  conversationUnderstood,
 }) => {
   // Convert MessageType to Message format for MessageItem
   const convertToMessage = (msg: MessageType): Message => ({
@@ -47,7 +49,9 @@ const MessageList: React.FC<MessageListProps> = ({
               onTypewriterComplete={() => {}}
               showQuickActions={isLastAIMessage}
               onQuickAction={onQuickAction}
-              onUnderstood={() => onUnderstood(message.id)}
+              onUnderstood={onUnderstood}
+              isUnderstood={conversationUnderstood}
+              disabled={conversationUnderstood || isLoading}
             />
           );
         })}

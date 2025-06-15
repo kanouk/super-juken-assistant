@@ -18,7 +18,7 @@ interface ChatMainViewProps {
   selectedImages: ImageData[];
   setSelectedImages: (imgs: ImageData[]) => void;
   onSendMessage: (content: string, images?: ImageData[]) => void;
-  onUnderstood: (id: string) => void;
+  onUnderstood: () => void;
   onQuickAction: (prompt: string) => void;
   showConfetti: boolean;
   onNewChat: () => void;
@@ -28,6 +28,7 @@ interface ChatMainViewProps {
   onToggleSidebar: () => void;
   isMobile: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  conversationUnderstood: boolean;
 }
 
 const ChatMainView: React.FC<ChatMainViewProps> = ({
@@ -51,6 +52,7 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
   onToggleSidebar,
   isMobile,
   messagesEndRef,
+  conversationUnderstood,
 }) => {
   return (
     <div className="flex-1 flex flex-col bg-white h-full overflow-hidden">
@@ -80,11 +82,12 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
             onUnderstood={onUnderstood}
             onQuickAction={onQuickAction}
             messagesEndRef={messagesEndRef}
+            conversationUnderstood={conversationUnderstood}
           />
         )}
         <MessageInput
           onSendMessage={onSendMessage}
-          isLoading={isLoading}
+          isLoading={isLoading || conversationUnderstood}
           selectedImages={selectedImages}
           onImagesChange={setSelectedImages}
         />

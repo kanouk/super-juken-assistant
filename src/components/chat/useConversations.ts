@@ -1,0 +1,113 @@
+
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { MessageType } from './types';
+
+export function useConversations(userId: string | undefined, subject: string) {
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [conversationUnderstood, setConversationUnderstood] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // 会話リスト
+  const { data: conversations = [], refetch: refetchConversations } = useQuery({
+    queryKey: ['conversations', userId, subject],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('subject', subject)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+
+  const handleSelectConversation = async (conversationId: string) => {
+    try {
+      // 会話の詳細を取得
+      const { data: conversationData, error: conversationError } = await supabase
+        .from('conversations')
+        .select('is_understood')
+        .eq('id', conversationId)
+        .single();
+
+      if (conversationError) throw conversationError;
+
+      const { data: messagesData, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      const formattedMessages: MessageType[] = messagesData.map((msg) => ({
+        id: msg.id.toString(),
+        content: msg.content,
+        isUser: msg.role === 'user',
+        timestamp: new Date(msg.created_at),
+        images: msg.image_url ? [{ url: msg.image_url }] : undefined,
+      }));
+
+      setSelectedConversationId(conversationId);
+      setConversationUnderstood(conversationData.is_understood || false);
+      
+      return formattedMessages;
+    } catch (error: any) {
+      toast({
+        title: "エラー",
+        description: "会話の読み込みに失敗しました。",
+        variant: "destructive",
+      });
+      return [];
+    }
+  };
+
+  const handleDeleteConversation = async (conversationId: string) => {
+    try {
+      await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', conversationId);
+
+      await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', conversationId);
+
+      if (selectedConversationId === conversationId) {
+        setSelectedConversationId(null);
+      }
+
+      refetchConversations();
+      toast({
+        title: "削除完了",
+        description: "会話が削除されました。",
+      });
+    } catch (error: any) {
+      toast({
+        title: "エラー",
+        description: "会話の削除に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return {
+    conversations,
+    selectedConversationId,
+    setSelectedConversationId,
+    conversationUnderstood,
+    setConversationUnderstood,
+    refetchConversations,
+    handleSelectConversation,
+    handleDeleteConversation,
+  };
+}
