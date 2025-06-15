@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -36,6 +37,14 @@ export const useChatStats = (userId: string | undefined) => {
     try {
       setError(null);
 
+      // conversationsテーブルからis_understoodがtrueの会話数を取得
+      const { count: understoodCount, error: understoodError } = await supabase
+        .from('conversations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('is_understood', true);
+      if (understoodError) throw understoodError;
+
       const { data: conversations, error: conversationsError } = await supabase
         .from('conversations')
         .select('id')
@@ -46,7 +55,7 @@ export const useChatStats = (userId: string | undefined) => {
       const conversationIds = conversations?.map(conv => conv.id) || [];
       if (conversationIds.length === 0) {
         setStats({
-          understoodCount: 0,
+          understoodCount: understoodCount || 0,
           dailyCost: 0,
           totalCost: 0,
           dailyQuestions: 0,
@@ -54,14 +63,6 @@ export const useChatStats = (userId: string | undefined) => {
         setIsLoading(false);
         return;
       }
-
-      const { count: understoodCount, error: understoodError } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'assistant')
-        .eq('is_understood', true)
-        .in('conversation_id', conversationIds);
-      if (understoodError) throw understoodError;
 
       const { data: totalCostData, error: totalCostError } = await supabase
         .from('messages')
