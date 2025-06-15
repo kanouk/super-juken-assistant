@@ -70,6 +70,7 @@ export const SubjectsTab = ({ subjectConfigs, updateSubjectConfig, moveSubject }
         <div className="space-y-4">
           <p className="text-sm text-gray-600 mb-4">
             教科の表示/非表示、並び順、カスタムインストラクションを設定できます。
+            <strong>カスタムインストラクションが空欄の場合は、管理者設定の教科別インストラクションが使用されます。</strong>
           </p>
           
           {subjectConfigs
@@ -127,9 +128,12 @@ export const SubjectsTab = ({ subjectConfigs, updateSubjectConfig, moveSubject }
                         value={config.instruction}
                         onChange={(e) => updateSubjectConfig(config.id, 'instruction', e.target.value)}
                         rows={3}
-                        placeholder={`${config.name}に関する指示を入力してください...`}
+                        placeholder={`${config.name}に関するあなた専用の指示を入力してください...`}
                         className="mt-2 border-2 border-gray-200 focus:border-teal-500"
                       />
+                      <p className="text-xs text-gray-600 mt-1">
+                        空欄の場合は管理者設定の{config.name}用インストラクションが使用されます
+                      </p>
                     </div>
                   </CardContent>
                 </Card>

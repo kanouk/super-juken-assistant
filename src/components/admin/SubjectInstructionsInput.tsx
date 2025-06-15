@@ -34,8 +34,12 @@ export const SubjectInstructionsInput = ({ subjectInstructions, updateSetting }:
   return (
     <Card>
       <CardHeader>
-        <CardTitle>教科別インストラクション</CardTitle>
-        <CardDescription>各教科ごとにAIアシスタントの指示文をカスタマイズできます。</CardDescription>
+        <CardTitle>教科別インストラクション（管理者設定）</CardTitle>
+        <CardDescription>
+          各教科ごとにAIアシスタントの指示文をカスタマイズできます。
+          <br />
+          <strong>ユーザーがカスタム設定していない場合は、ここで設定した内容が使用されます。</strong>
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {SUBJECTS.map((subject) => (
@@ -48,6 +52,9 @@ export const SubjectInstructionsInput = ({ subjectInstructions, updateSetting }:
               className="min-h-[80px]"
               placeholder={`${subject.name}のカスタム指示文...`}
             />
+            <p className="text-xs text-gray-600 mt-1">
+              ユーザーがカスタム設定していない場合に使用される{subject.name}用の指示文
+            </p>
           </div>
         ))}
       </CardContent>

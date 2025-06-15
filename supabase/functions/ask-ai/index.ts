@@ -53,6 +53,13 @@ serve(async (req) => {
 
     console.log("User settings fetched:", settings ? "found" : "not found");
 
+    // ユーザープロファイル取得（MBTI用）
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('mbti')
+      .eq('id', user.id)
+      .single();
+
     // 管理者デフォルト取得 - より詳細なログを追加
     console.log("Attempting to fetch admin_settings...");
     const { data: adminRows, error: adminError } = await supabaseClient
@@ -80,8 +87,17 @@ serve(async (req) => {
     // 追加ログ
     console.log("apiKeys to be used", apiKeys, "selectedProvider", selectedProvider);
 
+    // システムメッセージ用の設定オブジェクトを構築（管理者設定とユーザー設定を統合）
+    const systemSettings = {
+      ...settings,
+      user_mbti: profile?.mbti,
+      default_common_instruction: adminSettingMap['default_common_instruction'],
+      default_subject_instructions: adminSettingMap['default_subject_instructions'],
+      default_mbti_instructions: adminSettingMap['mbti_instructions']
+    };
+
     // システムメッセージ
-    const systemMessage = buildSystemMessage(settings, subject);
+    const systemMessage = buildSystemMessage(systemSettings, subject);
 
     let aiResponse = "";
     let usedModel = "";
