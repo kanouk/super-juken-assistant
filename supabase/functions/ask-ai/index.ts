@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -12,14 +13,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// free_user_api_keys の型安全な取得
+function safeParseJson(str: any, fallback: any) {
+  if (typeof str === "object" && str !== null) return str;
+  if (typeof str !== "string") return fallback;
+  try {
+    const obj = JSON.parse(str);
+    if (typeof obj === "object" && obj !== null) return obj;
+    return fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function sanitize(str: any): string {
   return typeof str === "string" ? str.trim() : "";
 }
 
 function getApiConfig(settings: any, adminSettingMap: any, userId: string) {
   // 管理者API: 無料ユーザー用
-  const freeUserApiKeys = adminSettingMap['free_user_api_keys'] || {};
-  const freeUserModels = adminSettingMap['free_user_models'] || {};
+  let freeUserApiKeys = adminSettingMap['free_user_api_keys'] || {};
+  let freeUserModels = adminSettingMap['free_user_models'] || {};
+  
+  // (重要) free_user_api_keys が JSON文字列の場合に必ずオブジェクトへ
+  freeUserApiKeys = safeParseJson(freeUserApiKeys, {});
+  freeUserModels = safeParseJson(freeUserModels, {});
+
   let apiKeys = settings?.api_keys || {};
   let models = settings?.models || {};
   let selectedProvider = settings?.selected_provider || "openai";
@@ -44,8 +63,15 @@ function getApiConfig(settings: any, adminSettingMap: any, userId: string) {
     usedFreeApi = true;
   }
 
-  // 追加ログ
-  console.log("getApiConfig result", { apiKeys, models, selectedProvider, usedFreeApi });
+  // ログを詳細化
+  console.log("getApiConfig result", { 
+    apiKeys, 
+    models, 
+    selectedProvider, 
+    usedFreeApi, 
+    rawAdminSettingMap: adminSettingMap,
+    rawFreeUserApiKeys: adminSettingMap['free_user_api_keys']
+  });
 
   return { apiKeys, models, selectedProvider, usedFreeApi };
 }
@@ -126,7 +152,7 @@ serve(async (req) => {
 
     if (selectedProvider === "openai") {
       if (!apiKeys.openai) {
-        console.error("OpenAI API key not configured (apiKeys)", apiKeys);
+        console.error("OpenAI API key not configured (apiKeys)", apiKeys, "raw freeUserApiKeys", adminSettingMap['free_user_api_keys']);
         throw new Error("OpenAI API key not configured");
       }
       const messages = [];
@@ -162,7 +188,7 @@ serve(async (req) => {
     }
     else if (selectedProvider === "anthropic") {
       if (!apiKeys.anthropic) {
-        console.error("Anthropic API key not configured (apiKeys)", apiKeys);
+        console.error("Anthropic API key not configured (apiKeys)", apiKeys, "raw freeUserApiKeys", adminSettingMap['free_user_api_keys']);
         throw new Error("Anthropic API key not configured");
       }
       console.log("Anthropic apiRequest", { model: model || models.anthropic, message });
@@ -179,7 +205,7 @@ serve(async (req) => {
     }
     else if (selectedProvider === "google") {
       if (!apiKeys.google) {
-        console.error("Google Gemini API key not configured (apiKeys)", apiKeys);
+        console.error("Google Gemini API key not configured (apiKeys)", apiKeys, "raw freeUserApiKeys", adminSettingMap['free_user_api_keys']);
         throw new Error("Google Gemini API key not configured");
       }
       console.log("Google apiRequest", { model: model || models.google, message });
