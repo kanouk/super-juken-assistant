@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -102,7 +103,7 @@ export function useChatScreen(props: UseChatScreenProps) {
 
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
-    // 新しいメッセージが追加された時のみスクロール
+    // 新しいメッセージが追加された時のみスクロール（理解済み状態の変更は除く）
     if (lastMessage && !lastMessage.isUnderstood) {
       scrollToBottom();
     }
@@ -175,15 +176,18 @@ export function useChatScreen(props: UseChatScreenProps) {
 
       if (messageError) throw messageError;
 
+      // 会話履歴を正しい形式で構築（role形式で送信）
+      const conversationHistory = messages.map(msg => ({
+        role: msg.isUser ? 'user' : 'assistant',
+        content: msg.content
+      }));
+
       // モデル（selectedModel）をAIへ必ず渡す
       const { data, error } = await supabase.functions.invoke('ask-ai', {
         body: {
           message: content,
           subject: subject,
-          conversationHistory: messages.map(msg => ({
-            content: msg.content,
-            isUser: msg.isUser
-          })),
+          conversationHistory: conversationHistory,
           images: images.length > 0 ? images : undefined,
           userId: userId,
           model: selectedModel

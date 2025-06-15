@@ -1,4 +1,5 @@
 
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -14,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, subject, imageUrl, conversationHistory } = await req.json();
+    const { message, subject, imageUrl, conversationHistory, model } = await req.json();
     
     // Get user's API keys and settings from Supabase
     const supabaseClient = createClient(
@@ -59,22 +60,10 @@ serve(async (req) => {
     if (conversationHistory && Array.isArray(conversationHistory)) {
       const recentHistory = conversationHistory.slice(-10);
       for (const historyMessage of recentHistory) {
-        if (historyMessage.role === 'user') {
-          messages.push({
-            role: 'user',
-            content: historyMessage.image_url 
-              ? [
-                  { type: 'text', text: historyMessage.content },
-                  { type: 'image_url', image_url: { url: historyMessage.image_url } }
-                ]
-              : historyMessage.content
-          });
-        } else if (historyMessage.role === 'assistant') {
-          messages.push({
-            role: 'assistant',
-            content: historyMessage.content
-          });
-        }
+        messages.push({
+          role: historyMessage.role,
+          content: historyMessage.content
+        });
       }
     }
 
@@ -89,7 +78,9 @@ serve(async (req) => {
         : message 
     });
 
-    console.log('Sending request to OpenAI with model:', settings.models?.openai || 'gpt-4o');
+    // Use the model passed from frontend, fallback to settings or default
+    const selectedModel = model || settings.models?.openai || 'gpt-4o';
+    console.log('Sending request to OpenAI with model:', selectedModel);
 
     // Call OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -99,7 +90,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: settings.models?.openai || 'gpt-4o',
+        model: selectedModel,
         messages: messages,
         temperature: 0.7,
         max_tokens: 2000,
@@ -125,7 +116,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       response: aiResponse,
       cost: cost,
-      model: settings.models?.openai || 'gpt-4o'
+      model: selectedModel
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -140,3 +131,4 @@ serve(async (req) => {
     });
   }
 });
+
