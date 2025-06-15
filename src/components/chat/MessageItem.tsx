@@ -127,6 +127,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 >
                   <Copy className="w-4 h-4" />
                 </button>
+                {/* コストを薄く表示 */}
+                {typeof message.cost === "number" && (
+                  <span className="text-xs text-gray-400 ml-1">
+                    ¥{message.cost.toFixed(4)}
+                  </span>
+                )}
                 {/* コストとモデル表示（薄グレー） */}
                 {(message.cost !== undefined || message.model) && (
                   <span className="text-xs text-gray-400 ml-1 select-none">
