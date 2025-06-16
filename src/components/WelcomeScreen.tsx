@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -11,6 +12,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { useChatStats } from "@/hooks/useChatStats";
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
+import StatCard from "./stats/StatCard";
 
 interface WelcomeScreenProps {
   onSubjectSelect: (subject: string) => void;
@@ -125,18 +127,23 @@ const WelcomeScreen = ({
           </CardContent>
         </Card>
 
-        {/* Stats - 4 items as requested */}
+        {/* Stats - 4 items with diff display */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Card className="bg-green-50 border-green-200 cursor-help">
-                  <CardContent className="p-4 text-center">
-                    <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-green-800">{chatStats.today_understood || 0}</p>
-                    <p className="text-sm text-green-600">本日理解した数</p>
-                  </CardContent>
-                </Card>
+                <div>
+                  <StatCard
+                    title="本日理解した数"
+                    value={chatStats.today_understood || 0}
+                    diff={chatStats.understoodDiff}
+                    isLoading={chatStats.isLoading}
+                    icon={CheckCircle}
+                    iconColor="text-green-600"
+                    cardColor="bg-green-50"
+                    borderColor="border-green-200"
+                  />
+                </div>
               </TooltipTrigger>
               <TooltipContent>
                 <div className="space-y-1">
@@ -156,13 +163,17 @@ const WelcomeScreen = ({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Card className="bg-blue-50 border-blue-200 cursor-help">
-                  <CardContent className="p-4 text-center">
-                    <Target className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-blue-800">{chatStats.understoodCount}</p>
-                    <p className="text-sm text-blue-600">累計理解した数</p>
-                  </CardContent>
-                </Card>
+                <div>
+                  <StatCard
+                    title="累計理解した数"
+                    value={chatStats.understoodCount}
+                    isLoading={chatStats.isLoading}
+                    icon={Target}
+                    iconColor="text-blue-600"
+                    cardColor="bg-blue-50"
+                    borderColor="border-blue-200"
+                  />
+                </div>
               </TooltipTrigger>
               <TooltipContent>
                 <div className="space-y-1">
@@ -179,21 +190,26 @@ const WelcomeScreen = ({
             </Tooltip>
           </TooltipProvider>
 
-          <Card className="bg-purple-50 border-purple-200">
-            <CardContent className="p-4 text-center">
-              <TrendingUp className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-purple-800">{chatStats.dailyQuestions}</p>
-              <p className="text-sm text-purple-600">本日の質問数</p>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="本日の質問数"
+            value={chatStats.dailyQuestions}
+            diff={chatStats.questionsDiff}
+            isLoading={chatStats.isLoading}
+            icon={TrendingUp}
+            iconColor="text-purple-600"
+            cardColor="bg-purple-50"
+            borderColor="border-purple-200"
+          />
 
-          <Card className="bg-orange-50 border-orange-200">
-            <CardContent className="p-4 text-center">
-              <User className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-orange-800">{chatStats.totalQuestions || 0}</p>
-              <p className="text-sm text-orange-600">累計質問数</p>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="累計質問数"
+            value={chatStats.totalQuestions || 0}
+            isLoading={chatStats.isLoading}
+            icon={User}
+            iconColor="text-orange-600"
+            cardColor="bg-orange-50"
+            borderColor="border-orange-200"
+          />
         </div>
 
         {/* Subject Selection */}
