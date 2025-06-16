@@ -1,7 +1,6 @@
 
 import React from 'react';
-import UnifiedMarkdownLatexRenderer from './UnifiedMarkdownLatexRenderer';
-import '../styles/markdown-latex.css';
+import ChatMessageRenderer from './ChatMessageRenderer';
 
 interface LaTeXRendererProps {
   content: string;
@@ -10,10 +9,16 @@ interface LaTeXRendererProps {
   debugMode?: boolean;
 }
 
-// 改良されたMarkdown+LaTeX統合レンダラー
-const LaTeXRenderer: React.FC<LaTeXRendererProps> = (props) => {
-  console.log('LaTeXRenderer: Using enhanced UnifiedMarkdownLatexRenderer with LaTeX parser');
-  return <UnifiedMarkdownLatexRenderer {...props} />;
+const LaTeXRenderer: React.FC<LaTeXRendererProps> = ({ 
+  content, 
+  className, 
+  colorScheme = "assistant" 
+}) => {
+  return (
+    <div className={className}>
+      <ChatMessageRenderer content={content} colorScheme={colorScheme} />
+    </div>
+  );
 };
 
 export default LaTeXRenderer;

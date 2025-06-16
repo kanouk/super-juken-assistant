@@ -1,0 +1,374 @@
+
+/* 基本スタイル */
+.chat-message-content {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.chat-message-content.assistant-message {
+  color: #1a1a1a;
+}
+
+.chat-message-content.user-message {
+  color: #ffffff;
+}
+
+/* 見出し */
+.chat-message-content h1 {
+  font-size: 1.8em;
+  font-weight: 600;
+  margin: 1.5em 0 0.8em 0;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.chat-message-content.assistant-message h1 {
+  color: #111827;
+}
+
+.chat-message-content.user-message h1 {
+  color: #ffffff;
+  border-bottom-color: rgba(255, 255, 255, 0.2);
+}
+
+.chat-message-content h2 {
+  font-size: 1.4em;
+  font-weight: 600;
+  margin: 1.3em 0 0.6em 0;
+}
+
+.chat-message-content.assistant-message h2 {
+  color: #111827;
+}
+
+.chat-message-content.user-message h2 {
+  color: #ffffff;
+}
+
+.chat-message-content h3 {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin: 1.2em 0 0.5em 0;
+}
+
+.chat-message-content.assistant-message h3 {
+  color: #111827;
+}
+
+.chat-message-content.user-message h3 {
+  color: #ffffff;
+}
+
+.chat-message-content h4,
+.chat-message-content h5,
+.chat-message-content h6 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 1em 0 0.5em 0;
+}
+
+.chat-message-content.assistant-message h4,
+.chat-message-content.assistant-message h5,
+.chat-message-content.assistant-message h6 {
+  color: #111827;
+}
+
+.chat-message-content.user-message h4,
+.chat-message-content.user-message h5,
+.chat-message-content.user-message h6 {
+  color: #ffffff;
+}
+
+/* 段落 */
+.chat-message-content p {
+  margin: 0 0 1em 0;
+}
+
+/* リスト */
+.chat-message-content ul,
+.chat-message-content ol {
+  margin: 0 0 1em 0;
+  padding-left: 2em;
+}
+
+.chat-message-content li {
+  margin: 0.3em 0;
+}
+
+.chat-message-content li > p {
+  margin: 0;
+}
+
+/* タスクリスト */
+.chat-message-content input[type="checkbox"] {
+  margin-right: 0.5em;
+  margin-left: -1.5em;
+}
+
+.chat-message-content ul:has(input[type="checkbox"]) {
+  list-style: none;
+  padding-left: 1.5em;
+}
+
+/* 表 */
+.chat-message-content .table-wrapper {
+  overflow-x: auto;
+  margin: 1em 0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chat-message-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.chat-message-content.assistant-message th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.chat-message-content.user-message th {
+  background-color: rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.chat-message-content.assistant-message td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.chat-message-content.user-message td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.chat-message-content tr:last-child td {
+  border-bottom: none;
+}
+
+.chat-message-content.assistant-message tr:hover {
+  background-color: #f9fafb;
+}
+
+.chat-message-content.user-message tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* コード */
+.chat-message-content code {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.chat-message-content.assistant-message code {
+  background-color: #f3f4f6;
+  color: #d1208a;
+}
+
+.chat-message-content.user-message code {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffc0cb;
+}
+
+.chat-message-content pre {
+  margin: 1em 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.chat-message-content pre code {
+  display: block;
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+
+/* シンタックスハイライター */
+.chat-message-content .syntax-highlighter {
+  margin: 0 !important;
+  border-radius: 8px !important;
+  font-size: 0.9em !important;
+}
+
+/* 引用 */
+.chat-message-content blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid #3b82f6;
+}
+
+.chat-message-content.assistant-message blockquote {
+  background-color: #eff6ff;
+  color: #1e40af;
+}
+
+.chat-message-content.user-message blockquote {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #93c5fd;
+  border-left-color: #60a5fa;
+}
+
+.chat-message-content blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* 水平線 */
+.chat-message-content hr {
+  margin: 2em 0;
+  border: none;
+  height: 2px;
+}
+
+.chat-message-content.assistant-message hr {
+  background: linear-gradient(to right, transparent, #e5e7eb 20%, #e5e7eb 80%, transparent);
+}
+
+.chat-message-content.user-message hr {
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent);
+}
+
+/* リンク */
+.chat-message-content a {
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.chat-message-content.assistant-message a {
+  color: #3b82f6;
+}
+
+.chat-message-content.user-message a {
+  color: #93c5fd;
+}
+
+.chat-message-content.assistant-message a:hover {
+  border-bottom-color: #3b82f6;
+}
+
+.chat-message-content.user-message a:hover {
+  border-bottom-color: #93c5fd;
+}
+
+/* 画像 */
+.chat-message-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 1em 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 強調 */
+.chat-message-content strong {
+  font-weight: 600;
+}
+
+.chat-message-content.assistant-message strong {
+  color: #111827;
+}
+
+.chat-message-content.user-message strong {
+  color: #ffffff;
+}
+
+.chat-message-content em {
+  font-style: italic;
+}
+
+.chat-message-content del {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* LaTeX数式 */
+.chat-message-content .katex {
+  font-size: 1.1em;
+}
+
+.chat-message-content.assistant-message .katex {
+  color: #1a1a1a;
+}
+
+.chat-message-content.user-message .katex {
+  color: #ffffff;
+}
+
+.chat-message-content .katex-display {
+  margin: 1.2em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5em 0;
+}
+
+.chat-message-content .katex-display::-webkit-scrollbar {
+  height: 6px;
+}
+
+.chat-message-content .katex-display::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.chat-message-content .katex-display::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.chat-message-content .katex-display::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* インライン数式の背景 */
+.chat-message-content span.katex {
+  padding: 0 2px;
+}
+
+/* エラー時の数式表示 */
+.chat-message-content .katex-error {
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.chat-message-content.assistant-message .katex-error {
+  color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.chat-message-content.user-message .katex-error {
+  color: #fca5a5;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 640px) {
+  .chat-message-content {
+    font-size: 14px;
+  }
+  
+  .chat-message-content table {
+    font-size: 0.8em;
+  }
+  
+  .chat-message-content th,
+  .chat-message-content td {
+    padding: 8px 12px;
+  }
+}
