@@ -150,7 +150,7 @@ const MainApp = () => {
       </div>
 
       {/* Overlay for mobile */}
-      {ieMobile && isSidebarOpen && (
+      {isMobile && isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={() => setIsSidebarOpen(false)}
