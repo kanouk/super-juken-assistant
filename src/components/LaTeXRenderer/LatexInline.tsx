@@ -12,8 +12,25 @@ const LatexInline: React.FC<LatexInlineProps> = ({ math, colorScheme }) => {
 
   try {
     return (
-      <span className="inline-block whitespace-nowrap" style={{ whiteSpace: 'nowrap', display: 'inline-block' }}>
-        <InlineMath math={math} />
+      <span 
+        className="inline-block whitespace-nowrap" 
+        style={{ 
+          whiteSpace: 'nowrap', 
+          display: 'inline-block',
+          verticalAlign: 'baseline',
+          lineHeight: '1'
+        }}
+      >
+        <InlineMath 
+          math={math}
+          settings={{
+            displayMode: false,
+            throwOnError: false,
+            strict: false,
+            trust: false,
+            output: 'html'
+          }}
+        />
       </span>
     );
   } catch (error) {
@@ -23,7 +40,11 @@ const LatexInline: React.FC<LatexInlineProps> = ({ math, colorScheme }) => {
         className={`${
           colorScheme === 'user' ? 'text-red-200 bg-red-700' : 'text-red-700 bg-red-50'
         } px-1 rounded inline-block whitespace-nowrap`}
-        style={{ whiteSpace: 'nowrap', display: 'inline-block' }}
+        style={{ 
+          whiteSpace: 'nowrap', 
+          display: 'inline-block',
+          verticalAlign: 'baseline'
+        }}
       >
         LaTeX Inline Error: {math}
       </span>
