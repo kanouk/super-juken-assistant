@@ -86,7 +86,7 @@ export const TagList: React.FC<TagListProps> = ({ subject, tags, onEdit, onDelet
                             {tag.minor_category}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {subject} > {majorCategory}
+                            {subject} {' > '} {majorCategory}
                           </div>
                         </div>
                         <div className="flex space-x-1 ml-2">
