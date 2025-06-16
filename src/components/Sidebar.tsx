@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +7,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   BookOpen, Calculator, FlaskConical, Atom, Languages, 
-  Settings, GraduationCap, LogOut, MapPin, Monitor, Plus,
+  Settings, LogOut, MapPin, Monitor, Plus,
   User, Clock, TrendingUp, Sparkles, ChevronDown, ChevronUp, CheckCircle, RefreshCw,
-  Globe, AlertCircle, X
+  Globe, AlertCircle, X, Bot
 } from "lucide-react";
 import { UserProfile } from '@/types/profile';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -67,6 +66,22 @@ const Sidebar = ({
     getUser();
   }, []);
 
+  // 教科の日本語名マッピング
+  const SUBJECT_JAPANESE_NAMES: Record<string, string> = {
+    'math': '数学',
+    'chemistry': '化学',
+    'biology': '生物',
+    'english': '英語',
+    'japanese': '国語',
+    'geography': '地理',
+    'information': '情報',
+    'other': '全般',
+    'physics': '物理',
+    'japanese_history': '日本史',
+    'world_history': '世界史',
+    'earth_science': '地学',
+  };
+
   // Get visible and sorted subjects from settings
   const visibleSubjects = settings?.subjectConfigs
     ?.filter((config: any) => config.visible)
@@ -90,9 +105,10 @@ const Sidebar = ({
 
   const displaySubjects = visibleSubjects.map((config: any) => {
     const legacyData = legacySubjects.find(s => s.id === config.id);
+    const japaneseName = SUBJECT_JAPANESE_NAMES[config.id] || config.id;
     return {
       id: config.id,
-      name: config.name && config.name.length > 0 ? config.name : (legacyData?.name || config.id),
+      name: japaneseName,
       icon: legacyData?.icon || Plus,
       color: legacyData?.color || 'bg-gray-100 text-gray-700 hover:bg-gray-200',
       gradient: legacyData?.gradient || 'from-gray-400 to-gray-600'
@@ -148,7 +164,7 @@ const Sidebar = ({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-3">
             <div className="p-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-sm">
-              <GraduationCap className="h-5 w-5 text-white" />
+              <Bot className="h-5 w-5 text-white" />
             </div>
             <div>
               <h1 className="text-sm font-semibold text-gray-900">受験アシスタント</h1>

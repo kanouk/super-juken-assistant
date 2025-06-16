@@ -4,6 +4,22 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, History, Menu, Cpu } from 'lucide-react';
 import { getModelDisplayName } from './getModelDisplayName';
 
+// 教科の日本語名マッピング
+const SUBJECT_JAPANESE_NAMES: Record<string, string> = {
+  'math': '数学',
+  'chemistry': '化学',
+  'biology': '生物',
+  'english': '英語',
+  'japanese': '国語',
+  'geography': '地理',
+  'information': '情報',
+  'other': '全般',
+  'physics': '物理',
+  'japanese_history': '日本史',
+  'world_history': '世界史',
+  'earth_science': '地学',
+};
+
 // 科目ごと濃い色（ボーダー/pill用）と淡い色（背景用）の2種
 const subjectColorMap: { [key: string]: { grad: string, border: string, bg: string } } = {
   math: {
@@ -97,6 +113,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   isMobile = false,
   onBackToWelcome
 }) => {
+  // 日本語名に変換
+  const displaySubjectName = SUBJECT_JAPANESE_NAMES[currentSubjectId] || SUBJECT_JAPANESE_NAMES[subjectName] || subjectName;
+  
   const subjectColors = subjectColorMap[currentSubjectId] || subjectColorMap['math']; // fallback
   const colorGradient = subjectColors.grad;
   const colorBorder = subjectColors.border;
@@ -135,7 +154,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                 mb-1
               `}
             >
-              {subjectName}
+              {displaySubjectName}
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 font-semibold tracking-wide uppercase">
               AI学習アシスタント
