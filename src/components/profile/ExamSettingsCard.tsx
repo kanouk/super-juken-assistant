@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, X } from "lucide-react";
 import { UserProfile, ExamSettings } from '@/types/profile';
 
 interface ExamSettingsCardProps {
@@ -13,8 +14,13 @@ interface ExamSettingsCardProps {
 }
 
 const ExamSettingsCard: React.FC<ExamSettingsCardProps> = ({ examSettings, onExamSettingChange }) => {
-  // 第二試験が設定されているかチェック
-  const hasSecondExam = examSettings.todai.name.trim() !== '' || examSettings.todai.date !== '';
+  // 第2ゴールが設定されているかチェック
+  const hasSecondGoal = examSettings.todai.name.trim() !== '' || examSettings.todai.date !== '';
+
+  const clearExamSetting = (exam: 'kyotsu' | 'todai') => {
+    onExamSettingChange(exam, 'name', '');
+    onExamSettingChange(exam, 'date', '');
+  };
 
   return (
     <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
@@ -25,11 +31,24 @@ const ExamSettingsCard: React.FC<ExamSettingsCardProps> = ({ examSettings, onExa
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-6">
-        {/* 第一志望 */}
+        {/* 第1ゴール */}
         <div className="space-y-4">
-          <h3 className="font-medium text-gray-900 border-b border-gray-200 pb-2">
-            第一志望
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-gray-900 border-b border-gray-200 pb-2">
+              第1ゴール
+            </h3>
+            {(examSettings.kyotsu.name.trim() !== '' || examSettings.kyotsu.date !== '') && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => clearExamSetting('kyotsu')}
+                className="text-xs text-gray-600 hover:text-red-600"
+              >
+                <X className="h-3 w-3 mr-1" />
+                クリア
+              </Button>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="kyotsu_name" className="text-sm font-medium text-gray-700">
@@ -40,6 +59,7 @@ const ExamSettingsCard: React.FC<ExamSettingsCardProps> = ({ examSettings, onExa
                 value={examSettings.kyotsu.name}
                 onChange={(e) => onExamSettingChange('kyotsu', 'name', e.target.value)}
                 className="mt-1 bg-white/80"
+                placeholder="例：共通テスト、東大模試など"
               />
             </div>
             <div>
@@ -59,11 +79,24 @@ const ExamSettingsCard: React.FC<ExamSettingsCardProps> = ({ examSettings, onExa
 
         <Separator />
 
-        {/* 第二志望 */}
+        {/* 第2ゴール */}
         <div className="space-y-4">
-          <h3 className="font-medium text-gray-900 border-b border-gray-200 pb-2">
-            第二志望
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-gray-900 border-b border-gray-200 pb-2">
+              第2ゴール
+            </h3>
+            {hasSecondGoal && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => clearExamSetting('todai')}
+                className="text-xs text-gray-600 hover:text-red-600"
+              >
+                <X className="h-3 w-3 mr-1" />
+                クリア
+              </Button>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="todai_name" className="text-sm font-medium text-gray-700">
@@ -74,7 +107,7 @@ const ExamSettingsCard: React.FC<ExamSettingsCardProps> = ({ examSettings, onExa
                 value={examSettings.todai.name}
                 onChange={(e) => onExamSettingChange('todai', 'name', e.target.value)}
                 className="mt-1 bg-white/80"
-                placeholder="第二志望がある場合は入力してください"
+                placeholder="第2ゴールがある場合は入力してください"
               />
             </div>
             <div>
@@ -90,9 +123,9 @@ const ExamSettingsCard: React.FC<ExamSettingsCardProps> = ({ examSettings, onExa
               />
             </div>
           </div>
-          {!hasSecondExam && (
+          {!hasSecondGoal && (
             <p className="text-xs text-gray-500">
-              ※ 第二志望を設定しない場合は空欄のままにしてください
+              ※ 第2ゴールを設定しない場合は空欄のままにしてください
             </p>
           )}
         </div>

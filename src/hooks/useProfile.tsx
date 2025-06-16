@@ -25,10 +25,10 @@ export const useProfile = () => {
       if (error) throw error;
 
       if (data) {
-        // デフォルトの試験設定
+        // デフォルトの試験設定（第1ゴールのみ）
         const defaultExamSettings: ExamSettings = {
           kyotsu: { name: '共通テスト', date: '2026-01-17' },
-          todai: { name: '東大二次試験', date: '2026-02-25' }
+          todai: { name: '', date: '' }
         };
 
         // exam_settingsの型安全な処理

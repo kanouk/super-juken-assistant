@@ -34,7 +34,7 @@ export const SubjectInstructionsInput = ({ subjectInstructions, updateSetting }:
   return (
     <Card>
       <CardHeader>
-        <CardTitle>教科別インストラクション（管理者設定）</CardTitle>
+        <CardTitle>教科別インストラクション（デフォルト設定）</CardTitle>
         <CardDescription>
           各教科ごとにAIアシスタントの指示文をカスタマイズできます。
           <br />
@@ -50,7 +50,7 @@ export const SubjectInstructionsInput = ({ subjectInstructions, updateSetting }:
               value={subjectInstructions?.[subject.id] || ""}
               onChange={e => handleChange(subject.id, e.target.value)}
               className="min-h-[80px]"
-              placeholder={`${subject.name}のカスタム指示文...`}
+              placeholder={`${subject.name}のデフォルト指示文...`}
             />
             <p className="text-xs text-gray-600 mt-1">
               ユーザーがカスタム設定していない場合に使用される{subject.name}用の指示文
