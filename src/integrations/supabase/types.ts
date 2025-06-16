@@ -64,6 +64,7 @@ export type Database = {
           is_understood: boolean | null
           subject: string
           title: string
+          understood_at: string | null
           user_id: string
         }
         Insert: {
@@ -72,6 +73,7 @@ export type Database = {
           is_understood?: boolean | null
           subject: string
           title: string
+          understood_at?: string | null
           user_id: string
         }
         Update: {
@@ -80,6 +82,7 @@ export type Database = {
           is_understood?: boolean | null
           subject?: string
           title?: string
+          understood_at?: string | null
           user_id?: string
         }
         Relationships: [

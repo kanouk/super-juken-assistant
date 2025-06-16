@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -76,7 +75,6 @@ const WelcomeScreen = ({
   // 教科ごとの理解数を計算（今はダミーデータを返す）
   const getUnderstoodBySubject = () => {
     const subjectCounts: Record<string, number> = {};
-    // TODO: 実際のデータが利用可能になったら実装
     return subjectCounts;
   };
 
@@ -135,7 +133,7 @@ const WelcomeScreen = ({
                 <Card className="bg-green-50 border-green-200 cursor-help">
                   <CardContent className="p-4 text-center">
                     <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-green-800">{chatStats.understoodCount}</p>
+                    <p className="text-2xl font-bold text-green-800">{chatStats.today_understood || 0}</p>
                     <p className="text-sm text-green-600">本日理解した数</p>
                   </CardContent>
                 </Card>
@@ -161,7 +159,7 @@ const WelcomeScreen = ({
                 <Card className="bg-blue-50 border-blue-200 cursor-help">
                   <CardContent className="p-4 text-center">
                     <Target className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-blue-800">{understoodCount}</p>
+                    <p className="text-2xl font-bold text-blue-800">{chatStats.understoodCount}</p>
                     <p className="text-sm text-blue-600">累計理解した数</p>
                   </CardContent>
                 </Card>

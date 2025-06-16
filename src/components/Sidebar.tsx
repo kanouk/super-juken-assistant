@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +18,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { useChatStats } from "@/hooks/useChatStats";
 import { supabase } from "@/integrations/supabase/client";
 import SidebarStatItem from "./sidebar/SidebarStatItem";
+import SidebarStatItemWithDiff from "./sidebar/SidebarStatItemWithDiff";
 import SidebarSectionHeader from "./sidebar/SidebarSectionHeader";
 import SidebarSubjectButton from "./sidebar/SidebarSubjectButton";
 
@@ -294,9 +294,10 @@ const Sidebar = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="cursor-help">
-                    <SidebarStatItem 
+                    <SidebarStatItemWithDiff 
                       label="本日理解した数" 
-                      value={chatStats.understoodCount} 
+                      value={chatStats.today_understood || 0}
+                      diff={chatStats.understoodDiff}
                       isLoading={isLoadingStats}
                       icon={CheckCircle}
                       iconColor="text-green-600"
@@ -318,23 +319,24 @@ const Sidebar = ({
               </Tooltip>
             </TooltipProvider>
             
-            <SidebarStatItem 
+            <SidebarStatItemWithDiff 
               label="本日の質問数" 
-              value={dailyQuestions} 
+              value={chatStats.dailyQuestions} 
+              diff={chatStats.questionsDiff}
               isLoading={isLoadingStats}
               icon={User}
               iconColor="text-blue-600"
             />
             <SidebarStatItem 
               label="本日のコスト" 
-              value={`¥${dailyCostProp.toFixed(2)}`}
+              value={`¥${chatStats.dailyCost.toFixed(2)}`}
               isLoading={isLoadingStats}
               icon={Sparkles}
               iconColor="text-purple-600"
             />
             <SidebarStatItem 
               label="累計コスト" 
-              value={`¥${totalCost.toFixed(2)}`}
+              value={`¥${chatStats.totalCost.toFixed(2)}`}
               isLoading={isLoadingStats}
               icon={RefreshCw}
               iconColor="text-orange-600"

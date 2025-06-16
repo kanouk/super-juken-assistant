@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -197,9 +198,13 @@ export function useMessages({
     try {
       setConversationUnderstood(true);
 
+      const now = new Date().toISOString();
       const { error } = await supabase
         .from('conversations')
-        .update({ is_understood: true })
+        .update({ 
+          is_understood: true,
+          understood_at: now
+        })
         .eq('id', selectedConversationId);
 
       if (error) {
