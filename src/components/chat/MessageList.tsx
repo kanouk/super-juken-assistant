@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { MessageType, Message } from './types';
 import MessageItem from './MessageItem';
@@ -23,18 +24,19 @@ const MessageList: React.FC<MessageListProps> = ({
   conversationUnderstood,
 }) => {
 
-  // ==== 根本調査＆型保証付き：AIメッセージには受け取ったmodel/costを（定義値があれば）必ず渡す ====
+  // Convert MessageType to Message with proper timestamp handling
   const convertToMessage = (msg: MessageType): Message => {
     const base: Message = {
       id: msg.id,
       content: msg.content,
       role: msg.isUser ? 'user' : 'assistant',
       created_at: msg.timestamp.toISOString(),
+      timestamp: msg.timestamp.toISOString(),
       subject: '', // Default empty subject for legacy messages
       image_url: msg.images?.[0]?.url,
       is_understood: msg.isUnderstood
     };
-    // msg.modelやmsg.costが（AIメッセージデータに含まれていれば）正しくセット
+    // Add model and cost for AI messages
     if (!msg.isUser) {
       return {
         ...base,
@@ -45,8 +47,6 @@ const MessageList: React.FC<MessageListProps> = ({
     return base;
   };
 
-  // --- Height: make sure this area expands to parent ---
-  // ScrollArea内のdivもh-full, min-h-0になるよう強制。
   return (
     <ScrollArea className="h-full min-h-0 flex-1">
       <div className="flex flex-col min-h-full h-full justify-end">
@@ -87,7 +87,6 @@ const MessageList: React.FC<MessageListProps> = ({
             </div>
           </div>
         )}
-        {/* 必ずBottomに現れるようabsoluteでなくrefで確実にページ末尾 */}
         <div ref={messagesEndRef} />
       </div>
     </ScrollArea>

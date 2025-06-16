@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ChatMainView from "./chat/ChatMainView";
 import ConversationHistoryView from "./chat/ConversationHistoryView";
@@ -53,6 +54,12 @@ const ChatScreen = (props: ChatScreenProps) => {
     handleUnderstood();
   };
 
+  // Fix the quick action handler to match the expected signature
+  const handleQuickActionWrapper = (prompt: string) => {
+    const quickAction = { id: Date.now().toString(), message: prompt, label: prompt };
+    handleQuickAction(quickAction);
+  };
+
   if (showConversations) {
     return (
       <ConversationHistoryView
@@ -82,7 +89,7 @@ const ChatScreen = (props: ChatScreenProps) => {
       setSelectedImages={handleSetImages}
       onSendMessage={handleSendMessage}
       onUnderstood={handleUnderstoodWrapper}
-      onQuickAction={handleQuickAction}
+      onQuickAction={handleQuickActionWrapper}
       showConfetti={showConfetti}
       onNewChat={handleNewChat}
       onShowHistory={handleShowHistory}
