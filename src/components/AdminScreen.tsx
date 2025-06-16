@@ -1,26 +1,31 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AdminHeader from "./admin/AdminHeader";
-import AdminUsersTab from "./admin/AdminUsersTab";
-import TagManagementTab from "./admin/TagManagementTab";
+import { AdminHeader } from "./admin/AdminHeader";
+import { AdminUsersTab } from "./admin/AdminUsersTab";
+import { TagManagementTab } from "./admin/TagManagementTab";
 import TaggingStatusTab from "./admin/TaggingStatusTab";
-import ApiKeysTab from "./admin/ApiKeysTab";
-import GeneralSettingsTab from "./admin/GeneralSettingsTab";
-import InstructionSettingsTab from "./admin/InstructionSettingsTab";
-import ModelsSettingsTab from "./admin/ModelsSettingsTab";
-import MbtiInstructionsTab from "./admin/MbtiInstructionsTab";
+import { ApiKeysTab } from "./admin/ApiKeysTab";
+import { GeneralSettingsTab } from "./admin/GeneralSettingsTab";
+import { InstructionSettingsTab } from "./admin/InstructionSettingsTab";
+import { ModelsSettingsTab } from "./admin/ModelsSettingsTab";
+import { MbtiInstructionsTab } from "./admin/MbtiInstructionsTab";
 
 const AdminScreen = () => {
   const [activeTab, setActiveTab] = useState("users");
 
+  const handleSave = () => {
+    // TODO: Implement save functionality
+    console.log('Save admin settings');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <AdminHeader />
+      <AdminHeader onSave={handleSave} isSaving={false} />
       
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9 mb-8">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 mb-8">
             <TabsTrigger value="users">ユーザー</TabsTrigger>
             <TabsTrigger value="tags">タグ管理</TabsTrigger>
             <TabsTrigger value="tagging-status">タグ状況</TabsTrigger>

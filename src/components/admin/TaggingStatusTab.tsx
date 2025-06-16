@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Eye, AlertCircle } from "lucide-react";
+import { RefreshCw, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,19 +39,17 @@ const TaggingStatusTab: React.FC = () => {
 
       if (totalError) throw totalError;
 
-      const { data: taggedData, error: taggedError } = await supabase
-        .from('conversations')
-        .select('id')
-        .in('id', 
-          supabase
-            .from('question_tags')
-            .select('conversation_id')
-        );
+      // タグ付きの会話IDを取得
+      const { data: taggedConversations, error: taggedError } = await supabase
+        .from('question_tags')
+        .select('conversation_id');
 
       if (taggedError) throw taggedError;
 
+      const taggedIds = new Set(taggedConversations?.map(t => t.conversation_id) || []);
+
       const total = totalData?.length || 0;
-      const tagged = taggedData?.length || 0;
+      const tagged = taggedIds.size;
       const untagged = total - tagged;
       const percentage = total > 0 ? Math.round((tagged / total) * 100) : 0;
 

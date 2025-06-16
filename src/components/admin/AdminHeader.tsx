@@ -45,3 +45,5 @@ export const AdminHeader = ({ onSave, isSaving }: AdminHeaderProps) => {
     </div>
   );
 };
+
+export default AdminHeader;
