@@ -9,7 +9,7 @@ import {
   BookOpen, Calculator, FlaskConical, Atom, Languages, 
   Settings, LogOut, MapPin, Monitor, Plus,
   User, Clock, TrendingUp, Sparkles, ChevronDown, ChevronUp, CheckCircle, RefreshCw,
-  Globe, AlertCircle, X, Bot
+  Globe, AlertCircle, X, Bot, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { UserProfile } from '@/types/profile';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -34,6 +34,7 @@ interface SidebarProps {
   onOpenConversation: (conversationId: string, subject: string) => void;
   onCloseSidebar: () => void;
   isMobile: boolean;
+  isOpen?: boolean;
 }
 
 const Sidebar = ({ 
@@ -49,7 +50,8 @@ const Sidebar = ({
   onSubjectSelect,
   onOpenConversation,
   onCloseSidebar,
-  isMobile
+  isMobile,
+  isOpen = true
 }: SidebarProps) => {
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({
@@ -158,235 +160,258 @@ const Sidebar = ({
   };
 
   return (
-    <div className="w-80 bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col h-screen shadow-lg">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-white">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-3">
-            <div className="p-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-sm">
-              <Bot className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-sm font-semibold text-gray-900">スーパー受験アシスタント</h1>
-              <p className="text-xs text-gray-500">AI学習サポート</p>
-            </div>
-          </div>
-          {isMobile && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onCloseSidebar}
-              className="p-1.5 hover:bg-gray-100 rounded-md"
-            >
-              <X className="h-4 w-4 text-gray-600" />
-            </Button>
-          )}
-        </div>
+    <div className={`${isOpen ? 'w-80' : 'w-12'} bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col h-screen shadow-lg transition-all duration-300 relative`}>
+      {/* Toggle Button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onCloseSidebar}
+        className={`absolute -right-3 top-4 z-50 w-6 h-6 p-0 bg-white border border-gray-200 rounded-full shadow-md hover:bg-gray-50 ${isOpen ? '' : 'rotate-180'}`}
+      >
+        {isOpen ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+      </Button>
 
-        {/* User Profile Section */}
-        <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-sm transition-all duration-200">
-          <Avatar className="h-7 w-7 border border-gray-200">
-            <AvatarImage src={profile?.avatar_url || undefined} />
-            <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold text-xs">
-              {profile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {profile?.display_name || 'ユーザー'}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {profile?.email || 'メール未設定'}
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onNavigate('profile')}
-            className="p-1.5 hover:bg-blue-100 rounded-md"
-          >
-            <User className="h-3 w-3 text-gray-600" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Content Sections */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4">
-        {/* Subjects Section */}
-        <Collapsible open={openCollapsibles['subjects']} onOpenChange={(isOpen) => handleOpenChange('subjects', isOpen)}>
-          <CollapsibleTrigger className="w-full">
-            <CollapsibleSectionHeader title="教科選択" icon={BookOpen} iconBgColor="bg-gradient-to-r from-blue-500 to-indigo-600" isOpen={openCollapsibles['subjects']} />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="pt-2 space-y-2">
-            {displaySubjects.map((subjectItem) => (
-              <SidebarSubjectButton
-                key={subjectItem.id}
-                id={subjectItem.id}
-                name={subjectItem.name}
-                Icon={subjectItem.icon}
-                color={subjectItem.color}
-                gradient={subjectItem.gradient}
-                isSelected={false}
-                onClick={onSubjectSelect}
-              />
-            ))}
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Countdown Section */}
-        {profile?.show_countdown && (
-          <Collapsible open={openCollapsibles['countdown']} onOpenChange={(isOpen) => handleOpenChange('countdown', isOpen)}>
-            <CollapsibleTrigger className="w-full">
-              <CollapsibleSectionHeader title="入試カウントダウン" icon={Clock} iconBgColor="bg-gradient-to-r from-red-500 to-pink-600" isOpen={openCollapsibles['countdown']} />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-2 space-y-3">
-              {!hasValidGoals() ? (
-                <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200 shadow-sm">
-                  <CardContent className="p-4 text-center">
-                    <AlertCircle className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
-                    <p className="text-sm text-yellow-800 font-medium mb-2">
-                      ゴールが設定されていません
-                    </p>
-                    <p className="text-xs text-yellow-700 mb-3">
-                      プロフィール設定で目標とする試験を設定してください
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onNavigate('profile')}
-                      className="text-yellow-700 border-yellow-300 hover:bg-yellow-100"
-                    >
-                      設定する
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <>
-                  {profile?.exam_settings?.kyotsu?.name && profile?.exam_settings?.kyotsu?.date && (
-                    <Card className="bg-gradient-to-r from-red-50 to-pink-50 border-red-200 shadow-sm hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-red-700 flex items-center space-x-2">
-                          <span>{profile.exam_settings.kyotsu.name}まで</span>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="text-2xl font-bold text-red-800">
-                          {calculateDaysLeft(profile.exam_settings.kyotsu.date)}日
-                        </div>
-                        <div className="text-xs text-red-600 mt-1">
-                          {profile.exam_settings.kyotsu.date}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {profile?.exam_settings?.todai?.name && profile?.exam_settings?.todai?.date && (
-                    <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-blue-700 flex items-center space-x-2">
-                          <span>{profile.exam_settings.todai.name}まで</span>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="text-2xl font-bold text-blue-800">
-                          {calculateDaysLeft(profile.exam_settings.todai.date)}日
-                        </div>
-                        <div className="text-xs text-blue-600 mt-1">
-                          {profile.exam_settings.todai.date}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </>
+      {isOpen && (
+        <>
+          {/* Header */}
+          <div className="p-4 border-b border-gray-200 bg-white">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-3">
+                <div className="p-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-sm">
+                  <Bot className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-sm font-semibold text-gray-900">スーパー受験アシスタント</h1>
+                  <p className="text-xs text-gray-500">AI学習サポート</p>
+                </div>
+              </div>
+              {isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onCloseSidebar}
+                  className="p-1.5 hover:bg-gray-100 rounded-md"
+                >
+                  <X className="h-4 w-4 text-gray-600" />
+                </Button>
               )}
-            </CollapsibleContent>
-          </Collapsible>
-        )}
+            </div>
 
-        {/* Stats Section */}
-        {profile?.show_stats && (
-          <Collapsible open={openCollapsibles['stats']} onOpenChange={(isOpen) => handleOpenChange('stats', isOpen)}>
-            <CollapsibleTrigger className="w-full">
-              <CollapsibleSectionHeader title="学習統計" icon={TrendingUp} iconBgColor="bg-gradient-to-r from-green-500 to-emerald-600" isOpen={openCollapsibles['stats']} />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-2 space-y-3">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="cursor-help">
-                      <SidebarStatItemWithDiff 
-                        label="本日理解した数" 
-                        value={understoodCount}
-                        diff={understoodDiff}
-                        isLoading={isStatsLoading}
-                        icon={CheckCircle}
-                        iconColor="text-green-600"
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="space-y-1">
-                      <p className="font-semibold">教科別本日理解数：</p>
-                      {Object.entries(understoodBySubject).length > 0 ? (
-                        Object.entries(understoodBySubject).map(([subject, count]) => (
-                          <p key={subject} className="text-sm">{subject}: {String(count)}個</p>
-                        ))
-                      ) : (
-                        <p className="text-sm">まだ理解した内容がありません</p>
+            {/* User Profile Section */}
+            <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-sm transition-all duration-200">
+              <Avatar className="h-7 w-7 border border-gray-200">
+                <AvatarImage src={profile?.avatar_url || undefined} />
+                <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold text-xs">
+                  {profile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {profile?.display_name || 'ユーザー'}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {profile?.email || 'メール未設定'}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onNavigate('profile')}
+                className="p-1.5 hover:bg-blue-100 rounded-md"
+              >
+                <User className="h-3 w-3 text-gray-600" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Content Sections */}
+          <div className="flex-1 p-4 overflow-y-auto space-y-4">
+            {/* Subjects Section */}
+            <Collapsible open={openCollapsibles['subjects']} onOpenChange={(isOpen) => handleOpenChange('subjects', isOpen)}>
+              <CollapsibleTrigger className="w-full">
+                <CollapsibleSectionHeader title="教科選択" icon={BookOpen} iconBgColor="bg-gradient-to-r from-blue-500 to-indigo-600" isOpen={openCollapsibles['subjects']} />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2 space-y-2">
+                {displaySubjects.map((subjectItem) => (
+                  <SidebarSubjectButton
+                    key={subjectItem.id}
+                    id={subjectItem.id}
+                    name={subjectItem.name}
+                    Icon={subjectItem.icon}
+                    color={subjectItem.color}
+                    gradient={subjectItem.gradient}
+                    isSelected={false}
+                    onClick={onSubjectSelect}
+                  />
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Countdown Section */}
+            {profile?.show_countdown && (
+              <Collapsible open={openCollapsibles['countdown']} onOpenChange={(isOpen) => handleOpenChange('countdown', isOpen)}>
+                <CollapsibleTrigger className="w-full">
+                  <CollapsibleSectionHeader title="入試カウントダウン" icon={Clock} iconBgColor="bg-gradient-to-r from-red-500 to-pink-600" isOpen={openCollapsibles['countdown']} />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-2 space-y-3">
+                  {!hasValidGoals() ? (
+                    <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200 shadow-sm">
+                      <CardContent className="p-4 text-center">
+                        <AlertCircle className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+                        <p className="text-sm text-yellow-800 font-medium mb-2">
+                          ゴールが設定されていません
+                        </p>
+                        <p className="text-xs text-yellow-700 mb-3">
+                          プロフィール設定で目標とする試験を設定してください
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onNavigate('profile')}
+                          className="text-yellow-700 border-yellow-300 hover:bg-yellow-100"
+                        >
+                          設定する
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <>
+                      {profile?.exam_settings?.kyotsu?.name && profile?.exam_settings?.kyotsu?.date && (
+                        <Card className="bg-gradient-to-r from-red-50 to-pink-50 border-red-200 shadow-sm hover:shadow-md transition-shadow">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-red-700 flex items-center space-x-2">
+                              <span>{profile.exam_settings.kyotsu.name}まで</span>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="pt-0">
+                            <div className="text-2xl font-bold text-red-800">
+                              {calculateDaysLeft(profile.exam_settings.kyotsu.date)}日
+                            </div>
+                            <div className="text-xs text-red-600 mt-1">
+                              {profile.exam_settings.kyotsu.date}
+                            </div>
+                          </CardContent>
+                        </Card>
                       )}
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              
-              <SidebarStatItemWithDiff 
-                label="本日の質問数" 
-                value={dailyQuestions} 
-                diff={questionsDiff}
-                isLoading={isStatsLoading}
-                icon={User}
-                iconColor="text-blue-600"
-              />
-              <SidebarStatItem 
-                label="本日のコスト" 
-                value={`¥0.00`}
-                isLoading={isStatsLoading}
-                icon={Sparkles}
-                iconColor="text-purple-600"
-              />
-              <SidebarStatItem 
-                label="累計コスト" 
-                value={`¥0.00`}
-                isLoading={isStatsLoading}
-                icon={RefreshCw}
-                iconColor="text-orange-600"
-              />
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-      </div>
 
-      <Separator />
+                      {profile?.exam_settings?.todai?.name && profile?.exam_settings?.todai?.date && (
+                        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-blue-700 flex items-center space-x-2">
+                              <span>{profile.exam_settings.todai.name}まで</span>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="pt-0">
+                            <div className="text-2xl font-bold text-blue-800">
+                              {calculateDaysLeft(profile.exam_settings.todai.date)}日
+                            </div>
+                            <div className="text-xs text-blue-600 mt-1">
+                              {profile.exam_settings.todai.date}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
 
-      {/* Settings and Logout */}
-      <div className="p-4 space-y-2">
-        <Button
-          variant="outline"
-          className="w-full justify-start hover:bg-gray-50 border-gray-200"
-          onClick={() => onNavigate('settings')}
-        >
-          <Settings className="h-4 w-4 mr-3" />
-          設定
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4 mr-3" />
-          ログアウト
-        </Button>
-      </div>
+            {/* Stats Section */}
+            {profile?.show_stats && (
+              <Collapsible open={openCollapsibles['stats']} onOpenChange={(isOpen) => handleOpenChange('stats', isOpen)}>
+                <CollapsibleTrigger className="w-full">
+                  <CollapsibleSectionHeader title="学習統計" icon={TrendingUp} iconBgColor="bg-gradient-to-r from-green-500 to-emerald-600" isOpen={openCollapsibles['stats']} />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-2 space-y-3">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="cursor-help">
+                          <SidebarStatItemWithDiff 
+                            label="本日理解した数" 
+                            value={understoodCount}
+                            diff={understoodDiff}
+                            isLoading={isStatsLoading}
+                            icon={CheckCircle}
+                            iconColor="text-green-600"
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="space-y-1">
+                          <p className="font-semibold">教科別本日理解数：</p>
+                          {Object.entries(understoodBySubject).length > 0 ? (
+                            Object.entries(understoodBySubject).map(([subject, count]) => (
+                              <p key={subject} className="text-sm">{subject}: {String(count)}個</p>
+                            ))
+                          ) : (
+                            <p className="text-sm">まだ理解した内容がありません</p>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <SidebarStatItemWithDiff 
+                    label="本日の質問数" 
+                    value={dailyQuestions} 
+                    diff={questionsDiff}
+                    isLoading={isStatsLoading}
+                    icon={User}
+                    iconColor="text-blue-600"
+                  />
+                  <SidebarStatItem 
+                    label="本日のコスト" 
+                    value={`¥0.00`}
+                    isLoading={isStatsLoading}
+                    icon={Sparkles}
+                    iconColor="text-purple-600"
+                  />
+                  <SidebarStatItem 
+                    label="累計コスト" 
+                    value={`¥0.00`}
+                    isLoading={isStatsLoading}
+                    icon={RefreshCw}
+                    iconColor="text-orange-600"
+                  />
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Settings and Logout */}
+          <div className="p-4 space-y-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start hover:bg-gray-50 border-gray-200"
+              onClick={() => onNavigate('settings')}
+            >
+              <Settings className="h-4 w-4 mr-3" />
+              設定
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4 mr-3" />
+              ログアウト
+            </Button>
+          </div>
+        </>
+      )}
+
+      {/* Collapsed state */}
+      {!isOpen && (
+        <div className="p-2 flex flex-col items-center space-y-2 mt-12">
+          <div className="p-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-sm">
+            <Bot className="h-4 w-4 text-white" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

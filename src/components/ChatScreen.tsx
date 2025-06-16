@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ChatMainView from "./chat/ChatMainView";
 import ConversationHistoryView from "./chat/ConversationHistoryView";
@@ -36,7 +35,6 @@ const ChatScreen = (props: ChatScreenProps) => {
       handleSelectConversation,
       handleDeleteConversation,
       handleQuickAction,
-      onToggleSidebar,
     }
   } = useChatScreen(props);
 
@@ -67,7 +65,6 @@ const ChatScreen = (props: ChatScreenProps) => {
         subjectName={subjectName}
         currentModel={currentModel}
         onBackToList={handleBackToChat}
-        onToggleSidebar={onToggleSidebar}
         isMobile={props.isMobile}
         conversations={conversations}
         onSelectConversation={handleSelectConversation}
@@ -95,7 +92,6 @@ const ChatScreen = (props: ChatScreenProps) => {
       onShowHistory={handleShowHistory}
       showNewChatButton={messages.length > 0}
       showHistoryButton={conversations.length > 0}
-      onToggleSidebar={onToggleSidebar}
       isMobile={props.isMobile}
       messagesEndRef={messagesEndRef}
       conversationUnderstood={conversationUnderstood}

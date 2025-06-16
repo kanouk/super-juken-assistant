@@ -96,7 +96,6 @@ const MainApp = () => {
             userId={userId}
             conversationId={chatState.conversationId}
             onBackToWelcome={handleBackToWelcome}
-            onToggleSidebar={handleToggleSidebar}
             isMobile={isMobile}
           />
         );
@@ -128,26 +127,25 @@ const MainApp = () => {
         className={`${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } transition-transform duration-300 ease-in-out ${
-          isMobile ? 'fixed inset-y-0 left-0 z-50 w-80' : 'relative'
-        } ${isMobile ? '' : isSidebarOpen ? 'w-80' : 'w-0'}`}
+          isMobile ? 'fixed inset-y-0 left-0 z-50' : 'relative'
+        }`}
       >
-        {(isSidebarOpen || !isMobile) && (
-          <Sidebar
-            profile={profile}
-            settings={settings}
-            dailyQuestions={chatStats.dailyQuestions}
-            understoodCount={chatStats.today_understood || 0}
-            totalQuestions={chatStats.totalQuestions || 0}
-            questionsDiff={chatStats.questionsDiff}
-            understoodDiff={chatStats.understoodDiff}
-            isStatsLoading={chatStats.isLoading}
-            onNavigate={(screen) => setCurrentScreen(screen as Screen)}
-            onSubjectSelect={handleSubjectSelect}
-            onOpenConversation={handleOpenConversation}
-            onCloseSidebar={() => setIsSidebarOpen(false)}
-            isMobile={isMobile}
-          />
-        )}
+        <Sidebar
+          profile={profile}
+          settings={settings}
+          dailyQuestions={chatStats.dailyQuestions}
+          understoodCount={chatStats.today_understood || 0}
+          totalQuestions={chatStats.totalQuestions || 0}
+          questionsDiff={chatStats.questionsDiff}
+          understoodDiff={chatStats.understoodDiff}
+          isStatsLoading={chatStats.isLoading}
+          onNavigate={(screen) => setCurrentScreen(screen as Screen)}
+          onSubjectSelect={handleSubjectSelect}
+          onOpenConversation={handleOpenConversation}
+          onCloseSidebar={handleToggleSidebar}
+          isMobile={isMobile}
+          isOpen={isSidebarOpen}
+        />
       </div>
 
       {/* Overlay for mobile */}
@@ -159,7 +157,7 @@ const MainApp = () => {
       )}
 
       {/* Main content */}
-      <div className={`flex-1 ${isMobile ? 'w-full' : ''}`}>
+      <div className="flex-1">
         {renderScreen()}
       </div>
     </div>

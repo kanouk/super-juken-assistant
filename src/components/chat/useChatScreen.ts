@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMessages } from './useMessages';
 import { useConversations } from './useConversations';
-import { Message, QuickAction } from './types';
+import { Message, QuickAction, MessageType } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface UseChatScreenProps {
@@ -11,7 +11,6 @@ export interface UseChatScreenProps {
   subjectName: string;
   userId?: string;
   conversationId?: string;
-  onToggleSidebar?: () => void;
   isMobile?: boolean;
 }
 
@@ -32,7 +31,7 @@ const SUBJECT_JAPANESE_NAMES: Record<string, string> = {
 };
 
 export const useChatScreen = (props: UseChatScreenProps) => {
-  const { subject, subjectName, userId, conversationId, onToggleSidebar, isMobile } = props;
+  const { subject, subjectName, userId, conversationId, isMobile } = props;
 
   const [showConversations, setShowConversations] = useState(false);
   const [currentModel, setCurrentModel] = useState('gpt-3.5-turbo');
@@ -58,6 +57,16 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     conversationsHook.setSelectedConversationId(null);
     setShowConversations(false);
     conversationsHook.setConversationUnderstood(false);
+    // 新しいチャット開始時に初期メッセージを表示
+    const japaneseName = SUBJECT_JAPANESE_NAMES[subject] || subject;
+    const welcomeMessage: MessageType = {
+      id: 'welcome-' + Date.now(),
+      content: `${japaneseName}の学習をサポートします。何でも気軽に質問してください！`,
+      isUser: false,
+      timestamp: new Date(),
+      isUnderstood: false,
+    };
+    messagesHook.setMessages([welcomeMessage]);
   };
 
   const handleShowHistory = () => {
@@ -83,19 +92,6 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     }
   };
 
-  const getInitialMessage = useCallback((subjectId: string): Message => {
-    const japaneseName = SUBJECT_JAPANESE_NAMES[subjectId] || subjectId;
-    return {
-      id: uuidv4(),
-      content: `こんにちは！${japaneseName}の学習をサポートします。何でも気軽に質問してください！`,
-      role: 'assistant',
-      created_at: new Date().toISOString(),
-      timestamp: new Date().toISOString(),
-      subject: subjectId,
-      isUnderstood: false
-    };
-  }, []);
-
   useEffect(() => {
     if (!userId || !subject) return;
 
@@ -106,19 +102,18 @@ export const useChatScreen = (props: UseChatScreenProps) => {
       });
     } else {
       // 新しい会話の場合、初期メッセージを設定
-      const initialMessage = getInitialMessage(subject);
-      // Convert to MessageType format for compatibility
-      const initialMessageType = {
-        id: initialMessage.id,
-        content: initialMessage.content,
+      const japaneseName = SUBJECT_JAPANESE_NAMES[subject] || subject;
+      const welcomeMessage: MessageType = {
+        id: 'welcome-' + Date.now(),
+        content: `${japaneseName}の学習をサポートします。何でも気軽に質問してください！`,
         isUser: false,
         timestamp: new Date(),
         isUnderstood: false,
       };
-      messagesHook.setMessages([initialMessageType]);
+      messagesHook.setMessages([welcomeMessage]);
       conversationsHook.setSelectedConversationId(null);
     }
-  }, [userId, subject, conversationId, getInitialMessage]);
+  }, [userId, subject, conversationId]);
 
   return {
     state: {
@@ -145,7 +140,6 @@ export const useChatScreen = (props: UseChatScreenProps) => {
       handleSelectConversation,
       handleDeleteConversation,
       handleQuickAction,
-      onToggleSidebar,
     }
   };
 };

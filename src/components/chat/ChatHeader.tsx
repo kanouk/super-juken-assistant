@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, History, Menu, Cpu, Calculator, FlaskConical, Atom, Languages, BookOpen, MapPin, Monitor, Globe } from 'lucide-react';
+import { ArrowLeft, Plus, History, Cpu, Calculator, FlaskConical, Atom, Languages, BookOpen, MapPin, Monitor, Globe } from 'lucide-react';
 import { getModelDisplayName } from './getModelDisplayName';
 
 // 教科の日本語名マッピング
@@ -106,7 +106,6 @@ interface ChatHeaderProps {
   onBackToList?: () => void;
   onNewChat?: () => void;
   onShowHistory?: () => void;
-  onToggleSidebar?: () => void;
   showBackButton?: boolean;
   showNewChatButton?: boolean;
   showHistoryButton?: boolean;
@@ -121,7 +120,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   onBackToList,
   onNewChat,
   onShowHistory,
-  onToggleSidebar,
   showBackButton = false,
   showNewChatButton = false,
   showHistoryButton = false,
@@ -141,16 +139,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     <div className={`border-b border-gray-200 shadow-sm flex-shrink-0 ${colorBg}`}>
       <div className="flex items-center justify-between px-4 py-3 gap-2 min-h-[72px] max-w-[100vw]">
         <div className="flex items-center gap-4 min-w-0 flex-1">
-          {onToggleSidebar && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleSidebar}
-              className="p-2 hover:bg-gray-100 transition-colors"
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-          )}
           {showBackButton && onBackToList && (
             <Button
               variant="ghost"
