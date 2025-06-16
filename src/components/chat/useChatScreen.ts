@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from "@/hooks/use-toast";
 import { useConfettiStore } from '@/store/confettiStore';
-import { useCompletion } from 'ai/react';
+import { useCompletion } from '@/hooks/useCompletion';
 import { useProfile } from '@/hooks/useProfile';
 import { useChatHistory } from '@/hooks/useChatHistory';
 import { useSubject } from '@/hooks/useSubject';
@@ -113,7 +113,10 @@ export const useChatScreen = (props: UseChatScreenProps) => {
         id: messageId,
         role: 'user',
         content: message,
-        image_url: images && images.length > 0 ? images[0].url : null,
+        created_at: new Date().toISOString(),
+        subject: subject,
+        timestamp: new Date().toISOString(),
+        image_url: images && images.length > 0 ? images[0].url : undefined,
       };
 
       setMessages((prevMessages) => [...prevMessages, userMessage]);
@@ -140,11 +143,13 @@ export const useChatScreen = (props: UseChatScreenProps) => {
           id: uuidv4(),
           role: 'assistant',
           content: result.content,
-          image_url: result.image_url || null,
+          created_at: new Date().toISOString(),
+          subject: subject,
+          timestamp: new Date().toISOString(),
+          image_url: result.image_url || undefined,
           model: result.model,
           cost: result.cost,
           db_id: result.messageId,
-          conversation_id: result.conversationId,
           is_understood: false,
         };
 
@@ -244,7 +249,7 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     const fetchMessages = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await useChatHistory().loadMessages(conversationId);
+        const { data, error } = await useChatHistory(subject).loadMessages(conversationId);
         if (error) {
           throw error;
         }
