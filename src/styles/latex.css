@@ -1,8 +1,9 @@
 
-/* LaTeX専用CSS - 単一行強制とレイアウト制御 */
+/* LaTeX専用CSS - 強化版単一行強制とレイアウト制御 */
 
 :root {
-  --latex-inline-max-height: 1.5em;
+  --latex-inline-max-height: 1.2em;
+  --latex-inline-max-width: 90vw;
   --latex-inline-overflow: hidden;
   --latex-block-margin: 1.5rem 0;
   --latex-error-bg-light: #fef2f2;
@@ -11,33 +12,50 @@
   --latex-error-text-dark: #fca5a5;
 }
 
-/* インライン数式の強制単一行表示 */
+/* インライン数式の厳格な単一行表示 */
 .latex-inline-container {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   max-height: var(--latex-inline-max-height);
+  max-width: var(--latex-inline-max-width);
   overflow: var(--latex-inline-overflow);
-  vertical-align: baseline;
+  vertical-align: middle;
   line-height: 1;
   white-space: nowrap;
+  contain: layout style size;
+  transform-origin: left center;
 }
 
 .latex-inline-container .katex {
-  display: inline-block !important;
-  vertical-align: baseline !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  vertical-align: middle !important;
   line-height: 1 !important;
   max-height: var(--latex-inline-max-height) !important;
+  max-width: 100% !important;
   overflow: hidden !important;
+  white-space: nowrap !important;
+  contain: layout style size !important;
 }
 
 .latex-inline-container .katex .katex-html {
-  display: inline-block !important;
-  vertical-align: baseline !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  vertical-align: middle !important;
   white-space: nowrap !important;
   overflow: hidden !important;
+  max-height: var(--latex-inline-max-height) !important;
+  contain: layout style size !important;
 }
 
-/* ブロック数式の中央揃え */
+/* 長い数式用の縮小表示 */
+.latex-inline-container.latex-long-formula {
+  transform: scale(0.85);
+  transform-origin: left center;
+  max-width: calc(var(--latex-inline-max-width) / 0.85);
+}
+
+/* ブロック数式の中央揃えと余白調整 */
 .latex-block-container {
   display: flex;
   justify-content: center;
@@ -45,15 +63,18 @@
   margin: var(--latex-block-margin);
   width: 100%;
   overflow-x: auto;
-  padding: 0.5rem 0;
+  padding: 1rem 0;
+  min-height: 3rem;
 }
 
 .latex-block-container .katex-display {
   margin: 0 !important;
   text-align: center !important;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
-/* エラー表示のスタイル */
+/* エラー表示の改善 */
 .latex-error {
   display: inline-block;
   padding: 0.25rem 0.5rem;
@@ -64,6 +85,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 300px;
+  vertical-align: middle;
 }
 
 .latex-error--light {
@@ -76,26 +98,44 @@
   color: var(--latex-error-text-dark);
 }
 
-/* 化学式専用のスタイル */
-.chemistry-formula {
+/* 化学式とベクトル記号の特別処理 */
+.chemistry-formula,
+.vector-formula {
   font-family: "Times New Roman", serif;
-  display: inline-block;
-  vertical-align: baseline;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
   white-space: nowrap;
+  line-height: 1;
 }
 
-.chemistry-formula sub {
+.chemistry-formula sub,
+.vector-formula sub {
   font-size: 0.75em;
   vertical-align: sub;
 }
 
-.chemistry-formula sup {
+.chemistry-formula sup,
+.vector-formula sup {
   font-size: 0.75em;
   vertical-align: super;
 }
 
-/* レスポンシブ対応 */
+/* 数式内の特殊記号の調整 */
+.latex-inline-container .katex .mord,
+.latex-inline-container .katex .mrel,
+.latex-inline-container .katex .mbin,
+.latex-inline-container .katex .mop {
+  white-space: nowrap !important;
+}
+
+/* レスポンシブ対応の強化 */
 @media (max-width: 640px) {
+  :root {
+    --latex-inline-max-width: 85vw;
+    --latex-inline-max-height: 1.1em;
+  }
+  
   .latex-block-container {
     overflow-x: auto;
     justify-content: flex-start;
@@ -103,10 +143,23 @@
   }
   
   .latex-inline-container {
-    max-width: 200px;
+    max-width: var(--latex-inline-max-width);
+  }
+  
+  .latex-inline-container.latex-long-formula {
+    transform: scale(0.75);
+    max-width: calc(var(--latex-inline-max-width) / 0.75);
   }
   
   .latex-error {
     max-width: 200px;
+  }
+}
+
+/* 極端に長い数式用の追加対応 */
+@media (max-width: 480px) {
+  .latex-inline-container.latex-long-formula {
+    transform: scale(0.65);
+    max-width: calc(var(--latex-inline-max-width) / 0.65);
   }
 }

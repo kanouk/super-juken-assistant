@@ -43,13 +43,36 @@ export const isValidLatex = (math: string): boolean => {
   return openBraces === closeBraces;
 };
 
-// インライン数式が複数行になる可能性があるかチェック
+// インライン数式が複数行になる可能性があるかチェック（より厳密に）
 export const shouldForceBlock = (math: string): boolean => {
+  // 文字数による判定を追加
+  if (math.length > 50) return true;
+  
   const multiLineIndicators = [
     '\\begin{', '\\end{', '\\\\', '\n', '\r',
     '\\frac{', '\\sum', '\\int', '\\prod',
-    '\\matrix', '\\pmatrix', '\\bmatrix'
+    '\\matrix', '\\pmatrix', '\\bmatrix',
+    '\\times', '\\vec{', '\\sin', '\\cos', '\\tan',
+    '\\alpha', '\\beta', '\\gamma', '\\theta',
+    // 長い数式パターンを追加
+    'pmatrix', 'bmatrix', 'vmatrix',
+    '\\cdot', '\\bullet'
   ];
   
-  return multiLineIndicators.some(indicator => math.includes(indicator));
+  // 複数の数学記号が含まれている場合もブロック化
+  const mathSymbolCount = multiLineIndicators.filter(indicator => 
+    math.includes(indicator)
+  ).length;
+  
+  return mathSymbolCount >= 3 || multiLineIndicators.some(indicator => math.includes(indicator));
+};
+
+// 長い数式の自動検出と分割
+export const detectLongFormula = (math: string): boolean => {
+  // 50文字以上、または特定のパターンを含む場合は長い数式とみなす
+  return math.length > 50 || 
+         math.includes('\\begin{') || 
+         math.includes('\\times') ||
+         math.includes('\\vec{') ||
+         (math.match(/\\/g) || []).length > 5; // バックスラッシュが5個以上
 };

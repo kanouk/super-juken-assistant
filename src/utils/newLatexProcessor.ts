@@ -12,7 +12,7 @@ interface ParseState {
   result: LaTeXContent[];
 }
 
-// ステートマシンベースのパーサー
+// ステートマシンベースのパーサー（改良版）
 export class LaTeXParser {
   private static readonly BLOCK_PATTERNS = [
     { start: '$$', end: '$$' },
@@ -27,6 +27,16 @@ export class LaTeXParser {
   private static readonly CHEMISTRY_PATTERNS = [
     /\(\\(?:ce|mathrm|text)\{([^}]+)\}\)/g,
     /\\(?:ce|mathrm|text)\{([^}]+)\}/g
+  ];
+
+  // 長い数式を自動的にブロック化すべきパターン
+  private static readonly FORCE_BLOCK_PATTERNS = [
+    /\\begin\{.*?\}/,
+    /\\end\{.*?\}/,
+    /\\vec\{.*?\}.*?\\times.*?\\vec\{.*?\}/,
+    /.*?\\times.*?\\times.*?/,
+    /\\frac\{.*?\}\{.*?\}.*?\\frac\{.*?\}\{.*?\}/,
+    /.{50,}/ // 50文字以上の数式
   ];
 
   static parse(content: string): LaTeXContent[] {
@@ -50,7 +60,17 @@ export class LaTeXParser {
 
       const inlineMatch = this.tryMatchInline(state);
       if (inlineMatch) {
-        this.addContent(state, inlineMatch);
+        // 長い数式パターンをチェックしてブロック化を検討
+        const shouldBeBlock = this.shouldForceBlock(inlineMatch.content);
+        if (shouldBeBlock) {
+          const blockVersion = {
+            ...inlineMatch,
+            type: 'block-math' as const
+          };
+          this.addContent(state, blockVersion);
+        } else {
+          this.addContent(state, inlineMatch);
+        }
         continue;
       }
 
@@ -69,6 +89,10 @@ export class LaTeXParser {
 
     console.log('LaTeXParser: Parse completed with', state.result.length, 'parts');
     return state.result;
+  }
+
+  private static shouldForceBlock(content: string): boolean {
+    return this.FORCE_BLOCK_PATTERNS.some(pattern => pattern.test(content));
   }
 
   private static tryMatchBlock(state: ParseState): LaTeXContent | null {

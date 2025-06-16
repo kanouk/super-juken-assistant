@@ -6,6 +6,7 @@ import {
   BLOCK_KATEX_OPTIONS, 
   isValidLatex, 
   shouldForceBlock,
+  detectLongFormula,
   renderSimpleChemistry 
 } from '../../utils/katexConfig';
 import '../../styles/latex.css';
@@ -36,8 +37,13 @@ const UnifiedLatexRenderer: React.FC<UnifiedLatexRendererProps> = ({
     return <ErrorDisplay content={content} colorScheme={colorScheme} />;
   }
 
-  // インライン数式が複数行になる可能性がある場合、ブロック数式に強制変換
-  const finalType = type === 'inline-math' && shouldForceBlock(content) ? 'block-math' : type;
+  // 長い数式の検出
+  const isLongFormula = detectLongFormula(content);
+  
+  // インライン数式が複数行になる可能性がある場合、または長い数式の場合、ブロック数式に強制変換
+  const finalType = (type === 'inline-math' && (shouldForceBlock(content) || isLongFormula)) 
+    ? 'block-math' 
+    : type;
 
   // 化学式の場合、簡易レンダラーを試行
   if (isChemistry && type === 'inline-math') {
@@ -62,8 +68,13 @@ const UnifiedLatexRenderer: React.FC<UnifiedLatexRendererProps> = ({
         </div>
       );
     } else {
+      // インライン数式用のクラス名を動的に決定
+      const containerClass = isLongFormula 
+        ? "latex-inline-container latex-long-formula"
+        : "latex-inline-container";
+        
       return (
-        <span className="latex-inline-container">
+        <span className={containerClass}>
           <InlineMath math={content} {...INLINE_KATEX_OPTIONS} />
         </span>
       );
