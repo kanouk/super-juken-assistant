@@ -1,7 +1,9 @@
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMessages } from './useMessages';
 import { useConversations } from './useConversations';
+import { useSettings } from '@/hooks/useSettings';
 import { Message, QuickAction, MessageType } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -33,7 +35,10 @@ export const useChatScreen = (props: UseChatScreenProps) => {
   const { subject, subjectName, userId, conversationId, isMobile } = props;
 
   const [showConversations, setShowConversations] = useState(false);
-  const [currentModel, setCurrentModel] = useState('gpt-3.5-turbo');
+  
+  // useSettingsを使用して現在のモデルを取得
+  const { getCurrentModel } = useSettings();
+  const currentModel = getCurrentModel();
 
   const conversationsHook = useConversations(userId, subject);
   const messagesHook = useMessages({
