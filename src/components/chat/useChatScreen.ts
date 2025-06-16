@@ -35,6 +35,7 @@ export const useChatScreen = (props: UseChatScreenProps) => {
   const { subject, subjectName, userId, conversationId, isMobile } = props;
 
   const [showConversations, setShowConversations] = useState(false);
+  const [previousSubject, setPreviousSubject] = useState<string | null>(null);
   
   // useSettingsを使用して現在のモデルを取得
   const { getCurrentModel } = useSettings();
@@ -89,15 +90,33 @@ export const useChatScreen = (props: UseChatScreenProps) => {
   useEffect(() => {
     if (!userId || !subject) return;
 
+    // 教科が変更された場合の処理
+    if (previousSubject !== null && previousSubject !== subject) {
+      console.log('Subject changed from', previousSubject, 'to', subject, '- resetting conversation state');
+      // 教科変更時は必ず新規チャット状態にリセット
+      messagesHook.setMessages([]);
+      conversationsHook.setSelectedConversationId(null);
+      conversationsHook.setConversationUnderstood(false);
+      setPreviousSubject(subject);
+      return;
+    }
+
+    // 初回ロード時のpreviousSubject設定
+    if (previousSubject === null) {
+      setPreviousSubject(subject);
+    }
+
     if (conversationId) {
       conversationsHook.setSelectedConversationId(conversationId);
       conversationsHook.handleSelectConversation(conversationId).then(messages => {
         messagesHook.setMessages(messages);
       });
     } else {
-      // 新しい会話の場合、メッセージをクリア
+      // 新しい会話の場合、メッセージをクリアし、理解状態もリセット
+      console.log('Starting new conversation - resetting all states');
       messagesHook.setMessages([]);
       conversationsHook.setSelectedConversationId(null);
+      conversationsHook.setConversationUnderstood(false);
     }
   }, [userId, subject, conversationId]);
 

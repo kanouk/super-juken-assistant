@@ -52,7 +52,9 @@ const MainApp = () => {
   }, []);
 
   const handleSubjectSelect = (subject: string) => {
-    setChatState({ subject });
+    console.log('Subject selected from sidebar:', subject);
+    // 新規チャットとして開始するため、conversationIdを明示的にundefinedに設定
+    setChatState({ subject, conversationId: undefined });
     setCurrentScreen('chat');
     if (isMobile) {
       setIsSidebarOpen(false);

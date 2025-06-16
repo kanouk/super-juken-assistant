@@ -87,6 +87,7 @@ export function useConversations(userId: string | undefined, subject: string) {
 
       if (selectedConversationId === conversationId) {
         setSelectedConversationId(null);
+        setConversationUnderstood(false); // 削除時も理解状態をリセット
       }
 
       refetchConversations();
@@ -103,6 +104,13 @@ export function useConversations(userId: string | undefined, subject: string) {
     }
   };
 
+  // 新規会話開始時の状態リセット関数を追加
+  const resetConversationState = () => {
+    console.log('Resetting conversation state');
+    setSelectedConversationId(null);
+    setConversationUnderstood(false);
+  };
+
   return {
     conversations,
     selectedConversationId,
@@ -112,6 +120,6 @@ export function useConversations(userId: string | undefined, subject: string) {
     refetchConversations,
     handleSelectConversation,
     handleDeleteConversation,
+    resetConversationState,
   };
 }
-
