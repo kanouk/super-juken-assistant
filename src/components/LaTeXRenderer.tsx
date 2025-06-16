@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import 'katex/dist/katex.min.css';
 import { InlineMath, BlockMath } from 'react-katex';
@@ -59,8 +58,8 @@ const LaTeXRenderer = ({
             }
           }
           
-          // Regular text
-          return part;
+          // Regular text - return as span to maintain proper rendering
+          return <span key={index}>{part}</span>;
         })}
       </>
     );
