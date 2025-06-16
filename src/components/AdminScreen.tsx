@@ -10,18 +10,19 @@ import { GeneralSettingsTab } from "./admin/GeneralSettingsTab";
 import { InstructionSettingsTab } from "./admin/InstructionSettingsTab";
 import { ModelsSettingsTab } from "./admin/ModelsSettingsTab";
 import { MbtiInstructionsTab } from "./admin/MbtiInstructionsTab";
+import { useAdminSettings } from "@/hooks/useAdminSettings";
 
 const AdminScreen = () => {
   const [activeTab, setActiveTab] = useState("users");
+  const { settings, updateSetting, saveSettings, isLoading } = useAdminSettings();
 
-  const handleSave = () => {
-    // TODO: Implement save functionality
-    console.log('Save admin settings');
+  const handleSave = async () => {
+    await saveSettings();
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <AdminHeader onSave={handleSave} isSaving={false} />
+      <AdminHeader onSave={handleSave} isSaving={isLoading} />
       
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -49,23 +50,23 @@ const AdminScreen = () => {
           </TabsContent>
           
           <TabsContent value="api-keys">
-            <ApiKeysTab />
+            <ApiKeysTab settings={settings} updateSetting={updateSetting} />
           </TabsContent>
           
           <TabsContent value="general">
-            <GeneralSettingsTab />
+            <GeneralSettingsTab settings={settings} updateSetting={updateSetting} />
           </TabsContent>
           
           <TabsContent value="instructions">
-            <InstructionSettingsTab />
+            <InstructionSettingsTab settings={settings} updateSetting={updateSetting} />
           </TabsContent>
           
           <TabsContent value="models">
-            <ModelsSettingsTab />
+            <ModelsSettingsTab settings={settings} updateSetting={updateSetting} />
           </TabsContent>
           
           <TabsContent value="mbti">
-            <MbtiInstructionsTab />
+            <MbtiInstructionsTab mbtiInstructions={settings.mbti_instructions} updateSetting={updateSetting} />
           </TabsContent>
         </Tabs>
       </div>

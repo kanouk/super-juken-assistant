@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Trash2, MessageSquare, Clock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Trash2, MessageSquare, Clock, Edit2, Check, X } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { supabase } from "@/integrations/supabase/client";
 import QuestionTags from './QuestionTags';
 
-interface Conversation {
+export interface Conversation {
   id: string;
   title: string;
   created_at: string;
@@ -23,16 +24,30 @@ interface Tag {
 
 interface ConversationListItemProps {
   conversation: Conversation;
-  isSelected: boolean;
-  onSelect: (id: string) => void;
-  onDelete: (id: string) => void;
+  isEditing: boolean;
+  isDeleting: boolean;
+  editingTitle: string;
+  onStartEdit: (conversation: Conversation) => void;
+  onSaveEdit: (conversationId: string) => void;
+  onCancelEdit: () => void;
+  onSetEditingTitle: (title: string) => void;
+  onDelete: (conversationId: string) => void;
+  onSelect: (conversationId: string) => void;
+  formatDate: (dateString: string) => string;
 }
 
 const ConversationListItem: React.FC<ConversationListItemProps> = ({
   conversation,
-  isSelected,
+  isEditing,
+  isDeleting,
+  editingTitle,
+  onStartEdit,
+  onSaveEdit,
+  onCancelEdit,
+  onSetEditingTitle,
+  onDelete,
   onSelect,
-  onDelete
+  formatDate
 }) => {
   const [tags, setTags] = useState<Tag[]>([]);
 
@@ -67,50 +82,94 @@ const ConversationListItem: React.FC<ConversationListItemProps> = ({
   }, [conversation.id]);
 
   return (
-    <div
-      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-        isSelected 
-          ? 'bg-blue-50 border-blue-200' 
-          : 'bg-white border-gray-200 hover:bg-gray-50'
-      }`}
-      onClick={() => onSelect(conversation.id)}
-    >
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-center space-x-2 min-w-0 flex-1">
-          <MessageSquare className="h-4 w-4 text-gray-500 flex-shrink-0" />
-          <h3 className="font-medium text-sm text-gray-900 truncate">
-            {conversation.title}
-          </h3>
-          {conversation.is_understood && (
-            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full flex-shrink-0">
-              理解済み
-            </span>
+    <div className="border-b border-gray-100 last:border-b-0">
+      <div
+        className="p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+        onClick={() => !isEditing && onSelect(conversation.id)}
+      >
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex items-center space-x-2 min-w-0 flex-1">
+            <MessageSquare className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            {isEditing ? (
+              <div className="flex items-center space-x-2 flex-1">
+                <Input
+                  value={editingTitle}
+                  onChange={(e) => onSetEditingTitle(e.target.value)}
+                  className="text-sm"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSaveEdit(conversation.id);
+                  }}
+                  className="h-6 w-6 p-0 text-green-600 hover:text-green-700"
+                >
+                  <Check className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCancelEdit();
+                  }}
+                  className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <>
+                <h3 className="font-medium text-sm text-gray-900 truncate">
+                  {conversation.title}
+                </h3>
+                {conversation.is_understood && (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full flex-shrink-0">
+                    理解済み
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+          {!isEditing && (
+            <div className="flex items-center space-x-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStartEdit(conversation);
+                }}
+                className="h-6 w-6 p-0 text-gray-400 hover:text-blue-600 flex-shrink-0"
+              >
+                <Edit2 className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(conversation.id);
+                }}
+                disabled={isDeleting}
+                className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 flex-shrink-0"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(conversation.id);
-          }}
-          className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 flex-shrink-0"
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
-      </div>
-      
-      <div className="flex items-center text-xs text-gray-500 mb-2">
-        <Clock className="h-3 w-3 mr-1" />
-        <span>
-          {formatDistanceToNow(new Date(conversation.created_at), {
-            addSuffix: true,
-            locale: ja
-          })}
-        </span>
-      </div>
+        
+        <div className="flex items-center text-xs text-gray-500 mb-2">
+          <Clock className="h-3 w-3 mr-1" />
+          <span>{formatDate(conversation.created_at)}</span>
+        </div>
 
-      <QuestionTags tags={tags} className="mt-2" />
+        <QuestionTags tags={tags} className="mt-2" />
+      </div>
     </div>
   );
 };
