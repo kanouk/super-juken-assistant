@@ -101,7 +101,7 @@ const MainApp = () => {
       case 'settings':
         return (
           <SettingsScreen
-            onBack={handleBackToWelcome}
+            onBack={handleBackTo Welcome}
             onToggleSidebar={handleToggleSidebar}
             isMobile={isMobile}
           />
@@ -139,7 +139,7 @@ const MainApp = () => {
             questionsDiff={chatStats.questionsDiff}
             understoodDiff={chatStats.understoodDiff}
             isStatsLoading={chatStats.isLoading}
-            onNavigate={(screen) => setCurrentScreen(screen)}
+            onNavigate={(screen) => setCurrentScreen(screen as Screen)}
             onSubjectSelect={handleSubjectSelect}
             onOpenConversation={handleOpenConversation}
             onCloseSidebar={() => setIsSidebarOpen(false)}

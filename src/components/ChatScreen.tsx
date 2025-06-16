@@ -6,6 +6,7 @@ import { useChatScreen, UseChatScreenProps } from "./chat/useChatScreen";
 
 interface ChatScreenProps extends UseChatScreenProps {
   onBackToWelcome?: () => void;
+  conversationId?: string;
 }
 
 const ChatScreen = (props: ChatScreenProps) => {

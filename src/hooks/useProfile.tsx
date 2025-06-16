@@ -32,7 +32,17 @@ export const useProfile = () => {
           .eq('setting_key', 'default_first_goal')
           .single();
 
-        const defaultFirstGoal = adminData?.setting_value || { name: '共通テスト', date: '2026-01-17' };
+        // 型安全な変換を行う
+        let defaultFirstGoal = { name: '共通テスト', date: '2026-01-17' };
+        if (adminData?.setting_value && typeof adminData.setting_value === 'object' && adminData.setting_value !== null) {
+          const settingValue = adminData.setting_value as any;
+          if (settingValue.name && settingValue.date) {
+            defaultFirstGoal = {
+              name: String(settingValue.name),
+              date: String(settingValue.date)
+            };
+          }
+        }
 
         // デフォルトの試験設定（第1ゴールは管理者設定から取得）
         const defaultExamSettings: ExamSettings = {
