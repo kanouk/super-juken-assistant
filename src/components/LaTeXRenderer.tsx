@@ -14,17 +14,65 @@ interface LaTeXRendererProps {
 const LaTeXRenderer = ({
   content,
   className = '',
-  colorScheme = 'assistant', // デフォルト: AI側
+  colorScheme = 'assistant',
 }: LaTeXRendererProps) => {
-  // テーマによるベースカラーを選択
   const baseColorClass =
     colorScheme === 'user'
       ? 'text-white prose-headings:text-white prose-strong:text-white prose-ul:text-white prose-ol:text-white prose-li:text-white prose-blockquote:text-white prose-code:text-white prose-pre:text-white !text-white'
       : 'text-gray-800 prose-headings:text-gray-900 prose-strong:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900 prose-li:text-gray-900 prose-blockquote:text-gray-700 prose-code:text-gray-900 prose-pre:text-gray-900 !text-gray-800';
 
+  // Custom component for processing inline LaTeX within text
+  const ProcessedText = ({ children }: { children: string }) => {
+    const parts = children.split(/(\\\([\s\S]*?\\\)|\$[^$\n]+?\$)/);
+    
+    return (
+      <>
+        {parts.map((part, index) => {
+          // Check if this part is inline LaTeX
+          if (
+            (part.startsWith('\\(') && part.endsWith('\\)')) ||
+            (part.startsWith('$') && part.endsWith('$') && part.length > 2 && !part.includes('\n'))
+          ) {
+            let math = '';
+            if (part.startsWith('\\(')) {
+              math = part.slice(2, -2).trim();
+            } else {
+              math = part.slice(1, -1).trim();
+            }
+            
+            if (math) {
+              try {
+                return <InlineMath key={index} math={math} />;
+              } catch (error) {
+                console.error('LaTeX Inline Math Error:', error, 'Input:', math);
+                return (
+                  <span
+                    key={index}
+                    className={`${
+                      colorScheme === 'user' ? 'text-red-200 bg-red-700' : 'text-red-700 bg-red-50'
+                    } px-1 rounded`}
+                  >
+                    LaTeX Error
+                  </span>
+                );
+              }
+            }
+          }
+          
+          // Regular text
+          return part;
+        })}
+      </>
+    );
+  };
+
   const processedContent = useMemo(() => {
-    const parts = content.split(/(\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\$\$[\s\S]*?\$\$|\$[^$\n]+?\$)/);
+    // First, handle block math (display math) separately
+    const blockMathRegex = /(\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$)/g;
+    const parts = content.split(blockMathRegex);
+    
     return parts.map((part, index) => {
+      // Handle block math
       if (
         (part.startsWith('\\[') && part.endsWith('\\]')) ||
         (part.startsWith('$$') && part.endsWith('$$') && part.length > 4)
@@ -35,6 +83,7 @@ const LaTeXRenderer = ({
         } else {
           math = part.slice(2, -2).trim();
         }
+        
         if (math) {
           try {
             return (
@@ -58,35 +107,7 @@ const LaTeXRenderer = ({
         }
       }
 
-      if (
-        (part.startsWith('\\(') && part.endsWith('\\)')) ||
-        (part.startsWith('$') && part.endsWith('$') && part.length > 2 && !part.includes('\n'))
-      ) {
-        let math = '';
-        if (part.startsWith('\\(')) {
-          math = part.slice(2, -2).trim();
-        } else {
-          math = part.slice(1, -1).trim();
-        }
-        if (math) {
-          try {
-            return <InlineMath key={index} math={math} />;
-          } catch (error) {
-            console.error('LaTeX Inline Math Error:', error, 'Input:', math);
-            return (
-              <span
-                key={index}
-                className={`${
-                  colorScheme === 'user' ? 'text-red-200 bg-red-700' : 'text-red-700 bg-red-50'
-                } px-1 rounded`}
-              >
-                LaTeX Error
-              </span>
-            );
-          }
-        }
-      }
-
+      // Handle regular content with inline math
       if (part.trim()) {
         return (
           <div
@@ -129,9 +150,19 @@ const LaTeXRenderer = ({
                       colorScheme === 'user' ? 'text-white' : 'text-gray-800'
                     }`}
                   >
-                    {children}
+                    {typeof children === 'string' ? (
+                      <ProcessedText>{children}</ProcessedText>
+                    ) : (
+                      children
+                    )}
                   </p>
                 ),
+                text: ({ children }) => {
+                  if (typeof children === 'string') {
+                    return <ProcessedText>{children}</ProcessedText>;
+                  }
+                  return children;
+                },
                 ul: ({ children }) => (
                   <ul
                     className={`mb-4 ml-6 space-y-2 ${
