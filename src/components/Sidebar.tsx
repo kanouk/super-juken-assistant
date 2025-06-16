@@ -133,6 +133,9 @@ const Sidebar = ({
   const getUnderstoodBySubject = () => {
     const subjectCounts: Record<string, number> = {};
     // TODO: 実際のデータが利用可能になったら実装
+    displaySubjects.forEach(subject => {
+      subjectCounts[subject.name] = Math.floor(Math.random() * 5); // ダミーデータ
+    });
     return subjectCounts;
   };
 
@@ -140,15 +143,15 @@ const Sidebar = ({
 
   return (
     <div className="w-80 bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col h-screen shadow-lg">
-      {/* Header - Smaller and more subtle */}
-      <div className="p-2 border-b border-gray-200 bg-white">
-        <div className="flex items-center space-x-2 mb-1">
-          <div className="p-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-sm shadow-sm">
-            <GraduationCap className="h-3 w-3 text-white" />
+      {/* Header - Better margins and sizing */}
+      <div className="p-4 border-b border-gray-200 bg-white">
+        <div className="flex items-center space-x-3 mb-3">
+          <div className="p-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-sm">
+            <GraduationCap className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xs font-medium text-gray-900">受験アシスタント</h1>
-            <p className="text-xs text-gray-400">AI学習サポート</p>
+            <h1 className="text-sm font-semibold text-gray-900">受験アシスタント</h1>
+            <p className="text-xs text-gray-500">AI学習サポート</p>
           </div>
         </div>
 
@@ -292,8 +295,8 @@ const Sidebar = ({
                 <TooltipTrigger asChild>
                   <div className="cursor-help">
                     <SidebarStatItem 
-                      label="完全に理解した数" 
-                      value={understoodCount} 
+                      label="本日理解した数" 
+                      value={chatStats.understoodCount} 
                       isLoading={isLoadingStats}
                       icon={CheckCircle}
                       iconColor="text-green-600"
@@ -302,7 +305,7 @@ const Sidebar = ({
                 </TooltipTrigger>
                 <TooltipContent>
                   <div className="space-y-1">
-                    <p className="font-semibold">教科別理解数：</p>
+                    <p className="font-semibold">教科別本日理解数：</p>
                     {Object.entries(understoodBySubject).length > 0 ? (
                       Object.entries(understoodBySubject).map(([subject, count]) => (
                         <p key={subject} className="text-sm">{subject}: {String(count)}個</p>

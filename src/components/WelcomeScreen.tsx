@@ -192,7 +192,7 @@ const WelcomeScreen = ({
           <Card className="bg-orange-50 border-orange-200">
             <CardContent className="p-4 text-center">
               <User className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-orange-800">{chatStats.totalCost || 0}</p>
+              <p className="text-2xl font-bold text-orange-800">{chatStats.totalQuestions || 0}</p>
               <p className="text-sm text-orange-600">累計質問数</p>
             </CardContent>
           </Card>

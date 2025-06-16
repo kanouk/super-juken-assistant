@@ -4,7 +4,9 @@ import ChatMainView from "./chat/ChatMainView";
 import ConversationHistoryView from "./chat/ConversationHistoryView";
 import { useChatScreen, UseChatScreenProps } from "./chat/useChatScreen";
 
-interface ChatScreenProps extends UseChatScreenProps {}
+interface ChatScreenProps extends UseChatScreenProps {
+  onBackToWelcome?: () => void;
+}
 
 const ChatScreen = (props: ChatScreenProps) => {
   const {
@@ -49,6 +51,7 @@ const ChatScreen = (props: ChatScreenProps) => {
         onSelectConversation={handleSelectConversation}
         onDeleteConversation={handleDeleteConversation}
         onNewChat={handleNewChat}
+        onBackToWelcome={props.onBackToWelcome}
       />
     );
   }
@@ -74,6 +77,7 @@ const ChatScreen = (props: ChatScreenProps) => {
       isMobile={props.isMobile}
       messagesEndRef={messagesEndRef}
       conversationUnderstood={conversationUnderstood}
+      onBackToWelcome={props.onBackToWelcome}
     />
   );
 };

@@ -7,8 +7,8 @@ interface ChatStats {
   dailyCost: number;
   totalCost: number;
   dailyQuestions: number;
+  totalQuestions: number;
   today_understood?: number;
-  total_questions?: number;
   understood_by_subject?: Record<string, number>;
 }
 
@@ -28,8 +28,8 @@ export const useChatStats = (userId: string | undefined) => {
     dailyCost: 0,
     totalCost: 0,
     dailyQuestions: 0,
+    totalQuestions: 0,
     today_understood: 0,
-    total_questions: 0,
     understood_by_subject: {},
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -65,8 +65,8 @@ export const useChatStats = (userId: string | undefined) => {
           dailyCost: 0,
           totalCost: 0,
           dailyQuestions: 0,
+          totalQuestions: 0,
           today_understood: 0,
-          total_questions: 0,
           understood_by_subject: {},
         });
         setIsLoading(false);
@@ -78,6 +78,14 @@ export const useChatStats = (userId: string | undefined) => {
         .select('cost')
         .in('conversation_id', conversationIds);
       if (totalCostError) throw totalCostError;
+
+      // 全てのユーザーメッセージ数を取得
+      const { count: totalQuestionsCount, error: totalQuestionsError } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'user')
+        .in('conversation_id', conversationIds);
+      if (totalQuestionsError) throw totalQuestionsError;
 
       const today = new Date().toISOString().split('T')[0];
       const { data: todayData, error: todayError } = await supabase
@@ -97,8 +105,8 @@ export const useChatStats = (userId: string | undefined) => {
         dailyCost,
         totalCost,
         dailyQuestions,
+        totalQuestions: totalQuestionsCount || 0,
         today_understood: understoodCount || 0,
-        total_questions: totalCost || 0,
         understood_by_subject: {},
       });
     } catch (err) {
