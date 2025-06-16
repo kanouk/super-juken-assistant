@@ -34,21 +34,24 @@ export default function ChatMessageRenderer({ content, colorScheme = 'assistant'
         }]]}
         components={{
           // コードブロックのシンタックスハイライト
-          code({ node, inline, className, children, ...props }) {
+          code(props) {
+            const { children, className, ...rest } = props;
             const match = /language-(\w+)/.exec(className || '');
-            return !inline && match ? (
+            const isInline = !match;
+            
+            return !isInline && match ? (
               <SyntaxHighlighter
                 style={oneDark}
                 language={match[1]}
                 PreTag="div"
                 className="syntax-highlighter"
                 showLineNumbers={true}
-                {...props}
+                {...rest}
               >
                 {String(children).replace(/\n$/, '')}
               </SyntaxHighlighter>
             ) : (
-              <code className={className} {...props}>
+              <code className={className} {...rest}>
                 {children}
               </code>
             );
