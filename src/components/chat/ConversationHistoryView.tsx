@@ -1,3 +1,4 @@
+
 import React from "react";
 import ChatHeader from "./ChatHeader";
 import ConversationList from "./ConversationList";
@@ -31,7 +32,7 @@ const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = ({
     <div className="flex flex-col h-full min-h-0 bg-white">
       <ChatHeader
         subject={subject}
-        subjectName={`${subjectName} - 会話履歴`}
+        subjectName={`会話履歴`}
         onBack={onBackToList}
         onNewChat={onNewChat}
         messages={[]}

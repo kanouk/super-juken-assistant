@@ -57,18 +57,15 @@ export const useMessageHandling = ({
 
       const apiRequestBody = {
         model: currentModel,
-        messages: [
-          { role: 'system', content: `You are a helpful assistant for ${subjectName}.` },
-          ...messages,
-          { role: 'user', content: message },
-        ],
+        message: message,
+        conversation_id: selectedConversationId,
         image_url: images && images.length > 0 ? images[0].url : null,
         profile,
         subject,
       };
 
       const result = await getCompletion({
-        api: '/api/completion',
+        api: '/api/ask-ai',
         body: apiRequestBody,
       });
 

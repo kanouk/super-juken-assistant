@@ -1,3 +1,4 @@
+
 import React from "react";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
@@ -60,7 +61,9 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
         subjectName={subjectName}
         onBack={onBackToWelcome || (() => {})}
         onNewChat={onNewChat}
+        onShowHistory={onShowHistory}
         messages={messages}
+        showHistoryButton={showHistoryButton}
       />
       {/* ↓入力欄高さ分のpbを動的に確保 */}
       <div className={`flex-1 min-h-0 h-0 flex flex-col overflow-hidden ${isMobile ? `pb-[${inputBarHeight}px]` : ''}`}>

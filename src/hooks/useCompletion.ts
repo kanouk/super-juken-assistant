@@ -9,7 +9,8 @@ interface CompletionOptions {
 export const useCompletion = () => {
   const getCompletion = useCallback(async (options: CompletionOptions) => {
     try {
-      const response = await fetch(options.api, {
+      // Use the correct Supabase Edge Function endpoint
+      const response = await fetch('/api/ask-ai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
