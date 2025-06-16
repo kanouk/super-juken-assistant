@@ -14,6 +14,7 @@ interface ConversationHistoryViewProps {
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => void;
   onNewChat: () => void;
+  onBackToWelcome?: () => void;
 }
 
 const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = ({
@@ -27,6 +28,7 @@ const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = ({
   onSelectConversation,
   onDeleteConversation,
   onNewChat,
+  onBackToWelcome,
 }) => {
   return (
     <div className="flex flex-col h-full min-h-0 bg-white">
@@ -38,6 +40,7 @@ const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = ({
         showBackButton={true}
         onToggleSidebar={onToggleSidebar}
         isMobile={isMobile}
+        onBackToWelcome={onBackToWelcome}
       />
       {/* 履歴リスト本体を、flex-1 min-h-0で高さを受け渡す */}
       <div className="flex-1 min-h-0">
@@ -53,4 +56,3 @@ const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = ({
 };
 
 export default ConversationHistoryView;
-
