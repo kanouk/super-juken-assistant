@@ -161,12 +161,12 @@ const Sidebar = ({
 
   return (
     <div className={`${isOpen ? 'w-80' : 'w-12'} bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col h-screen shadow-lg transition-all duration-300 relative`}>
-      {/* Toggle Button */}
+      {/* Toggle Button - Fixed positioning */}
       <Button
         variant="ghost"
         size="sm"
         onClick={onCloseSidebar}
-        className={`absolute -right-3 top-4 z-50 w-6 h-6 p-0 bg-white border border-gray-200 rounded-full shadow-md hover:bg-gray-50 ${isOpen ? '' : 'rotate-180'}`}
+        className={`absolute ${isOpen ? '-right-3' : 'right-1'} top-4 z-50 w-6 h-6 p-0 bg-white border border-gray-200 rounded-full shadow-md hover:bg-gray-50 transition-all duration-300`}
       >
         {isOpen ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
       </Button>
