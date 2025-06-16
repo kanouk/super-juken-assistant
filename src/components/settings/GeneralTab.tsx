@@ -32,7 +32,7 @@ export const GeneralTab = ({ commonInstruction, updateSetting }: GeneralTabProps
             className="mt-2 border-2 border-gray-200 focus:border-orange-500 text-sm lg:text-base"
           />
           <p className="text-xs lg:text-sm text-gray-600 mt-2">
-            <strong>空欄の場合は管理者設定の共通インストラクションが使用されます。</strong><br />
+            <strong>空欄の場合はデフォルトの共通インストラクションが使用されます。</strong><br />
             ここに入力すると、あなた専用のカスタムインストラクションでAIの動作をパーソナライズできます。
           </p>
         </div>

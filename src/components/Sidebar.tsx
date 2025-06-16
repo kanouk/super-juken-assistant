@@ -8,7 +8,7 @@ import {
   BookOpen, Calculator, FlaskConical, Atom, Languages, 
   Settings, GraduationCap, LogOut, MapPin, Monitor, Plus,
   User, Clock, TrendingUp, Sparkles, ChevronDown, ChevronUp, CheckCircle, RefreshCw,
-  Globe
+  Globe, AlertCircle
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -102,6 +102,15 @@ const Sidebar = ({
     const diffTime = target.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
+  };
+
+  // 有効なゴールがあるかチェック
+  const hasValidGoals = () => {
+    if (!profile?.exam_settings) return false;
+    const { kyotsu, todai } = profile.exam_settings;
+    const hasFirstGoal = kyotsu.name.trim() !== '' && kyotsu.date !== '';
+    const hasSecondGoal = todai.name.trim() !== '' && todai.date !== '';
+    return hasFirstGoal || hasSecondGoal;
   };
 
   const handleOpenChange = useCallback((id: string, isOpen: boolean) => {
@@ -217,37 +226,65 @@ const Sidebar = ({
               <CollapsibleSectionHeader title="入試カウントダウン" icon={Clock} iconBgColor="bg-gradient-to-r from-red-500 to-pink-600" isOpen={openCollapsibles['countdown']} />
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-2 space-y-3">
-              <Card className="bg-gradient-to-r from-red-50 to-pink-50 border-red-200 shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-red-700 flex items-center space-x-2">
-                    <span>{profile?.exam_settings?.kyotsu?.name || '共通テスト'}まで</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-2xl font-bold text-red-800">
-                    {calculateDaysLeft(profile?.exam_settings?.kyotsu?.date || '2026-01-17')}日
-                  </div>
-                  <div className="text-xs text-red-600 mt-1">
-                    {profile?.exam_settings?.kyotsu?.date || '2026年1月17日'}
-                  </div>
-                </CardContent>
-              </Card>
+              {!hasValidGoals() ? (
+                <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200 shadow-sm">
+                  <CardContent className="p-4 text-center">
+                    <AlertCircle className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+                    <p className="text-sm text-yellow-800 font-medium mb-2">
+                      ゴールが設定されていません
+                    </p>
+                    <p className="text-xs text-yellow-700 mb-3">
+                      プロフィール設定で目標とする試験を設定してください
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onProfileClick}
+                      className="text-yellow-700 border-yellow-300 hover:bg-yellow-100"
+                    >
+                      設定する
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  {profile?.exam_settings?.kyotsu?.name && profile?.exam_settings?.kyotsu?.date && (
+                    <Card className="bg-gradient-to-r from-red-50 to-pink-50 border-red-200 shadow-sm hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-red-700 flex items-center space-x-2">
+                          <span>{profile.exam_settings.kyotsu.name}まで</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="text-2xl font-bold text-red-800">
+                          {calculateDaysLeft(profile.exam_settings.kyotsu.date)}日
+                        </div>
+                        <div className="text-xs text-red-600 mt-1">
+                          {profile.exam_settings.kyotsu.date}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
-              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-blue-700 flex items-center space-x-2">
-                    <span>{profile?.exam_settings?.todai?.name || '東大二次試験'}まで</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-2xl font-bold text-blue-800">
-                    {calculateDaysLeft(profile?.exam_settings?.todai?.date || '2026-02-25')}日
-                  </div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    {profile?.exam_settings?.todai?.date || '2026年2月25日'}
-                  </div>
-                </CardContent>
-              </Card>
+                  {profile?.exam_settings?.todai?.name && profile?.exam_settings?.todai?.date && (
+                    <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-blue-700 flex items-center space-x-2">
+                          <span>{profile.exam_settings.todai.name}まで</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="text-2xl font-bold text-blue-800">
+                          {calculateDaysLeft(profile.exam_settings.todai.date)}日
+                        </div>
+                        <div className="text-xs text-blue-600 mt-1">
+                          {profile.exam_settings.todai.date}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
             </CollapsibleContent>
           </Collapsible>
         )}

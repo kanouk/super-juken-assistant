@@ -14,6 +14,9 @@ interface ExamSettingsCardProps {
 }
 
 const ExamSettingsCard: React.FC<ExamSettingsCardProps> = ({ examSettings, onExamSettingChange }) => {
+  // 第1ゴールが設定されているかチェック
+  const hasFirstGoal = examSettings.kyotsu.name.trim() !== '' || examSettings.kyotsu.date !== '';
+  
   // 第2ゴールが設定されているかチェック
   const hasSecondGoal = examSettings.todai.name.trim() !== '' || examSettings.todai.date !== '';
 
@@ -37,7 +40,7 @@ const ExamSettingsCard: React.FC<ExamSettingsCardProps> = ({ examSettings, onExa
             <h3 className="font-medium text-gray-900 border-b border-gray-200 pb-2">
               第1ゴール
             </h3>
-            {(examSettings.kyotsu.name.trim() !== '' || examSettings.kyotsu.date !== '') && (
+            {hasFirstGoal && (
               <Button
                 variant="outline"
                 size="sm"

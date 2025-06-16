@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import ChatScreen from './ChatScreen';
 import SettingsScreen from './SettingsScreen';
 import ProfileScreen from './ProfileScreen';
+import WelcomeScreen from './WelcomeScreen';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -11,8 +13,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import type { User } from '@supabase/supabase-js';
 
 const MainApp = () => {
-  const [selectedSubject, setSelectedSubject] = useState('math');
-  const [currentView, setCurrentView] = useState<'chat' | 'settings' | 'profile'>('chat');
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<'welcome' | 'chat' | 'settings' | 'profile'>('welcome');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -79,8 +81,9 @@ const MainApp = () => {
     }
   };
 
-  const handleBackToChat = () => {
-    setCurrentView('chat');
+  const handleBackToWelcome = () => {
+    setCurrentView('welcome');
+    setSelectedSubject(null);
   };
 
   const handleLogout = async () => {
@@ -123,7 +126,7 @@ const MainApp = () => {
         h-full
       `}>
         <Sidebar
-          selectedSubject={selectedSubject}
+          selectedSubject={selectedSubject || ''}
           onSubjectChange={handleSubjectChange}
           onSettingsClick={handleSettingsClick}
           onProfileClick={handleProfileClick}
@@ -138,7 +141,15 @@ const MainApp = () => {
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {currentView === 'chat' ? (
+        {currentView === 'welcome' ? (
+          <WelcomeScreen
+            onSubjectSelect={handleSubjectChange}
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+            isMobile={isMobile}
+            dailyQuestions={dailyQuestions}
+            understoodCount={understoodCount}
+          />
+        ) : currentView === 'chat' && selectedSubject ? (
           <ChatScreen
             subject={selectedSubject}
             subjectName={subjectNames[selectedSubject]}
@@ -148,13 +159,13 @@ const MainApp = () => {
           />
         ) : currentView === 'settings' ? (
           <SettingsScreen 
-            onBack={handleBackToChat}
+            onBack={handleBackToWelcome}
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
             isMobile={isMobile}
           />
         ) : (
           <ProfileScreen 
-            onBack={handleBackToChat}
+            onBack={handleBackToWelcome}
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
             isMobile={isMobile}
           />
