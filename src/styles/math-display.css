@@ -45,3 +45,18 @@
   border-radius: 5px;
   overflow-x: auto;
 }
+
+/* 化学式のスタイル調整 */
+.math-content .katex .mord.chem {
+  font-family: 'Times New Roman', serif;
+}
+
+/* 反応矢印のスタイル */
+.math-content .katex .mrel {
+  margin: 0 0.3em;
+}
+
+/* 上付き・下付き文字の調整 */
+.math-content .katex .msupsub {
+  font-size: 0.8em;
+}

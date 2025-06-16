@@ -40,11 +40,79 @@ a_1b_2 - a_2b_1
 より複雑な例：
 $$\\frac{\\vec{a} \\cdot \\vec{b}}{|\\vec{a}||\\vec{b}|} = \\cos\\theta$$`;
 
+const chemistryContent = `# 化学式の例
+
+## 1. 基本的な化学式
+
+水の分子式：$\\ce{H2O}$
+
+硫酸：$\\ce{H2SO4}$
+
+## 2. 化学反応式
+
+燃焼反応：
+$$\\ce{CH4 + 2O2 -> CO2 + 2H2O}$$
+
+酸塩基反応：
+$$\\ce{HCl + NaOH -> NaCl + H2O}$$
+
+## 3. イオン
+
+硫酸イオン：$\\ce{SO4^{2-}}$
+
+アンモニウムイオン：$\\ce{NH4+}$
+
+## 4. 複雑な反応
+
+平衡反応：
+$$\\ce{N2 + 3H2 <=> 2NH3}$$
+
+沈殿反応：
+$$\\ce{AgNO3(aq) + NaCl(aq) -> AgCl(s) v + NaNO3(aq)}$$
+
+## 5. 有機化学
+
+エタノール：$\\ce{C2H5OH}$
+
+ベンゼン環：$\\ce{C6H6}$
+
+エステル化反応：
+$$\\ce{CH3COOH + C2H5OH ->[\\ce{H+}] CH3COOC2H5 + H2O}$$
+
+## 6. 錯体
+
+ヘキサアクア鉄(III)イオン：$\\ce{[Fe(H2O)6]^{3+}}$
+
+## 7. 同位体
+
+重水：$\\ce{^2H2O}$ または $\\ce{D2O}$
+
+炭素14：$\\ce{^{14}C}$
+
+## 8. 結晶構造
+
+塩化ナトリウム：$\\ce{NaCl}$の結晶構造は面心立方格子
+
+## 9. 数学と化学の混在
+
+反応速度定数：$k = A e^{-\\frac{E_a}{RT}}$
+
+ここで$\\ce{H2}$の解離エネルギーは$E_a = 436\\text{ kJ/mol}$`;
+
 const MathTest = () => {
   return (
     <div className="container mx-auto p-8 max-w-4xl">
       <h1 className="text-3xl font-bold mb-8">Math Display Test</h1>
-      <MathDisplay content={sampleContent} />
+      
+      <div className="mb-12">
+        <h2 className="text-2xl font-semibold mb-4">数学</h2>
+        <MathDisplay content={sampleContent} />
+      </div>
+      
+      <div>
+        <h2 className="text-2xl font-semibold mb-4">化学</h2>
+        <MathDisplay content={chemistryContent} />
+      </div>
     </div>
   );
 };
