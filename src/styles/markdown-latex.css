@@ -1,0 +1,136 @@
+
+/* Markdown + LaTeX統合レンダラー専用CSS */
+
+.markdown-latex-container {
+  /* 基本設定 */
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* KaTeX数式の基本スタイリング */
+.markdown-latex-container .katex {
+  font-size: 1.1em;
+  line-height: 1.4;
+}
+
+/* インライン数式のスタイリング */
+.markdown-latex-container .katex-inline {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0.2em;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+
+/* ブロック数式のスタイリング */
+.markdown-latex-container .katex-display {
+  display: block;
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5em 0;
+  max-width: 100%;
+}
+
+/* 長い数式の横スクロール対応 */
+.markdown-latex-container .katex-display > .katex {
+  display: inline-block;
+  white-space: nowrap;
+  min-width: min-content;
+}
+
+/* エラー表示のスタイリング */
+.markdown-latex-container .katex-error {
+  color: #cc0000;
+  border: 1px solid #cc0000;
+  background-color: #fff5f5;
+  padding: 0.2em 0.4em;
+  border-radius: 0.3em;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .markdown-latex-container .katex {
+    font-size: 1em;
+  }
+  
+  .markdown-latex-container .katex-display {
+    margin: 1em 0;
+    font-size: 0.95em;
+  }
+  
+  /* モバイルでの横スクロール最適化 */
+  .markdown-latex-container .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  
+  .markdown-latex-container .katex-display::-webkit-scrollbar {
+    height: 4px;
+  }
+  
+  .markdown-latex-container .katex-display::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+  }
+  
+  .markdown-latex-container .katex-display::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .markdown-latex-container .katex {
+    font-size: 0.9em;
+  }
+  
+  .markdown-latex-container .katex-display {
+    font-size: 0.85em;
+  }
+}
+
+/* 数式の自動改行設定（長い数式用） */
+.markdown-latex-container .katex .base {
+  display: inline-block;
+  white-space: normal;
+  word-break: break-all;
+  line-height: 1.3;
+}
+
+/* フォールバック用のプレーンテキスト表示 */
+.markdown-latex-container .math-fallback {
+  font-family: monospace;
+  background-color: #f8f9fa;
+  padding: 0.2em 0.4em;
+  border-radius: 0.3em;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* プログレッシブ・エンハンスメント */
+.markdown-latex-container .katex .katex-html {
+  /* KaTeX HTMLが利用可能な場合の最適化 */
+  line-height: 1.4;
+}
+
+.markdown-latex-container .katex .katex-mathml {
+  /* アクセシビリティ用のMathMLは隠す */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+}

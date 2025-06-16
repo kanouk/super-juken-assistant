@@ -45,15 +45,6 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-
-    /* LaTeX専用CSS変数 */
-    --latex-inline-max-height: 1.5em;
-    --latex-inline-overflow: hidden;
-    --latex-block-margin: 1.5rem 0;
-    --latex-error-bg-light: #fef2f2;
-    --latex-error-text-light: #dc2626;
-    --latex-error-bg-dark: #7f1d1d;
-    --latex-error-text-dark: #fca5a5;
   }
 
   .dark {
@@ -126,79 +117,6 @@
   }
 }
 
-/* LaTeX専用スタイル - インライン数式の強制単一行表示 */
-@layer components {
-  .latex-inline-container {
-    @apply inline-flex items-baseline;
-    max-height: var(--latex-inline-max-height);
-    overflow: var(--latex-inline-overflow);
-    vertical-align: baseline;
-    line-height: 1;
-    white-space: nowrap;
-  }
-
-  .latex-inline-container .katex {
-    display: inline-block !important;
-    vertical-align: baseline !important;
-    line-height: 1 !important;
-    max-height: var(--latex-inline-max-height) !important;
-    overflow: hidden !important;
-  }
-
-  .latex-inline-container .katex .katex-html {
-    display: inline-block !important;
-    vertical-align: baseline !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-  }
-
-  .latex-block-container {
-    @apply flex justify-center items-center w-full overflow-x-auto;
-    margin: var(--latex-block-margin);
-    padding: 0.5rem 0;
-  }
-
-  .latex-block-container .katex-display {
-    margin: 0 !important;
-    text-align: center !important;
-  }
-
-  .latex-error {
-    @apply inline-block px-2 py-1 rounded font-mono text-sm;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 300px;
-  }
-
-  .latex-error--light {
-    background-color: var(--latex-error-bg-light);
-    color: var(--latex-error-text-light);
-  }
-
-  .latex-error--dark {
-    background-color: var(--latex-error-bg-dark);
-    color: var(--latex-error-text-dark);
-  }
-
-  .chemistry-formula {
-    @apply inline-block;
-    font-family: "Times New Roman", serif;
-    vertical-align: baseline;
-    white-space: nowrap;
-  }
-
-  .chemistry-formula sub {
-    font-size: 0.75em;
-    vertical-align: sub;
-  }
-
-  .chemistry-formula sup {
-    font-size: 0.75em;
-    vertical-align: super;
-  }
-}
-
 /* アニメーション追加 */
 @layer utilities {
   .animate-fade-in {
@@ -219,20 +137,5 @@
   /* スクロール防止のためのユーティリティクラス */
   .prevent-scroll {
     overflow: hidden !important;
-  }
-
-  /* レスポンシブ対応 */
-  @media (max-width: 640px) {
-    .latex-block-container {
-      @apply overflow-x-auto justify-start p-2;
-    }
-    
-    .latex-inline-container {
-      max-width: 200px;
-    }
-    
-    .latex-error {
-      max-width: 200px;
-    }
   }
 }
