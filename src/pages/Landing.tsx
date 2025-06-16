@@ -13,7 +13,8 @@ import {
   Brain,
   Users,
   Check,
-  X
+  X,
+  Clock
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -86,7 +87,8 @@ const Landing = () => {
         "カスタマイズ機能制限"
       ],
       buttonText: "無料で始める",
-      popular: false
+      popular: false,
+      comingSoon: false
     },
     {
       name: "スタンダード",
@@ -103,7 +105,8 @@ const Landing = () => {
       ],
       limitations: [],
       buttonText: "今すぐ購入",
-      popular: true
+      popular: true,
+      comingSoon: false
     },
     {
       name: "プレミアム",
@@ -119,8 +122,9 @@ const Landing = () => {
         "詳細な成績分析レポート"
       ],
       limitations: [],
-      buttonText: "プレミアムを始める",
-      popular: false
+      buttonText: "カミングスーン",
+      popular: false,
+      comingSoon: true
     }
   ];
 
@@ -295,6 +299,14 @@ const Landing = () => {
                     </Badge>
                   </div>
                 )}
+                {plan.comingSoon && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-orange-500 text-white px-4 py-1">
+                      <Clock className="h-3 w-3 mr-1" />
+                      カミングスーン
+                    </Badge>
+                  </div>
+                )}
                 <CardContent className="p-8">
                   <div className="text-center mb-6">
                     <h4 className="text-2xl font-bold text-gray-900 mb-2">
@@ -330,11 +342,14 @@ const Landing = () => {
                   
                   <Button 
                     className={`w-full text-lg py-3 ${
-                      plan.popular 
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700' 
-                        : 'bg-gray-800 hover:bg-gray-900'
+                      plan.comingSoon 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : plan.popular 
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700' 
+                          : 'bg-gray-800 hover:bg-gray-900'
                     }`}
-                    onClick={() => navigate('/login')}
+                    onClick={() => !plan.comingSoon && navigate('/login')}
+                    disabled={plan.comingSoon}
                   >
                     {plan.buttonText}
                   </Button>

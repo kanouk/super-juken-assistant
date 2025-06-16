@@ -1,9 +1,11 @@
+
 import { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   BookOpen, Calculator, FlaskConical, Atom, Languages, 
   Settings, GraduationCap, LogOut, MapPin, Monitor, Plus,
@@ -14,6 +16,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSettings } from "@/hooks/useSettings";
+import { useChatStats } from "@/hooks/useChatStats";
 import SidebarStatItem from "./sidebar/SidebarStatItem";
 import SidebarSectionHeader from "./sidebar/SidebarSectionHeader";
 import SidebarSubjectButton from "./sidebar/SidebarSubjectButton";
@@ -31,17 +34,6 @@ interface SidebarProps {
   isLoadingStats: boolean;
 }
 
-const subjects = [
-  { id: 'math', name: '数学', icon: Calculator, color: 'bg-blue-100 text-blue-700 hover:bg-blue-200', gradient: 'from-blue-400 to-blue-600' },
-  { id: 'chemistry', name: '化学', icon: FlaskConical, color: 'bg-purple-100 text-purple-700 hover:bg-purple-200', gradient: 'from-purple-400 to-purple-600' },
-  { id: 'biology', name: '生物', icon: Atom, color: 'bg-green-100 text-green-700 hover:bg-green-200', gradient: 'from-green-400 to-green-600' },
-  { id: 'english', name: '英語', icon: Languages, color: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200', gradient: 'from-indigo-400 to-indigo-600' },
-  { id: 'japanese', name: '国語', icon: BookOpen, color: 'bg-red-100 text-red-700 hover:bg-red-200', gradient: 'from-red-400 to-red-600' },
-  { id: 'geography', name: '地理', icon: MapPin, color: 'bg-teal-100 text-teal-700 hover:bg-teal-200', gradient: 'from-teal-400 to-teal-600' },
-  { id: 'information', name: '情報', icon: Monitor, color: 'bg-gray-100 text-gray-700 hover:bg-gray-200', gradient: 'from-gray-400 to-gray-600' },
-  { id: 'other', name: '全般', icon: Plus, color: 'bg-orange-100 text-orange-700 hover:bg-orange-200', gradient: 'from-orange-400 to-orange-600' },
-];
-
 const Sidebar = ({ 
   selectedSubject, 
   onSubjectChange, 
@@ -56,6 +48,7 @@ const Sidebar = ({
 }: SidebarProps) => {
   const { profile, isLoading: isLoadingProfile } = useProfile();
   const { settings } = useSettings();
+  const { stats } = useChatStats();
   const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({
     subjects: true, // Default to open
     countdown: true,
@@ -125,54 +118,48 @@ const Sidebar = ({
     />
   );
 
-  const StatItem = ({ label, value, unit, isLoading, icon: Icon, iconColor }: { label: string, value: number | string, unit?: string, isLoading: boolean, icon: React.ElementType, iconColor: string }) => (
-    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
-      <div className="flex items-center space-x-2">
-        <Icon className={`h-4 w-4 ${iconColor}`} />
-        <span className="text-sm text-gray-700 font-medium">{label}</span>
-      </div>
-      {isLoading ? (
-        <Skeleton className="h-5 w-12" />
-      ) : (
-        <Badge variant="secondary" className="font-semibold">
-          {value}{unit}
-        </Badge>
-      )}
-    </div>
-  );
+  // 教科ごとの理解数を計算
+  const getUnderstoodBySubject = () => {
+    const subjectCounts = {};
+    if (stats?.understood_by_subject) {
+      Object.entries(stats.understood_by_subject).forEach(([subject, count]) => {
+        const legacyData = legacySubjects.find(s => s.id === subject);
+        const displayName = legacyData?.name || subject;
+        subjectCounts[displayName] = count;
+      });
+    }
+    return subjectCounts;
+  };
+
+  const understoodBySubject = getUnderstoodBySubject();
 
   return (
     <div className="w-80 bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col h-screen shadow-lg">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="relative">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
-              <GraduationCap className="h-8 w-8 text-white" />
-            </div>
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-              <Sparkles className="h-2 w-2 text-white" />
-            </div>
+      {/* Header - Made smaller and more subtle */}
+      <div className="p-4 border-b border-gray-200 bg-white">
+        <div className="flex items-center space-x-2 mb-3">
+          <div className="p-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-sm">
+            <GraduationCap className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">スーパー受験アシスタント</h1>
-            <p className="text-sm text-gray-600 mt-1">AIとの対話で効率的に学習</p>
+            <h1 className="text-lg font-semibold text-gray-900">受験アシスタント</h1>
+            <p className="text-xs text-gray-500">AI学習サポート</p>
           </div>
         </div>
 
         {/* User Profile Section */}
-        <div className="flex items-center space-x-3 p-3 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200">
-          <Avatar className="h-10 w-10 border-2 border-blue-200">
+        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-sm transition-all duration-200">
+          <Avatar className="h-8 w-8 border border-gray-200">
             <AvatarImage src={profile?.avatar_url || undefined} />
-            <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+            <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold text-sm">
               {profile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             {isLoadingProfile ? (
               <>
-                <Skeleton className="h-4 w-24 mb-1" />
-                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-3 w-20 mb-1" />
+                <Skeleton className="h-2 w-24" />
               </>
             ) : (
               <>
@@ -189,9 +176,9 @@ const Sidebar = ({
             variant="ghost"
             size="sm"
             onClick={onProfileClick}
-            className="p-2 hover:bg-blue-100 rounded-lg"
+            className="p-1.5 hover:bg-blue-100 rounded-md"
           >
-            <User className="h-4 w-4 text-gray-600" />
+            <User className="h-3 w-3 text-gray-600" />
           </Button>
         </div>
       </div>
@@ -295,13 +282,34 @@ const Sidebar = ({
             <CollapsibleSectionHeader title="学習統計" icon={TrendingUp} iconBgColor="bg-gradient-to-r from-green-500 to-emerald-600" isOpen={openCollapsibles['stats']} />
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-2 space-y-3">
-            <SidebarStatItem 
-              label="完全に理解した数" 
-              value={understoodCount} 
-              isLoading={isLoadingStats}
-              icon={CheckCircle}
-              iconColor="text-green-600"
-            />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="cursor-help">
+                    <SidebarStatItem 
+                      label="完全に理解した数" 
+                      value={understoodCount} 
+                      isLoading={isLoadingStats}
+                      icon={CheckCircle}
+                      iconColor="text-green-600"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="space-y-1">
+                    <p className="font-semibold">教科別理解数：</p>
+                    {Object.entries(understoodBySubject).length > 0 ? (
+                      Object.entries(understoodBySubject).map(([subject, count]) => (
+                        <p key={subject} className="text-sm">{subject}: {count}個</p>
+                      ))
+                    ) : (
+                      <p className="text-sm">まだ理解した内容がありません</p>
+                    )}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
             <SidebarStatItem 
               label="本日の質問数" 
               value={dailyQuestions} 

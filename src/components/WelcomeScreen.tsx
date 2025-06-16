@@ -1,13 +1,15 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   BookOpen, Calculator, FlaskConical, Atom, Languages, 
   MapPin, Monitor, Plus, GraduationCap, Sparkles, 
-  Target, TrendingUp, Clock, User
+  Target, TrendingUp, Clock, User, CheckCircle, HelpCircle
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
+import { useChatStats } from "@/hooks/useChatStats";
 
 interface WelcomeScreenProps {
   onSubjectSelect: (subject: string) => void;
@@ -26,6 +28,7 @@ const WelcomeScreen = ({
 }: WelcomeScreenProps) => {
   const { profile, isLoading: isLoadingProfile } = useProfile();
   const { settings } = useSettings();
+  const { stats } = useChatStats();
 
   // Get visible and sorted subjects from settings
   const visibleSubjects = settings.subjectConfigs
@@ -34,18 +37,18 @@ const WelcomeScreen = ({
 
   // Legacy subject data for icons and colors
   const legacySubjects = [
-    { id: 'math', name: '数学', icon: Calculator, color: 'from-blue-400 to-blue-600' },
-    { id: 'chemistry', name: '化学', icon: FlaskConical, color: 'from-purple-400 to-purple-600' },
-    { id: 'biology', name: '生物', icon: Atom, color: 'from-green-400 to-green-600' },
-    { id: 'english', name: '英語', icon: Languages, color: 'from-indigo-400 to-indigo-600' },
-    { id: 'japanese', name: '国語', icon: BookOpen, color: 'from-red-400 to-red-600' },
-    { id: 'geography', name: '地理', icon: MapPin, color: 'from-teal-400 to-teal-600' },
-    { id: 'information', name: '情報', icon: Monitor, color: 'from-gray-400 to-gray-600' },
-    { id: 'other', name: '全般', icon: Plus, color: 'from-orange-400 to-orange-600' },
-    { id: 'physics', name: '物理', icon: Atom, color: 'from-orange-400 to-orange-600' },
-    { id: 'japanese_history', name: '日本史', icon: BookOpen, color: 'from-pink-400 to-pink-600' },
-    { id: 'world_history', name: '世界史', icon: BookOpen, color: 'from-amber-400 to-amber-600' },
-    { id: 'earth_science', name: '地学', icon: Calculator, color: 'from-cyan-400 to-cyan-600' },
+    { id: 'math', name: '数学', icon: Calculator, color: 'bg-blue-100 text-blue-700 hover:bg-blue-200', gradient: 'from-blue-400 to-blue-600' },
+    { id: 'chemistry', name: '化学', icon: FlaskConical, color: 'bg-purple-100 text-purple-700 hover:bg-purple-200', gradient: 'from-purple-400 to-purple-600' },
+    { id: 'biology', name: '生物', icon: Atom, color: 'bg-green-100 text-green-700 hover:bg-green-200', gradient: 'from-green-400 to-green-600' },
+    { id: 'english', name: '英語', icon: Languages, color: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200', gradient: 'from-indigo-400 to-indigo-600' },
+    { id: 'japanese', name: '国語', icon: BookOpen, color: 'bg-red-100 text-red-700 hover:bg-red-200', gradient: 'from-red-400 to-red-600' },
+    { id: 'geography', name: '地理', icon: MapPin, color: 'bg-teal-100 text-teal-700 hover:bg-teal-200', gradient: 'from-teal-400 to-teal-600' },
+    { id: 'information', name: '情報', icon: Monitor, color: 'bg-gray-100 text-gray-700 hover:bg-gray-200', gradient: 'from-gray-400 to-gray-600' },
+    { id: 'other', name: '全般', icon: Plus, color: 'bg-orange-100 text-orange-700 hover:bg-orange-200', gradient: 'from-orange-400 to-orange-600' },
+    { id: 'physics', name: '物理', icon: Atom, color: 'bg-orange-100 text-orange-700 hover:bg-orange-200', gradient: 'from-orange-400 to-orange-600' },
+    { id: 'japanese_history', name: '日本史', icon: BookOpen, color: 'bg-pink-100 text-pink-700 hover:bg-pink-200', gradient: 'from-pink-400 to-pink-600' },
+    { id: 'world_history', name: '世界史', icon: BookOpen, color: 'bg-amber-100 text-amber-700 hover:bg-amber-200', gradient: 'from-amber-400 to-amber-600' },
+    { id: 'earth_science', name: '地学', icon: Calculator, color: 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200', gradient: 'from-cyan-400 to-cyan-600' },
   ];
 
   const displaySubjects = visibleSubjects.map(config => {
@@ -54,7 +57,7 @@ const WelcomeScreen = ({
       id: config.id,
       name: config.name && config.name.length > 0 ? config.name : (legacyData?.name || config.id),
       icon: legacyData?.icon || Plus,
-      gradient: legacyData?.color || 'from-gray-400 to-gray-600'
+      color: legacyData?.color || 'bg-gray-100 text-gray-700 hover:bg-gray-200'
     };
   });
 
@@ -65,6 +68,21 @@ const WelcomeScreen = ({
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
+
+  // 教科ごとの理解数を計算
+  const getUnderstoodBySubject = ()=> {
+    const subjectCounts = {};
+    if (stats?.understood_by_subject) {
+      Object.entries(stats.understood_by_subject).forEach(([subject, count]) => {
+        const legacyData = legacySubjects.find(s => s.id === subject);
+        const displayName = legacyData?.name || subject;
+        subjectCounts[displayName] = count;
+      });
+    }
+    return subjectCounts;
+  };
+
+  const understoodBySubject = getUnderstoodBySubject();
 
   return (
     <div className="flex-1 bg-gradient-to-br from-slate-50 to-blue-50 overflow-auto">
@@ -111,43 +129,73 @@ const WelcomeScreen = ({
           </CardContent>
         </Card>
 
-        {/* Quick Stats */}
+        {/* Stats - Updated with 4 items */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-green-50 border-green-200">
-            <CardContent className="p-4 text-center">
-              <Target className="h-8 w-8 text-green-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-green-800">{understoodCount}</p>
-              <p className="text-sm text-green-600">完全に理解した数</p>
-            </CardContent>
-          </Card>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Card className="bg-green-50 border-green-200 cursor-help">
+                  <CardContent className="p-4 text-center">
+                    <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-green-800">{stats?.today_understood || 0}</p>
+                    <p className="text-sm text-green-600">本日理解した数</p>
+                  </CardContent>
+                </Card>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="space-y-1">
+                  <p className="font-semibold">今日理解した内容：</p>
+                  {Object.entries(understoodBySubject).length > 0 ? (
+                    Object.entries(understoodBySubject).map(([subject, count]) => (
+                      <p key={subject} className="text-sm">{subject}: {count}個</p>
+                    ))
+                  ) : (
+                    <p className="text-sm">まだ理解した内容がありません</p>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           
-          <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="p-4 text-center">
-              <TrendingUp className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-blue-800">{dailyQuestions}</p>
-              <p className="text-sm text-blue-600">本日の質問数</p>
-            </CardContent>
-          </Card>
-
-          {profile?.exam_settings?.kyotsu?.name && profile?.exam_settings?.kyotsu?.date && (
-            <Card className="bg-red-50 border-red-200">
-              <CardContent className="p-4 text-center">
-                <Clock className="h-8 w-8 text-red-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-red-800">
-                  {calculateDaysLeft(profile.exam_settings.kyotsu.date)}日
-                </p>
-                <p className="text-sm text-red-600">{profile.exam_settings.kyotsu.name}まで</p>
-              </CardContent>
-            </Card>
-          )}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Card className="bg-blue-50 border-blue-200 cursor-help">
+                  <CardContent className="p-4 text-center">
+                    <Target className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-blue-800">{understoodCount}</p>
+                    <p className="text-sm text-blue-600">累計理解した数</p>
+                  </CardContent>
+                </Card>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="space-y-1">
+                  <p className="font-semibold">教科別累計理解数：</p>
+                  {Object.entries(understoodBySubject).length > 0 ? (
+                    Object.entries(understoodBySubject).map(([subject, count]) => (
+                      <p key={subject} className="text-sm">{subject}: {count}個</p>
+                    ))
+                  ) : (
+                    <p className="text-sm">まだ理解した内容がありません</p>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <Card className="bg-purple-50 border-purple-200">
             <CardContent className="p-4 text-center">
-              <User className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-              <p className="text-lg font-bold text-purple-800">
-                {!isLoadingProfile && profile?.display_name ? profile.display_name : 'ユーザー'}
-              </p>
-              <p className="text-sm text-purple-600">学習者</p>
+              <TrendingUp className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+              <p className="text-2xl font-bold text-purple-800">{dailyQuestions}</p>
+              <p className="text-sm text-purple-600">本日の質問数</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-orange-50 border-orange-200">
+            <CardContent className="p-4 text-center">
+              <User className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+              <p className="text-2xl font-bold text-orange-800">{stats?.total_questions || 0}</p>
+              <p className="text-sm text-orange-600">累計質問数</p>
             </CardContent>
           </Card>
         </div>
@@ -168,7 +216,7 @@ const WelcomeScreen = ({
                   <Button
                     key={subject.id}
                     variant="outline"
-                    className={`h-20 flex flex-col items-center justify-center space-y-2 bg-gradient-to-r ${subject.gradient} text-white border-0 hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl`}
+                    className={`h-20 flex flex-col items-center justify-center space-y-2 ${subject.color} border-0 hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl`}
                     onClick={() => onSubjectSelect(subject.id)}
                   >
                     <IconComponent className="h-8 w-8" />
