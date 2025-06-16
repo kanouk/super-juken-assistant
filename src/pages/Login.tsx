@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -158,7 +157,7 @@ const Login = () => {
               <BookOpen className="h-8 w-8 text-green-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              スーパーAI個別指導
+              スーパー受験アシスタント
             </h1>
             <p className="text-gray-600 text-sm">
               AIとの対話で効率的に学習しよう
