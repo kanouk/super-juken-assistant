@@ -10,6 +10,8 @@ import {
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
 import { useChatStats } from "@/hooks/useChatStats";
+import { useState, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 
 interface WelcomeScreenProps {
   onSubjectSelect: (subject: string) => void;
@@ -28,7 +30,17 @@ const WelcomeScreen = ({
 }: WelcomeScreenProps) => {
   const { profile, isLoading: isLoadingProfile } = useProfile();
   const { settings } = useSettings();
-  const chatStats = useChatStats(profile?.id);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+  
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id);
+    };
+    getUser();
+  }, []);
+  
+  const chatStats = useChatStats(userId);
 
   // Get visible and sorted subjects from settings
   const visibleSubjects = settings.subjectConfigs
@@ -133,7 +145,7 @@ const WelcomeScreen = ({
                   <p className="font-semibold">今日理解した内容：</p>
                   {Object.entries(understoodBySubject).length > 0 ? (
                     Object.entries(understoodBySubject).map(([subject, count]) => (
-                      <p key={subject} className="text-sm">{subject}: {count}個</p>
+                      <p key={subject} className="text-sm">{subject}: {String(count)}個</p>
                     ))
                   ) : (
                     <p className="text-sm">まだ理解した内容がありません</p>
@@ -159,7 +171,7 @@ const WelcomeScreen = ({
                   <p className="font-semibold">教科別累計理解数：</p>
                   {Object.entries(understoodBySubject).length > 0 ? (
                     Object.entries(understoodBySubject).map(([subject, count]) => (
-                      <p key={subject} className="text-sm">{subject}: {count}個</p>
+                      <p key={subject} className="text-sm">{subject}: {String(count)}個</p>
                     ))
                   ) : (
                     <p className="text-sm">まだ理解した内容がありません</p>

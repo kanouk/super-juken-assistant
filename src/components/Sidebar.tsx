@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSettings } from "@/hooks/useSettings";
 import { useChatStats } from "@/hooks/useChatStats";
+import { supabase } from "@/integrations/supabase/client";
 import SidebarStatItem from "./sidebar/SidebarStatItem";
 import SidebarSectionHeader from "./sidebar/SidebarSectionHeader";
 import SidebarSubjectButton from "./sidebar/SidebarSubjectButton";
@@ -48,7 +49,17 @@ const Sidebar = ({
 }: SidebarProps) => {
   const { profile, isLoading: isLoadingProfile } = useProfile();
   const { settings } = useSettings();
-  const chatStats = useChatStats(profile?.id);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+  
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id);
+    };
+    getUser();
+  }, []);
+  
+  const chatStats = useChatStats(userId);
   const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({
     subjects: true, // Default to open
     countdown: true,
@@ -129,15 +140,15 @@ const Sidebar = ({
 
   return (
     <div className="w-80 bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col h-screen shadow-lg">
-      {/* Header - Made smaller and more subtle */}
-      <div className="p-3 border-b border-gray-200 bg-white">
-        <div className="flex items-center space-x-2 mb-2">
-          <div className="p-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-md shadow-sm">
-            <GraduationCap className="h-4 w-4 text-white" />
+      {/* Header - Smaller and more subtle */}
+      <div className="p-2 border-b border-gray-200 bg-white">
+        <div className="flex items-center space-x-2 mb-1">
+          <div className="p-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-sm shadow-sm">
+            <GraduationCap className="h-3 w-3 text-white" />
           </div>
           <div>
-            <h1 className="text-sm font-semibold text-gray-900">受験アシスタント</h1>
-            <p className="text-xs text-gray-500">AI学習サポート</p>
+            <h1 className="text-xs font-medium text-gray-900">受験アシスタント</h1>
+            <p className="text-xs text-gray-400">AI学習サポート</p>
           </div>
         </div>
 
