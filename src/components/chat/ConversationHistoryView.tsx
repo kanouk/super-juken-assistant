@@ -1,4 +1,3 @@
-
 import React from "react";
 import ChatHeader from "./ChatHeader";
 import ConversationList from "./ConversationList";
@@ -31,13 +30,11 @@ const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = ({
   return (
     <div className="flex flex-col h-full min-h-0 bg-white">
       <ChatHeader
+        subject={subject}
         subjectName={`${subjectName} - 会話履歴`}
-        currentModel={currentModel}
-        currentSubjectId={subject}
-        onBackToList={onBackToList}
-        showBackButton={true}
-        isMobile={isMobile}
-        onBackToWelcome={onBackToWelcome}
+        onBack={onBackToList}
+        onNewChat={onNewChat}
+        messages={[]}
       />
       {/* 履歴リスト本体を、flex-1 min-h-0で高さを受け渡す */}
       <div className="flex-1 min-h-0">

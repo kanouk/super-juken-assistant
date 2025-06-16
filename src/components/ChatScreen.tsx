@@ -1,8 +1,9 @@
+
 import React from 'react';
 import ChatMainView from "./chat/ChatMainView";
 import ConversationHistoryView from "./chat/ConversationHistoryView";
 import { useChatScreen, UseChatScreenProps } from "./chat/useChatScreen";
-import { ImageData } from "./chat/types";
+import { ImageData, Message } from "./chat/types";
 
 interface ChatScreenProps extends UseChatScreenProps {
   onBackToWelcome?: () => void;
@@ -37,6 +38,18 @@ const ChatScreen = (props: ChatScreenProps) => {
       handleQuickAction,
     }
   } = useChatScreen(props);
+
+  // Convert Message[] to MessageType[] format for compatibility
+  const convertedMessages = messages.map((msg: Message) => ({
+    id: msg.id,
+    content: msg.content,
+    isUser: msg.role === 'user',
+    timestamp: new Date(msg.created_at),
+    images: msg.image_url ? [{ url: msg.image_url }] : undefined,
+    isUnderstood: msg.is_understood,
+    cost: msg.cost,
+    model: msg.model,
+  }));
 
   // Convert selectedImages to ImageData format if needed
   const imageData: ImageData[] = Array.isArray(selectedImages) 
@@ -80,7 +93,7 @@ const ChatScreen = (props: ChatScreenProps) => {
       subject={subject}
       subjectName={subjectName}
       currentModel={currentModel}
-      messages={messages}
+      messages={convertedMessages}
       isLoading={isLoading}
       selectedImages={imageData}
       setSelectedImages={handleSetImages}

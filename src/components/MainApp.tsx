@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useProfile } from '@/hooks/useProfile';
 import { useSettings } from '@/hooks/useSettings';
@@ -96,7 +95,6 @@ const MainApp = () => {
           <ChatScreen
             subject={chatState.subject}
             subjectName={chatState.subject}
-            userId={userId}
             conversationId={chatState.conversationId}
             onBackToWelcome={handleBackToWelcome}
             isMobile={isMobile}

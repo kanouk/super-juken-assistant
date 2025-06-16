@@ -46,9 +46,12 @@ export const useChatHistory = (subject: string) => {
 
   const createConversation = async (title: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('conversations')
-        .insert([{ title, subject }])
+        .insert([{ title, subject, user_id: user.id }])
         .select()
         .single();
 
