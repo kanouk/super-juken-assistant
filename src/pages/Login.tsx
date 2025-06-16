@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { BookOpen, GraduationCap, ArrowLeft } from "lucide-react";
+import { BookOpen, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -141,17 +141,11 @@ const Login = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardContent className="p-6">
-          {/* Back to Home */}
-          <Button
-            variant="ghost"
+          {/* Logo/Service Name - Clickable to return to home */}
+          <div 
+            className="text-center mb-6 cursor-pointer" 
             onClick={() => navigate('/')}
-            className="mb-4 text-gray-600 hover:text-gray-900"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            ホームに戻る
-          </Button>
-
-          <div className="text-center mb-6">
             <div className="flex items-center justify-center mb-4">
               <GraduationCap className="h-8 w-8 text-blue-600 mr-2" />
               <BookOpen className="h-8 w-8 text-green-600" />
