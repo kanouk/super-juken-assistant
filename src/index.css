@@ -126,13 +126,36 @@
 
   /* ブロック数式：横スクロール対応 */
   .katex-display {
-    margin: 1.2em 0;
+    margin: 1.2em 0 !important;
     overflow-x: auto;
-    overflow-y: visible;
+    overflow-y: hidden;
     padding: 0.5em 0;
     text-align: center;
   }
 
+  /* KaTeXエラー時のスタイル */
+  .katex-error {
+    color: #ef4444;
+    background-color: #fee2e2;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+
+  /* タスクリストのスタイル調整 */
+  ul:has(input[type="checkbox"]) {
+    list-style: none !important;
+    padding-left: 0 !important;
+  }
+
+  ul:has(input[type="checkbox"]) li {
+    display: flex;
+    align-items: flex-start;
+    margin-left: 0;
+  }
+
+  /* スクロールバーのスタイル */
   .katex-display::-webkit-scrollbar {
     height: 6px;
   }
@@ -151,20 +174,17 @@
     background: #9ca3af;
   }
 
+  /* プリント時の調整 */
+  @media print {
+    .katex-display {
+      overflow: visible !important;
+    }
+  }
+
   /* インライン数式：自然な表示 */
   span.katex {
     display: inline-block;
     vertical-align: middle;
-  }
-
-  /* エラー時の数式表示 */
-  .katex-error {
-    padding: 2px 4px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9em;
-    color: #ef4444;
-    background-color: #fef2f2;
   }
 }
 
