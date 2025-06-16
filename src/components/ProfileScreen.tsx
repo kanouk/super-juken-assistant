@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +20,7 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
   const { profile: loadedProfile, isLoading: isProfileLoading, refetchProfile, uploadAvatar } = useProfile();
   
   const [profileData, setProfileData] = useState<UserProfile>({
+    id: '',
     display_name: '',
     email: '',
     avatar_url: '',

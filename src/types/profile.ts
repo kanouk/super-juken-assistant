@@ -1,4 +1,3 @@
-
 export interface ExamSettings {
   kyotsu: {
     name: string;
@@ -11,6 +10,7 @@ export interface ExamSettings {
 }
 
 export interface UserProfile {
+  id: string;
   display_name: string | null;
   email: string | null;
   avatar_url: string | null;

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile, ExamSettings, isValidExamSettings } from '@/types/profile';
@@ -59,6 +58,7 @@ export const useProfile = () => {
         }
 
         setProfile({
+          id: user.id, // Add the user ID to the profile
           display_name: data.display_name,
           email: data.email || user.email,
           avatar_url: data.avatar_url,
