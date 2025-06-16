@@ -1,4 +1,3 @@
-
 export interface Message {
   id: string;
   db_id?: string;
@@ -12,6 +11,7 @@ export interface Message {
   is_understood?: boolean;
   isUnderstood?: boolean;
   timestamp: string;
+  conversation_id?: string;
 }
 
 export interface Conversation {
