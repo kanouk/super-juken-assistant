@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,23 +21,23 @@ const Landing = () => {
   const features = [
     {
       icon: Brain,
-      title: "AI個別指導",
-      description: "最新のAI技術があなた専用の個別指導を提供。理解度に合わせて最適化された学習体験。"
+      title: "AI学習サポート",
+      description: "最新のAI技術があなたの学習をサポート。理解度に合わせて最適化された学習体験を提供します。"
     },
     {
       icon: Target,
       title: "目標設定＆管理",
-      description: "共通テストから難関大学まで、あなたの目標に向けた戦略的学習プランを作成。"
+      description: "共通テストから難関大学まで、あなたの目標に向けた戦略的学習プランを作成します。"
     },
     {
       icon: TrendingUp,
       title: "学習進捗の可視化",
-      description: "日々の学習成果を数値化し、モチベーション維持と効率的な学習をサポート。"
+      description: "日々の学習成果を数値化し、モチベーション維持と効率的な学習をサポートします。"
     },
     {
       icon: BookOpen,
       title: "全教科対応",
-      description: "数学、英語、国語、理科、社会まで、受験に必要な全教科を幅広くカバー。"
+      description: "数学、英語、国語、理科、社会まで、受験に必要な全教科を幅広くカバーしています。"
     }
   ];
 
@@ -80,7 +79,7 @@ const Landing = () => {
               <div className="p-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
                 <GraduationCap className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-gray-900">スーパーAI個別指導</h1>
+              <h1 className="text-xl font-bold text-gray-900">スーパー受験アシスタント</h1>
             </div>
             <div className="flex items-center space-x-4">
               <Button 
@@ -109,16 +108,16 @@ const Landing = () => {
             最新AI技術搭載
           </Badge>
           <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            AIが導く、
+            AIが支える、
             <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              あなただけの
+              あなたの
             </span>
             <br />
-            合格への道筋
+            受験成功への道
           </h2>
           <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-            一人ひとりの学習スタイルと理解度に合わせた、完全個別指導をAIが実現。
-            効率的で確実な受験対策で、あなたの夢を現実にします。
+            一人ひとりの学習スタイルと理解度に合わせた、AIアシスタントがあなたの受験をサポート。
+            効率的で確実な学習で、あなたの夢を現実にします。
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-16">
             <Button 
@@ -153,10 +152,10 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h3 className="text-4xl font-bold text-gray-900 mb-4">
-              なぜスーパーAI個別指導が選ばれるのか
+              なぜスーパー受験アシスタントが選ばれるのか
             </h3>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              従来の予備校や家庭教師にはない、AI技術による革新的な学習体験をお届けします
+              従来の予備校や家庭教師にはない、AI技術による革新的な学習サポートをお届けします
             </p>
           </div>
           
@@ -188,7 +187,7 @@ const Landing = () => {
               利用者の声
             </h3>
             <p className="text-xl text-gray-600">
-              実際にスーパーAI個別指導で成果を上げた生徒たちの体験談
+              実際にスーパー受験アシスタントで成果を上げた生徒たちの体験談
             </p>
           </div>
           
@@ -227,7 +226,7 @@ const Landing = () => {
             あなたの合格への第一歩を、今すぐ踏み出そう
           </h3>
           <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-            無料トライアルで、AIによる個別指導の効果を実感してください。
+            無料トライアルで、AIアシスタントによる学習サポートの効果を実感してください。
             クレジットカードは不要です。
           </p>
           <Button 
@@ -249,11 +248,11 @@ const Landing = () => {
               <div className="p-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
                 <GraduationCap className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold">スーパーAI個別指導</span>
+              <span className="text-xl font-bold">スーパー受験アシスタント</span>
             </div>
             <div className="text-gray-400 text-center md:text-right">
-              <p>&copy; 2024 スーパーAI個別指導. All rights reserved.</p>
-              <p className="text-sm mt-1">AIとの対話で効率的に学習しよう</p>
+              <p>&copy; 2024 スーパー受験アシスタント. All rights reserved.</p>
+              <p className="text-sm mt-1">AIアシスタントと一緒に効率的に学習しよう</p>
             </div>
           </div>
         </div>

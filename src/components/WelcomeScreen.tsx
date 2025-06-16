@@ -97,12 +97,12 @@ const WelcomeScreen = ({
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-blue-800">
               <Sparkles className="h-6 w-6" />
-              <span>スーパーAI個別指導へようこそ！</span>
+              <span>スーパー受験アシスタントへようこそ！</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-blue-700 leading-relaxed">
-              AIとの対話を通じて効率的に学習を進めましょう。
+              AIアシスタントとの対話を通じて効率的に学習を進めましょう。
               下の教科から選択してチャットを開始できます。
               {!isLoadingProfile && profile?.display_name && (
                 <span className="font-medium"> {profile.display_name}さん、一緒に頑張りましょう！</span>
