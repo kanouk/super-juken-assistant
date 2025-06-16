@@ -97,7 +97,7 @@ const WelcomeScreen = ({
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-blue-800">
               <Sparkles className="h-6 w-6" />
-              <span>スーパー受験アシスタントへようこそ！</span>
+              <span>スーパーAI個別指導へようこそ！</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
