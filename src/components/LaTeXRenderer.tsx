@@ -22,7 +22,9 @@ const LaTeXRenderer = ({
 
   // Custom component for processing inline LaTeX within text
   const ProcessedText = ({ children }: { children: string }) => {
-    const parts = children.split(/(\\\([\s\S]*?\\\)|\$[^$\n]+?\$)/);
+    // 日本語キーボードの¥記号も\として扱う
+    const normalizedText = children.replace(/¥/g, '\\');
+    const parts = normalizedText.split(/(\\[[(][\s\S]*?\\[)\]]|\$[^$\n]+?\$)/);
     
     return (
       <>
@@ -66,9 +68,12 @@ const LaTeXRenderer = ({
   };
 
   const processedContent = useMemo(() => {
+    // 日本語キーボードの¥記号も\として扱う
+    const normalizedContent = content.replace(/¥/g, '\\');
+    
     // First, handle block math (display math) separately
-    const blockMathRegex = /(\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$)/g;
-    const parts = content.split(blockMathRegex);
+    const blockMathRegex = /(\\[[][\s\S]*?\\[\]]|\$\$[\s\S]*?\$\$)/g;
+    const parts = normalizedContent.split(blockMathRegex);
     
     return parts.map((part, index) => {
       // Handle block math
