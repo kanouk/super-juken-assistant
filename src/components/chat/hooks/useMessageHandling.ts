@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useCompletion } from '@/hooks/useCompletion';
 import { useToast } from "@/hooks/use-toast";
@@ -69,19 +70,21 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
 
       setMessages(prev => [...prev, userMessage]);
 
+      // Prepare conversation history for the Edge Function
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        image_url: msg.image_url
+      }));
+
       const completion = await getCompletion({
-        api: '/api/ask-ai',
+        api: '/functions/v1/ask-ai',
         body: {
-          messages: [...messages, userMessage].map(msg => ({
-            role: msg.role,
-            content: msg.content,
-            image_url: msg.image_url
-          })),
+          message: content,
           subject,
-          subjectName,
+          imageUrl: images?.[0]?.url,
+          conversationHistory,
           model: currentModel,
-          profile,
-          conversationId,
         },
       });
 

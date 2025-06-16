@@ -30,6 +30,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   // Get subject configuration from legacySubjects
   const subjectConfig = legacySubjects.find(s => s.id === subject) || legacySubjects.find(s => s.id === 'other');
 
+  // Get conversation ID from messages, but only if it's a valid UUID
+  const conversationId = messages.length > 0 && messages[0]?.conversation_id && 
+    messages[0].conversation_id !== '' && 
+    messages[0].conversation_id.length > 10 ? messages[0].conversation_id : null;
+
   return (
     <div className={`${subjectConfig?.color || 'bg-gray-100'} border-b border-gray-200 p-4 flex items-center justify-between`}>
       <div className="flex items-center space-x-3">
@@ -46,10 +51,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             <h1 className="text-lg font-semibold text-gray-900">
               {subjectConfig?.name || subjectName}
             </h1>
-            {/* Show tags for the current conversation if available */}
-            {messages.length > 0 && (
+            {/* Show tags for the current conversation if available and valid */}
+            {conversationId && (
               <MessageTags 
-                conversationId={messages[0]?.conversation_id || ''} 
+                conversationId={conversationId} 
                 className="mt-1" 
               />
             )}
