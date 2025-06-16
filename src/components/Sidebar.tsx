@@ -167,7 +167,7 @@ const Sidebar = ({
               <Bot className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-sm font-semibold text-gray-900">受験アシスタント</h1>
+              <h1 className="text-sm font-semibold text-gray-900">スーパー受験アシスタント</h1>
               <p className="text-xs text-gray-500">AI学習サポート</p>
             </div>
           </div>

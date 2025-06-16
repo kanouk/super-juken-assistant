@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, History, Menu, Cpu } from 'lucide-react';
+import { ArrowLeft, Plus, History, Menu, Cpu, Calculator, FlaskConical, Atom, Languages, BookOpen, MapPin, Monitor, Globe } from 'lucide-react';
 import { getModelDisplayName } from './getModelDisplayName';
 
 // 教科の日本語名マッピング
@@ -18,6 +17,22 @@ const SUBJECT_JAPANESE_NAMES: Record<string, string> = {
   'japanese_history': '日本史',
   'world_history': '世界史',
   'earth_science': '地学',
+};
+
+// 教科アイコンマッピング
+const SUBJECT_ICONS: Record<string, React.ElementType> = {
+  'math': Calculator,
+  'chemistry': FlaskConical,
+  'biology': Atom,
+  'english': Languages,
+  'japanese': BookOpen,
+  'geography': MapPin,
+  'information': Monitor,
+  'other': Plus,
+  'physics': Atom,
+  'japanese_history': BookOpen,
+  'world_history': BookOpen,
+  'earth_science': Globe,
 };
 
 // 科目ごと濃い色（ボーダー/pill用）と淡い色（背景用）の2種
@@ -115,6 +130,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 }) => {
   // 日本語名に変換
   const displaySubjectName = SUBJECT_JAPANESE_NAMES[currentSubjectId] || SUBJECT_JAPANESE_NAMES[subjectName] || subjectName;
+  const SubjectIcon = SUBJECT_ICONS[currentSubjectId] || SUBJECT_ICONS[subjectName] || Calculator;
   
   const subjectColors = subjectColorMap[currentSubjectId] || subjectColorMap['math']; // fallback
   const colorGradient = subjectColors.grad;
@@ -125,12 +141,12 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     <div className={`border-b border-gray-200 shadow-sm flex-shrink-0 ${colorBg}`}>
       <div className="flex items-center justify-between px-4 py-3 gap-2 min-h-[72px] max-w-[100vw]">
         <div className="flex items-center gap-4 min-w-0 flex-1">
-          {isMobile && onToggleSidebar && (
+          {onToggleSidebar && (
             <Button
               variant="ghost"
               size="sm"
               onClick={onToggleSidebar}
-              className="lg:hidden p-2 hover:bg-gray-100 transition-colors"
+              className="p-2 hover:bg-gray-100 transition-colors"
             >
               <Menu className="h-4 w-4" />
             </Button>
@@ -148,14 +164,16 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           )}
           {/* 教科名 & サブタイトル */}
           <div className="min-w-0 flex-1">
-            <h1
-              className={`
-                text-2xl font-extrabold bg-gradient-to-r ${colorGradient} bg-clip-text text-transparent leading-tight tracking-tight
-                mb-1
-              `}
-            >
-              {displaySubjectName}
-            </h1>
+            <div className="flex items-center gap-2 mb-1">
+              <SubjectIcon className="h-6 w-6 text-gray-600" />
+              <h1
+                className={`
+                  text-2xl font-extrabold bg-gradient-to-r ${colorGradient} bg-clip-text text-transparent leading-tight tracking-tight
+                `}
+              >
+                {displaySubjectName}
+              </h1>
+            </div>
             <p className="text-xs sm:text-sm text-slate-400 font-semibold tracking-wide uppercase">
               AI学習アシスタント
             </p>
