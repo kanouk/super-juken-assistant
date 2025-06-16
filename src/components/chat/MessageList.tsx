@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { MessageType, Message } from './types';
+import { Message } from './types';
 import MessageItem from './MessageItem';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bot } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface MessageListProps {
-  messages: MessageType[];
+  messages: Message[];
   isLoading: boolean;
   onUnderstood: () => void;
   onQuickAction: (prompt: string) => void;
@@ -24,38 +24,15 @@ const MessageList: React.FC<MessageListProps> = ({
   conversationUnderstood,
 }) => {
 
-  // Convert MessageType to Message with proper timestamp handling
-  const convertToMessage = (msg: MessageType): Message => {
-    const base: Message = {
-      id: msg.id,
-      content: msg.content,
-      role: msg.isUser ? 'user' : 'assistant',
-      created_at: msg.timestamp.toISOString(),
-      timestamp: msg.timestamp.toISOString(),
-      subject: 'other', // Default subject for legacy messages
-      image_url: msg.images?.[0]?.url,
-      is_understood: msg.isUnderstood
-    };
-    // Add model and cost for AI messages
-    if (!msg.isUser) {
-      return {
-        ...base,
-        model: msg.model ?? undefined,
-        cost: msg.cost ?? undefined
-      };
-    }
-    return base;
-  };
-
   return (
     <ScrollArea className="h-full min-h-0 flex-1">
       <div className="flex flex-col min-h-full h-full justify-end">
         {messages.map((message, index) => {
-          const isLastAIMessage = !message.isUser && index === messages.length - 1;
+          const isLastAIMessage = message.role === 'assistant' && index === messages.length - 1;
           return (
             <MessageItem
               key={message.id}
-              message={convertToMessage(message)}
+              message={message}
               onCopyToClipboard={() => {}}
               onTypewriterComplete={() => {}}
               showQuickActions={isLastAIMessage}

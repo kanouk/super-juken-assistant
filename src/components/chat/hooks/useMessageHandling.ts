@@ -1,8 +1,8 @@
 
 import { useState, useCallback } from 'react';
-import { useCompletion } from '@/hooks/useCompletion';
 import { useToast } from "@/hooks/use-toast";
-import { ImageData, Message } from '../types';
+import { supabase } from '@/integrations/supabase/client';
+import { Message } from '../types';
 
 interface UseMessageHandlingProps {
   subject: string;
@@ -33,10 +33,42 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { getCompletion } = useCompletion();
   const { toast } = useToast();
 
-  const handleSendMessage = useCallback(async (content: string, images?: ImageData[]) => {
+  // Optimized auto-tagging function with proper error handling
+  const performAutoTagging = useCallback(async (conversationId: string, questionContent: string) => {
+    try {
+      console.log('Starting auto-tagging for conversation:', conversationId);
+      
+      const { data, error } = await supabase.functions.invoke('auto-tag-question', {
+        body: {
+          conversationId,
+          questionContent,
+          subject
+        }
+      });
+
+      if (error) {
+        console.error('Auto-tagging error:', error);
+        return false;
+      }
+
+      if (data?.success && data.tagsCount > 0) {
+        console.log(`Auto-tagging successful: ${data.tagsCount} tags applied`);
+        toast({
+          title: "自動タグ付け完了",
+          description: `${data.tagsCount}個のタグが自動的に付与されました。`,
+        });
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Auto-tagging failed:', error);
+      return false;
+    }
+  }, [subject, toast]);
+
+  const handleSendMessage = useCallback(async (content: string, images?: any[]) => {
     if (!profile?.id) {
       toast({
         title: "エラー",
@@ -51,12 +83,14 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
     try {
       let conversationId = selectedConversationId;
       
+      // Create conversation if needed
       if (!conversationId) {
         const conversation = await createConversation(content.substring(0, 50), subject);
         conversationId = conversation.id;
         setSelectedConversationId(conversationId);
       }
 
+      // Create user message
       const userMessage: Message = {
         id: Date.now().toString(),
         content,
@@ -70,39 +104,82 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
 
       setMessages(prev => [...prev, userMessage]);
 
-      // Prepare conversation history for the Edge Function
+      // Save user message to database
+      const { error: userMessageError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          content: content,
+          role: 'user',
+          created_at: new Date().toISOString(),
+          image_url: images?.[0]?.url
+        });
+
+      if (userMessageError) {
+        console.error('Failed to save user message:', userMessageError);
+      }
+
+      // Prepare conversation history
       const conversationHistory = messages.map(msg => ({
         role: msg.role,
         content: msg.content,
         image_url: msg.image_url
       }));
 
-      const completion = await getCompletion({
-        api: '/functions/v1/ask-ai',
+      // Call AI using unified Edge Function approach
+      const { data, error } = await supabase.functions.invoke('ask-ai', {
         body: {
           message: content,
           subject,
           imageUrl: images?.[0]?.url,
           conversationHistory,
           model: currentModel,
-        },
+          userId: profile.id
+        }
       });
 
-      if (completion.success && completion.data) {
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content: completion.data.content,
+      if (error) {
+        throw error;
+      }
+
+      // Create AI message
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: data.response,
+        role: 'assistant',
+        created_at: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+        subject,
+        conversation_id: conversationId,
+        model: data.model,
+        cost: data.cost,
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+
+      // Save AI message to database
+      const { error: aiMessageError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          content: data.response,
           role: 'assistant',
           created_at: new Date().toISOString(),
-          timestamp: new Date().toISOString(),
-          subject,
-          conversation_id: conversationId,
-          model: completion.data.model,
-          cost: completion.data.cost,
-        };
+          cost: data.cost || 0,
+          model: data.model
+        });
 
-        setMessages(prev => [...prev, aiMessage]);
+      if (aiMessageError) {
+        console.error('Failed to save AI message:', aiMessageError);
       }
+
+      // Perform auto-tagging in background after AI response is complete
+      setTimeout(() => {
+        performAutoTagging(conversationId!, content).catch(error => {
+          console.error('Background auto-tagging failed:', error);
+        });
+      }, 1000); // Delay to avoid race conditions
+
     } catch (error) {
       console.error('Send message error:', error);
       toast({
@@ -113,7 +190,7 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, profile, subject, subjectName, currentModel, selectedConversationId, setSelectedConversationId, createConversation, getCompletion, toast]);
+  }, [messages, profile, subject, currentModel, selectedConversationId, setSelectedConversationId, createConversation, toast, performAutoTagging]);
 
   const handleUnderstood = useCallback(async () => {
     if (!selectedConversationId) return;

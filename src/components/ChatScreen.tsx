@@ -44,30 +44,13 @@ const ChatScreen = (props: ChatScreenProps) => {
   const subjectConfig = legacySubjects.find(s => s.id === subject) || legacySubjects.find(s => s.id === 'other');
   const displaySubjectName = subjectConfig?.name || subjectName;
 
-  // Convert Message[] to MessageType[] format for compatibility
-  const convertedMessages = messages.map((msg: Message) => ({
-    id: msg.id,
-    content: msg.content,
-    isUser: msg.role === 'user',
-    timestamp: new Date(msg.created_at),
-    images: msg.image_url ? [{ url: msg.image_url }] : undefined,
-    isUnderstood: msg.is_understood,
-    cost: msg.cost,
-    model: msg.model,
-  }));
-
   // Convert selectedImages to ImageData format if needed
   const imageData: ImageData[] = Array.isArray(selectedImages) 
     ? selectedImages.map(img => typeof img === 'string' ? { url: img } : img)
     : [];
 
   const handleSetImages = (imgs: ImageData[]) => {
-    // Handle image setting - for now we'll keep it simple
     console.log('Setting images:', imgs);
-  };
-
-  const handleUnderstoodWrapper = () => {
-    handleUnderstood();
   };
 
   // Fix the quick action handler to match the expected signature
@@ -98,12 +81,12 @@ const ChatScreen = (props: ChatScreenProps) => {
       subject={subject}
       subjectName={displaySubjectName}
       currentModel={currentModel}
-      messages={convertedMessages}
+      messages={messages}
       isLoading={isLoading}
       selectedImages={imageData}
       setSelectedImages={handleSetImages}
       onSendMessage={handleSendMessage}
-      onUnderstood={handleUnderstoodWrapper}
+      onUnderstood={handleUnderstood}
       onQuickAction={handleQuickActionWrapper}
       showConfetti={showConfetti}
       onNewChat={handleNewChat}

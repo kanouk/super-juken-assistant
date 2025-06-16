@@ -1,3 +1,4 @@
+
 export interface Message {
   id: string;
   db_id?: string;
@@ -9,7 +10,6 @@ export interface Message {
   created_at: string;
   subject: string;
   is_understood?: boolean;
-  isUnderstood?: boolean;
   timestamp: string;
   conversation_id?: string;
 }
@@ -21,18 +21,6 @@ export interface Conversation {
   subject: string;
   user_id: string;
 }
-
-// Legacy type aliases for backward compatibility
-export type MessageType = {
-  id: string;
-  content: string;
-  isUser: boolean;
-  timestamp: Date;
-  images?: ImageData[];
-  isUnderstood?: boolean;
-  cost?: number;
-  model?: string;
-};
 
 export interface ImageData {
   url: string;
