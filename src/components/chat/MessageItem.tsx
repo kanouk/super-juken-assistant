@@ -3,13 +3,12 @@ import React from 'react';
 import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import LaTeXRenderer from '../LaTeXRenderer';
+import MarkdownRenderer from '../MarkdownRenderer';
 import QuickActions from './QuickActions';
 import { useProfile } from '@/hooks/useProfile';
 import MessageItemFooter from './MessageItemFooter';
-import { Button } from "@/components/ui/button";
-import { Copy, Clock, Bot, User } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Bot, User } from 'lucide-react';
+import '../MarkdownRenderer.css';
 
 interface MessageItemProps {
   message: Message;
@@ -37,26 +36,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
   currentModel,
 }) => {
   const { profile } = useProfile();
-  const { toast } = useToast();
 
   React.useEffect(() => {
     if (message.role === 'assistant' && message.db_id) {
       onTypewriterComplete(message.db_id);
     }
   }, [message.role, message.db_id, onTypewriterComplete]);
-
-  // クリップボードへコピー
-  const handleCopy = () => {
-    if (navigator?.clipboard) {
-      navigator.clipboard.writeText(message.content);
-      toast({
-        title: "コピーしました",
-        description: "回答がクリップボードにコピーされました",
-        duration: 1500,
-      });
-    }
-    if (onCopyToClipboard) onCopyToClipboard(message.content);
-  };
 
   // ユーザーメッセージ
   if (message.role === 'user') {
@@ -84,7 +69,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                       />
                     </div>
                   )}
-                  <LaTeXRenderer content={message.content} className="text-white" colorScheme="user" />
+                  <MarkdownRenderer content={message.content} colorScheme="user" />
                 </CardContent>
               </Card>
             </div>
@@ -116,7 +101,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 </div>
               )}
 
-              <LaTeXRenderer content={message.content} colorScheme="assistant" />
+              <MarkdownRenderer content={message.content} colorScheme="assistant" />
               
               {/* フッター：モデル名・コスト・コピーボタンは常に表示 */}
               <div className="flex w-full">

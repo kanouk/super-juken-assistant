@@ -1,6 +1,6 @@
 
 import React from 'react';
-import ChatMessageRenderer from './ChatMessageRenderer';
+import MarkdownRenderer from './MarkdownRenderer';
 
 const testMessages = [
   {
@@ -104,15 +104,15 @@ export default function TestChat() {
   return (
     <div className="max-w-4xl mx-auto p-4">
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold mb-4">チャットメッセージレンダリングテスト</h1>
+        <h1 className="text-2xl font-bold mb-4">統一されたMarkdownレンダリングテスト</h1>
         <div className="space-y-6">
           <div className="p-4 bg-gray-50 rounded-lg">
             <h2 className="text-lg font-semibold mb-2">AIメッセージ（通常）</h2>
-            <ChatMessageRenderer content={testMessages[0].content} colorScheme="assistant" />
+            <MarkdownRenderer content={testMessages[0].content} colorScheme="assistant" />
           </div>
           <div className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
             <h2 className="text-lg font-semibold mb-2 text-white">ユーザーメッセージ（青背景）</h2>
-            <ChatMessageRenderer content={testMessages[0].content} colorScheme="user" />
+            <MarkdownRenderer content={testMessages[0].content} colorScheme="user" />
           </div>
         </div>
       </div>

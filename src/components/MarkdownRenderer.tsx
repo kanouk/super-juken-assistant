@@ -7,22 +7,19 @@ import rehypeKatex from 'rehype-katex';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import 'katex/dist/katex.min.css';
-import './ChatMessageRenderer.css';
 
-interface ChatMessageRendererProps {
+interface MarkdownRendererProps {
   content: string;
-  colorScheme?: 'user' | 'assistant';
+  colorScheme: 'user' | 'assistant';
 }
 
-// KaTeXに化学式マクロを追加
+// KaTeXオプション（化学式サポート含む）
 const katexOptions = {
   strict: false,
   throwOnError: false,
   output: 'html',
   trust: true,
   macros: {
-    "\\ce": "\\mathrm{#1}",  // 化学式の簡易サポート
-    "\\pu": "\\mathrm{#1}",
     "\\vec": "\\overrightarrow{#1}",
     "\\R": "\\mathbb{R}",
     "\\N": "\\mathbb{N}",
@@ -32,15 +29,13 @@ const katexOptions = {
   }
 };
 
-export default function ChatMessageRenderer({ content, colorScheme = 'assistant' }: ChatMessageRendererProps) {
-  // LaTeXのエスケープを処理
-  const processContent = (text: string) => {
-    // ブロック数式のバックスラッシュを保護
-    return text.replace(/\$\$/g, '\n$$\n');
-  };
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, colorScheme }) => {
+  const baseClasses = colorScheme === 'user' 
+    ? 'markdown-content user-message'
+    : 'markdown-content assistant-message';
 
   return (
-    <div className={`chat-message-content ${colorScheme === 'user' ? 'user-message' : 'assistant-message'}`}>
+    <div className={baseClasses}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[[rehypeKatex, katexOptions]]}
@@ -92,8 +87,10 @@ export default function ChatMessageRenderer({ content, colorScheme = 'assistant'
           }
         }}
       >
-        {processContent(content)}
+        {content}
       </ReactMarkdown>
     </div>
   );
-}
+};
+
+export default MarkdownRenderer;
