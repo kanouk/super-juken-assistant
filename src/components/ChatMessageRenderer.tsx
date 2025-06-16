@@ -14,24 +14,36 @@ interface ChatMessageRendererProps {
   colorScheme?: 'user' | 'assistant';
 }
 
+// KaTeXに化学式マクロを追加
+const katexOptions = {
+  strict: false,
+  throwOnError: false,
+  output: 'html',
+  trust: true,
+  macros: {
+    "\\ce": "\\mathrm{#1}",  // 化学式の簡易サポート
+    "\\pu": "\\mathrm{#1}",
+    "\\vec": "\\overrightarrow{#1}",
+    "\\R": "\\mathbb{R}",
+    "\\N": "\\mathbb{N}",
+    "\\Z": "\\mathbb{Z}",
+    "\\Q": "\\mathbb{Q}",
+    "\\C": "\\mathbb{C}"
+  }
+};
+
 export default function ChatMessageRenderer({ content, colorScheme = 'assistant' }: ChatMessageRendererProps) {
+  // LaTeXのエスケープを処理
+  const processContent = (text: string) => {
+    // ブロック数式のバックスラッシュを保護
+    return text.replace(/\$\$/g, '\n$$\n');
+  };
+
   return (
     <div className={`chat-message-content ${colorScheme === 'user' ? 'user-message' : 'assistant-message'}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[[rehypeKatex, { 
-          strict: false,
-          throwOnError: false,
-          output: 'html',
-          trust: true,
-          macros: {
-            "\\R": "\\mathbb{R}",
-            "\\N": "\\mathbb{N}",
-            "\\Z": "\\mathbb{Z}",
-            "\\Q": "\\mathbb{Q}",
-            "\\C": "\\mathbb{C}"
-          }
-        }]]}
+        rehypePlugins={[[rehypeKatex, katexOptions]]}
         components={{
           // コードブロックのシンタックスハイライト
           code(props) {
@@ -80,7 +92,7 @@ export default function ChatMessageRenderer({ content, colorScheme = 'assistant'
           }
         }}
       >
-        {content}
+        {processContent(content)}
       </ReactMarkdown>
     </div>
   );

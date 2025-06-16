@@ -5,38 +5,74 @@ import ChatMessageRenderer from './ChatMessageRenderer';
 const testMessages = [
   {
     id: 1,
-    content: `# 数学の基礎
+    content: `# 数学と化学のテスト
 
-## 1. ピタゴラスの定理
+## 数学
 
+### 1. ピタゴラスの定理
 直角三角形において、$a^2 + b^2 = c^2$ が成り立ちます。
 
-## 2. 相加相乗平均
-
+### 2. 相加相乗平均
 任意の正の数 $a, b$ に対して：
 
-$$\\frac{a + b}{2} \\geq \\sqrt{ab}$$
+$$
+\\frac{a + b}{2} \\geq \\sqrt{ab}
+$$
 
-等号成立は $a = b$ のときです。
+### 3. ベクトルの内積
+$$
+\\vec{a} \\cdot \\vec{b} = |\\vec{a}||\\vec{b}|\\cos\\theta
+$$
 
-## 3. ベクトルの演算
+### 4. 行列
+$$
+\\begin{pmatrix}
+a & b \\\\
+c & d
+\\end{pmatrix}
+$$
 
-### 内積
-$$\\vec{a} \\cdot \\vec{b} = |\\vec{a}||\\vec{b}|\\cos\\theta$$
+### 5. ベクトルの外積
+3次元空間で $\\vec{a} = (a_1, a_2, a_3)$ のとき、外積は
 
-### 外積
-3次元空間で $\\vec{a} = (a_1, a_2, a_3)$ のとき：
-
-$$\\vec{a} \\times \\vec{b} = \\begin{pmatrix}
+$$
+\\vec{a} \\times \\vec{b} = \\begin{pmatrix}
 a_2b_3 - a_3b_2 \\\\
 a_3b_1 - a_1b_3 \\\\
 a_1b_2 - a_2b_1
-\\end{pmatrix}$$
+\\end{pmatrix}
+$$
 
-## 4. 積分
+### 6. 分数の例
+分数は$\\frac{a}{b}$のように表示されます。
 
-ガウス積分：
-$$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$
+より複雑な例：
+$$
+\\frac{\\vec{a} \\cdot \\vec{b}}{|\\vec{a}||\\vec{b}|} = \\cos\\theta
+$$
+
+## 化学
+
+### 1. 基本的な化学式
+水の分子式：$\\ce{H2O}$
+
+硫酸：$\\ce{H2SO4}$
+
+### 2. 化学反応式
+燃焼反応：
+$$
+\\ce{CH4 + 2O2 -> CO2 + 2H2O}
+$$
+
+酸塩基反応：
+$$
+\\ce{HCl + NaOH -> NaCl + H2O}
+$$
+
+### 3. イオン
+硫酸イオン：$\\ce{SO4^{2-}}$
+
+アンモニウムイオン：$\\ce{NH4+}$
 
 ---
 
@@ -47,32 +83,20 @@ $$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$
 | $x^n$ | $nx^{n-1}$ | $\\frac{x^{n+1}}{n+1} + C$ |
 | $e^x$ | $e^x$ | $e^x + C$ |
 | $\\sin x$ | $\\cos x$ | $-\\cos x + C$ |
-| $\\cos x$ | $-\\sin x$ | $\\sin x + C$ |
 
-## コードの例
+## コード例
 
 \`\`\`python
 import numpy as np
 
-def quadratic_formula(a, b, c):
-    """二次方程式の解を求める"""
+def solve_quadratic(a, b, c):
     discriminant = b**2 - 4*a*c
     if discriminant >= 0:
         x1 = (-b + np.sqrt(discriminant)) / (2*a)
         x2 = (-b - np.sqrt(discriminant)) / (2*a)
         return x1, x2
-    else:
-        return None
-\`\`\`
-
-## タスクリスト
-
-- [x] MarkdownとLaTeXの統合
-- [x] 表のレンダリング
-- [ ] グラフの描画機能
-- [ ] インタラクティブな数式
-
-> **注意**: このレンダラーはKaTeXを使用しているため、一部のLaTeXコマンドはサポートされていない場合があります。`
+    return None
+\`\`\``
   }
 ];
 
