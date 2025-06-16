@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useConfettiStore } from '@/store/confettiStore';
 import { useProfile } from '@/hooks/useProfile';
@@ -44,7 +43,7 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     createConversation,
     updateConversation,
     loadConversations,
-    handleUnderstood,
+    handleUnderstood: baseHandleUnderstood,
     handleNewChat,
     handleShowHistory,
     handleBackToChat,
@@ -52,12 +51,19 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     handleDeleteConversation,
   } = useConversationActions({ subject });
 
+  // Confetti trigger function
+  const triggerConfetti = () => {
+    setShowConfetti(true);
+    celebrate();
+  };
+
   // Use message handling hook
   const {
     messages,
     setMessages,
     isLoading,
     handleSendMessage,
+    handleUnderstood: messageHandleUnderstood,
   } = useMessageHandling({
     subject,
     subjectName,
@@ -68,7 +74,11 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     createConversation,
     updateConversation,
     setConversationUnderstood,
+    onConfettiTrigger: triggerConfetti,
   });
+
+  // Override the understood handler to use the message handling version
+  const handleUnderstood = messageHandleUnderstood;
 
   // Update subject and subjectName when props change
   useEffect(() => {
@@ -94,7 +104,6 @@ export const useChatScreen = (props: UseChatScreenProps) => {
 
   useEffect(() => {
     if (showConfetti) {
-      celebrate();
       setTimeout(() => {
         setShowConfetti(false);
         if (onConfettiComplete) {
@@ -102,7 +111,7 @@ export const useChatScreen = (props: UseChatScreenProps) => {
         }
       }, 2000);
     }
-  }, [showConfetti, celebrate, onConfettiComplete]);
+  }, [showConfetti, onConfettiComplete]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
