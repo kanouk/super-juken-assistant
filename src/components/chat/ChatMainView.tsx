@@ -23,7 +23,6 @@ interface ChatMainViewProps {
   onShowHistory: () => void;
   showNewChatButton: boolean;
   showHistoryButton: boolean;
-  onToggleSidebar: () => void;
   isMobile: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   conversationUnderstood: boolean;
@@ -46,7 +45,6 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
   onShowHistory,
   showNewChatButton,
   showHistoryButton,
-  onToggleSidebar,
   isMobile,
   messagesEndRef,
   conversationUnderstood,
@@ -66,7 +64,6 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
         onShowHistory={onShowHistory}
         showNewChatButton={showNewChatButton}
         showHistoryButton={showHistoryButton}
-        onToggleSidebar={onToggleSidebar}
         isMobile={isMobile}
         onBackToWelcome={onBackToWelcome}
       />

@@ -8,7 +8,6 @@ interface ConversationHistoryViewProps {
   subjectName: string;
   currentModel: string;
   onBackToList: () => void;
-  onToggleSidebar: () => void;
   isMobile: boolean;
   conversations: any[];
   onSelectConversation: (id: string) => void;
@@ -22,7 +21,6 @@ const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = ({
   subjectName,
   currentModel,
   onBackToList,
-  onToggleSidebar,
   isMobile,
   conversations,
   onSelectConversation,
@@ -38,7 +36,6 @@ const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = ({
         currentSubjectId={subject}
         onBackToList={onBackToList}
         showBackButton={true}
-        onToggleSidebar={onToggleSidebar}
         isMobile={isMobile}
         onBackToWelcome={onBackToWelcome}
       />
