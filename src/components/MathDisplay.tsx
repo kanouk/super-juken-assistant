@@ -5,7 +5,9 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import 'katex/dist/katex.min.css';
-import 'katex/dist/contrib/mhchem.min.js'; // 化学式サポート
+
+// Import mhchem extension for chemical formulas
+import 'katex/dist/contrib/mhchem.min.js';
 
 interface MathDisplayProps {
   content: string;
