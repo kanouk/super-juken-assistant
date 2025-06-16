@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,7 +7,6 @@ import QuickActions from './QuickActions';
 import { useProfile } from '@/hooks/useProfile';
 import MessageItemFooter from './MessageItemFooter';
 import { Bot, User } from 'lucide-react';
-import '../MarkdownRenderer.css';
 
 interface MessageItemProps {
   message: Message;

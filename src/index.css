@@ -117,6 +117,57 @@
   }
 }
 
+/* LaTeX and KaTeX styling */
+@layer components {
+  /* LaTeX数式の基本スタイル */
+  .katex {
+    font-size: 1.1em;
+  }
+
+  /* ブロック数式：横スクロール対応で切れる問題を解決 */
+  .katex-display {
+    margin: 1.2em 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding: 0.5em 0;
+    text-align: center;
+  }
+
+  .katex-display::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .katex-display::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 3px;
+  }
+
+  .katex-display::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+  }
+
+  .katex-display::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+
+  /* インライン数式：自然な表示 */
+  span.katex {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  /* エラー時の数式表示 */
+  .katex-error {
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+    color: #ef4444;
+    background-color: #fef2f2;
+  }
+}
+
 /* アニメーション追加 */
 @layer utilities {
   .animate-fade-in {
@@ -134,7 +185,7 @@
     }
   }
 
-  /* スクロール防止のためのユーティリティクラス */
+  /* スクroll防止のためのユーティリティクラス */
   .prevent-scroll {
     overflow: hidden !important;
   }
