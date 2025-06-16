@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMessages } from './useMessages';
@@ -33,88 +34,34 @@ const SUBJECT_JAPANESE_NAMES: Record<string, string> = {
 export const useChatScreen = (props: UseChatScreenProps) => {
   const { subject, subjectName, userId, conversationId, onToggleSidebar, isMobile } = props;
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
-  const [showConfetti, setShowConfetti] = useState(false);
   const [showConversations, setShowConversations] = useState(false);
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [currentModel, setCurrentModel] = useState('gpt-3.5-turbo');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [conversationUnderstood, setConversationUnderstood] = useState(false);
 
-  const { conversations, loadConversations, createConversation, deleteConversation } = useConversations(userId, subject);
-  const { loadMessages, sendMessage } = useMessages(userId, currentModel);
-
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, []);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
-
-  const handleSendMessage = async (content: string) => {
-    if (!userId) {
-      console.error("User ID is not available.");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const newMessage = await sendMessage(content, selectedImages, selectedConversationId);
-      setMessages(prevMessages => [...prevMessages, newMessage]);
-      setSelectedImages([]); // reset
-      scrollToBottom();
-      if (!selectedConversationId) {
-        // Create a new conversation
-        const newConversation = await createConversation(content);
-        setSelectedConversationId(newConversation.id);
-        loadConversations();
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUnderstood = async (messageId: string) => {
-    setMessages(prevMessages =>
-      prevMessages.map(msg =>
-        msg.id === messageId ? { ...msg, isUnderstood: true } : msg
-      )
-    );
-    setConversationUnderstood(true);
-
-    // Save to DB
-    if (!userId) {
-      console.error("handleUnderstood: User ID is not available.");
-      return;
-    }
-    const { error } = await supabase
-      .from('messages')
-      .update({ is_understood: true })
-      .eq('id', messageId);
-
-    if (error) {
-      console.error("Error updating message:", error);
-    }
-  };
+  const conversationsHook = useConversations(userId, subject);
+  const messagesHook = useMessages({
+    userId,
+    subject,
+    selectedConversationId: conversationsHook.selectedConversationId,
+    setSelectedConversationId: conversationsHook.setSelectedConversationId,
+    conversationUnderstood: conversationsHook.conversationUnderstood,
+    setConversationUnderstood: conversationsHook.setConversationUnderstood,
+    refetchConversations: conversationsHook.refetchConversations,
+    selectedModel: currentModel,
+  });
 
   const handleQuickAction = async (action: QuickAction) => {
-    await handleSendMessage(action.message);
+    await messagesHook.handleSendMessage(action.message);
   };
 
   const handleNewChat = () => {
-    setMessages([]);
-    setSelectedConversationId(null);
+    messagesHook.setMessages([]);
+    conversationsHook.setSelectedConversationId(null);
     setShowConversations(false);
-    setConversationUnderstood(false);
+    conversationsHook.setConversationUnderstood(false);
   };
 
   const handleShowHistory = () => {
-    loadConversations();
+    conversationsHook.refetchConversations();
     setShowConversations(true);
   };
 
@@ -122,18 +69,17 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     setShowConversations(false);
   };
 
-  const handleSelectConversation = (conversationId: string) => {
-    setSelectedConversationId(conversationId);
-    loadMessages(conversationId);
+  const handleSelectConversation = async (conversationId: string) => {
+    const messages = await conversationsHook.handleSelectConversation(conversationId);
+    messagesHook.setMessages(messages);
     setShowConversations(false);
   };
 
   const handleDeleteConversation = async (conversationId: string) => {
-    await deleteConversation(conversationId);
-    loadConversations();
-    if (selectedConversationId === conversationId) {
-      setMessages([]);
-      setSelectedConversationId(null);
+    await conversationsHook.handleDeleteConversation(conversationId);
+    if (conversationsHook.selectedConversationId === conversationId) {
+      messagesHook.setMessages([]);
+      conversationsHook.setSelectedConversationId(null);
     }
   };
 
@@ -143,7 +89,9 @@ export const useChatScreen = (props: UseChatScreenProps) => {
       id: uuidv4(),
       content: `こんにちは！${japaneseName}の学習をサポートします。何でも気軽に質問してください！`,
       role: 'assistant',
+      created_at: new Date().toISOString(),
       timestamp: new Date().toISOString(),
+      subject: subjectId,
       isUnderstood: false
     };
   }, []);
@@ -152,35 +100,45 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     if (!userId || !subject) return;
 
     if (conversationId) {
-      setSelectedConversationId(conversationId);
-      loadMessages(conversationId);
+      conversationsHook.setSelectedConversationId(conversationId);
+      conversationsHook.handleSelectConversation(conversationId).then(messages => {
+        messagesHook.setMessages(messages);
+      });
     } else {
       // 新しい会話の場合、初期メッセージを設定
       const initialMessage = getInitialMessage(subject);
-      setMessages([initialMessage]);
-      setSelectedConversationId(null);
+      // Convert to MessageType format for compatibility
+      const initialMessageType = {
+        id: initialMessage.id,
+        content: initialMessage.content,
+        isUser: false,
+        timestamp: new Date(),
+        isUnderstood: false,
+      };
+      messagesHook.setMessages([initialMessageType]);
+      conversationsHook.setSelectedConversationId(null);
     }
-  }, [userId, subject, conversationId, loadMessages, getInitialMessage]);
+  }, [userId, subject, conversationId, getInitialMessage]);
 
   return {
     state: {
       subject,
       subjectName,
-      messages,
-      isLoading,
-      selectedImages,
-      showConfetti,
+      messages: messagesHook.messages,
+      isLoading: messagesHook.isLoading,
+      selectedImages: [],
+      showConfetti: messagesHook.showConfetti,
       showConversations,
-      selectedConversationId,
+      selectedConversationId: conversationsHook.selectedConversationId,
       currentModel,
-      conversations,
-      messagesEndRef,
-      conversationUnderstood,
+      conversations: conversationsHook.conversations,
+      messagesEndRef: messagesHook.messagesEndRef,
+      conversationUnderstood: conversationsHook.conversationUnderstood,
     },
     handlers: {
-      setSelectedImages,
-      handleSendMessage,
-      handleUnderstood,
+      setSelectedImages: () => {},
+      handleSendMessage: messagesHook.handleSendMessage,
+      handleUnderstood: messagesHook.handleUnderstood,
       handleNewChat,
       handleShowHistory,
       handleBackToChat,

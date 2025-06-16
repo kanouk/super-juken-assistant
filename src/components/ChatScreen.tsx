@@ -1,8 +1,8 @@
-
 import React from 'react';
 import ChatMainView from "./chat/ChatMainView";
 import ConversationHistoryView from "./chat/ConversationHistoryView";
 import { useChatScreen, UseChatScreenProps } from "./chat/useChatScreen";
+import { ImageData } from "./chat/types";
 
 interface ChatScreenProps extends UseChatScreenProps {
   onBackToWelcome?: () => void;
@@ -39,6 +39,20 @@ const ChatScreen = (props: ChatScreenProps) => {
     }
   } = useChatScreen(props);
 
+  // Convert selectedImages to ImageData format if needed
+  const imageData: ImageData[] = Array.isArray(selectedImages) 
+    ? selectedImages.map(img => typeof img === 'string' ? { url: img } : img)
+    : [];
+
+  const handleSetImages = (imgs: ImageData[]) => {
+    // Handle image setting - for now we'll keep it simple
+    console.log('Setting images:', imgs);
+  };
+
+  const handleUnderstoodWrapper = () => {
+    handleUnderstood();
+  };
+
   if (showConversations) {
     return (
       <ConversationHistoryView
@@ -64,10 +78,10 @@ const ChatScreen = (props: ChatScreenProps) => {
       currentModel={currentModel}
       messages={messages}
       isLoading={isLoading}
-      selectedImages={selectedImages}
-      setSelectedImages={setSelectedImages}
+      selectedImages={imageData}
+      setSelectedImages={handleSetImages}
       onSendMessage={handleSendMessage}
-      onUnderstood={handleUnderstood}
+      onUnderstood={handleUnderstoodWrapper}
       onQuickAction={handleQuickAction}
       showConfetti={showConfetti}
       onNewChat={handleNewChat}

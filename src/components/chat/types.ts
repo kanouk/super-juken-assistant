@@ -1,3 +1,4 @@
+
 export interface Message {
   id: string;
   db_id?: string;
@@ -9,6 +10,8 @@ export interface Message {
   created_at: string;
   subject: string;
   is_understood?: boolean;
+  isUnderstood?: boolean;
+  timestamp: string;
 }
 
 export interface Conversation {
@@ -34,4 +37,10 @@ export type MessageType = {
 export interface ImageData {
   url: string;
   alt?: string;
+}
+
+export interface QuickAction {
+  id: string;
+  message: string;
+  label: string;
 }
