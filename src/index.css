@@ -100,14 +100,18 @@
 
   html, body, #root {
     height: 100%;
-    overflow: hidden;
   }
 
   body {
     @apply bg-background text-foreground;
     /* confettiによるスクロールを防ぐ */
     overflow-x: hidden;
-    overflow-y: hidden;
+  }
+
+  /* アプリ画面でのスクロール防止 */
+  .app-container {
+    overflow: hidden;
+    height: 100vh;
   }
 
   /* canvasエレメント（confetti）がレイアウトに影響しないようにする */
