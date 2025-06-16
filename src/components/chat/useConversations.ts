@@ -55,7 +55,7 @@ export function useConversations(userId: string | undefined, subject: string) {
         role: msg.role === 'user' ? 'user' : 'assistant',
         created_at: msg.created_at,
         timestamp: msg.created_at,
-        subject: msg.subject || subject,
+        subject: subject, // Use the subject parameter instead of msg.subject
         image_url: msg.image_url || undefined,
         model: msg.model || undefined,
         cost: typeof msg.cost === 'number' ? msg.cost : undefined,
