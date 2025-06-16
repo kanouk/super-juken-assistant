@@ -24,7 +24,7 @@ interface SidebarProps {
   onNavigate: (screen: string) => void;
   onSubjectSelect: (subject: string) => void;
   onOpenConversation: (conversationId: string, subject: string) => void;
-  onCloseSidebar: () => void;
+  onToggleSidebar: () => void;
   isMobile: boolean;
   isOpen?: boolean;
 }
@@ -41,7 +41,7 @@ const Sidebar = ({
   onNavigate,
   onSubjectSelect,
   onOpenConversation,
-  onCloseSidebar,
+  onToggleSidebar,
   isMobile,
   isOpen = true
 }: SidebarProps) => {
@@ -66,14 +66,19 @@ const Sidebar = ({
     setOpenCollapsibles(prev => ({ ...prev, [id]: isOpen }));
   }, []);
 
+  const handleToggleClick = () => {
+    console.log('Toggle button clicked, current isOpen:', isOpen);
+    onToggleSidebar();
+  };
+
   return (
     <div className={`${isOpen ? 'w-80' : 'w-12'} bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col h-screen shadow-lg transition-all duration-300 relative`}>
       {/* Toggle Button - Fixed positioning */}
       <Button
         variant="ghost"
         size="sm"
-        onClick={onCloseSidebar}
-        className={`absolute ${isOpen ? '-right-3' : 'right-1'} top-4 z-50 w-6 h-6 p-0 bg-white border border-gray-200 rounded-full shadow-md hover:bg-gray-50 transition-all duration-300`}
+        onClick={handleToggleClick}
+        className={`absolute ${isOpen ? '-right-3' : '-right-3'} top-4 z-50 w-6 h-6 p-0 bg-white border border-gray-200 rounded-full shadow-md hover:bg-gray-50 transition-all duration-300`}
       >
         {isOpen ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
       </Button>
@@ -83,7 +88,7 @@ const Sidebar = ({
           <SidebarHeader
             profile={profile}
             isMobile={isMobile}
-            onCloseSidebar={onCloseSidebar}
+            onCloseSidebar={onToggleSidebar}
             onNavigate={onNavigate}
           />
 

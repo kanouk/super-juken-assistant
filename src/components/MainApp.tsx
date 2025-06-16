@@ -65,6 +65,7 @@ const MainApp = () => {
   };
 
   const handleToggleSidebar = () => {
+    console.log('MainApp toggle sidebar, current state:', isSidebarOpen);
     setIsSidebarOpen(!isSidebarOpen);
   };
 
@@ -142,14 +143,14 @@ const MainApp = () => {
           onNavigate={(screen) => setCurrentScreen(screen as Screen)}
           onSubjectSelect={handleSubjectSelect}
           onOpenConversation={handleOpenConversation}
-          onCloseSidebar={handleToggleSidebar}
+          onToggleSidebar={handleToggleSidebar}
           isMobile={isMobile}
           isOpen={isSidebarOpen}
         />
       </div>
 
       {/* Overlay for mobile */}
-      {isMobile && isSidebarOpen && (
+      {ieMobile && isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={() => setIsSidebarOpen(false)}
