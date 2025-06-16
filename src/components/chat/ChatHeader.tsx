@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, History, Menu, Cpu } from 'lucide-react';
@@ -79,6 +80,7 @@ interface ChatHeaderProps {
   showNewChatButton?: boolean;
   showHistoryButton?: boolean;
   isMobile?: boolean;
+  onBackToWelcome?: () => void;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -92,7 +94,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   showBackButton = false,
   showNewChatButton = false,
   showHistoryButton = false,
-  isMobile = false
+  isMobile = false,
+  onBackToWelcome
 }) => {
   const subjectColors = subjectColorMap[currentSubjectId] || subjectColorMap['math']; // fallback
   const colorGradient = subjectColors.grad;
