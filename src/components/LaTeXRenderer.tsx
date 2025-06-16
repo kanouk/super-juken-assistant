@@ -62,7 +62,7 @@ const LaTeXRenderer = ({
   }, [content, colorScheme, className]);
 
   return (
-    <div className={`${baseColorClass} leading-relaxed`}>
+    <div className={`${baseColorClass} leading-relaxed`} style={{ wordBreak: 'normal', whiteSpace: 'normal' }}>
       {processedContent.filter(Boolean)}
     </div>
   );

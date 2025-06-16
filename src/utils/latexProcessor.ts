@@ -12,8 +12,8 @@ export const parseLatexContent = (content: string): ParsedContent[] => {
   let normalizedContent = content.replace(/¥/g, '\\');
   console.log('After ¥ normalization:', normalizedContent);
 
-  // 包括的なLaTeX正規表現パターン - インライン数式の改行を防ぐため、改行文字を除外
-  const latexPattern = /(\\?\[[\s\S]*?\\?\]|\$\$[\s\S]*?\$\$|\\?\([^\n\r]*?\\?\)|\$[^$\n\r]*?\$|\(\s*\\?mathrm\{[^}]*\}\s*\))/g;
+  // より厳密なLaTeX正規表現パターン - インライン数式は絶対に改行を含まない
+  const latexPattern = /(\\?\[[\s\S]*?\\?\]|\$\$[\s\S]*?\$\$|\\?\([^\n\r]*?\\?\)|\$[^$\n\r]+?\$|\(\s*\\?(?:mathrm|text)\{[^}\n\r]*\}\s*\))/g;
   
   const parts = normalizedContent.split(latexPattern);
   console.log('Split parts:', parts);
@@ -23,7 +23,7 @@ export const parseLatexContent = (content: string): ParsedContent[] => {
     .map((part, index) => {
       console.log(`Processing part ${index}:`, part);
 
-      // ブロック数式の判定
+      // ブロック数式の判定（改行を含む可能性があるもの）
       if ((part.startsWith('\\[') && part.endsWith('\\]')) || 
           (part.startsWith('$$') && part.endsWith('$$'))) {
         let math = '';
@@ -41,10 +41,12 @@ export const parseLatexContent = (content: string): ParsedContent[] => {
         };
       }
 
-      // インライン数式の判定（改行を含まないもののみ）
-      if ((part.startsWith('\\(') && part.endsWith('\\)') && !part.includes('\n')) ||
-          (part.startsWith('$') && part.endsWith('$') && !part.startsWith('$$') && !part.includes('\n')) ||
-          (part.startsWith('(') && part.includes('\\mathrm{') && part.endsWith(')') && !part.includes('\n'))) {
+      // インライン数式の判定（改行を絶対に含まないもののみ）
+      if ((part.startsWith('\\(') && part.endsWith('\\)') && !part.includes('\n') && !part.includes('\r')) ||
+          (part.startsWith('$') && part.endsWith('$') && !part.startsWith('$$') && 
+           !part.includes('\n') && !part.includes('\r') && part.length > 2) ||
+          (part.startsWith('(') && /\\(?:mathrm|text)\{[^}\n\r]*\}/.test(part) && 
+           part.endsWith(')') && !part.includes('\n') && !part.includes('\r'))) {
         
         let math = '';
         
@@ -52,8 +54,17 @@ export const parseLatexContent = (content: string): ParsedContent[] => {
           math = part.slice(2, -2).trim();
         } else if (part.startsWith('$') && part.endsWith('$')) {
           math = part.slice(1, -1).trim();
-        } else if (part.startsWith('(') && part.includes('\\mathrm{')) {
+        } else if (part.startsWith('(') && /\\(?:mathrm|text)\{/.test(part)) {
           math = part.replace(/^\(\s*/, '').replace(/\s*\)$/, '').trim();
+        }
+        
+        // 空の数式は無視
+        if (!math) {
+          console.log('Empty math content, treating as text:', part);
+          return {
+            type: 'text' as const,
+            content: part
+          };
         }
         
         console.log('Inline math detected:', math);

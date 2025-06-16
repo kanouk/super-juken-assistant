@@ -36,7 +36,7 @@ const MarkdownText: React.FC<MarkdownTextProps> = ({ content, colorScheme, class
             </h3>
           ),
           p: ({ children }) => (
-            <p className={`mb-4 leading-7 ${colorScheme === 'user' ? 'text-white' : 'text-gray-800'}`}>
+            <p className={`mb-4 leading-7 whitespace-pre-wrap ${colorScheme === 'user' ? 'text-white' : 'text-gray-800'}`}>
               {children}
             </p>
           ),
@@ -64,7 +64,7 @@ const MarkdownText: React.FC<MarkdownTextProps> = ({ content, colorScheme, class
             const isInline = !codeClassName;
             if (isInline) {
               return (
-                <code className={`bg-gray-100 px-2 py-1 rounded text-sm font-mono ${colorScheme === 'user' ? 'text-white' : 'text-gray-900'}`}>
+                <code className={`bg-gray-100 px-2 py-1 rounded text-sm font-mono whitespace-nowrap ${colorScheme === 'user' ? 'text-white' : 'text-gray-900'}`}>
                   {children}
                 </code>
               );
