@@ -84,15 +84,9 @@ export const ModelsTab = ({
     return freeUserModels?.[provider] || "";
   };
 
-  // 有効なプロバイダーのリスト（APIキーがある場合は全て、ない場合はデフォルトのみ）
+  // 利用可能なプロバイダーのリスト（APIキーが設定されたもの + デフォルト）
   const getVisibleProviders = () => {
-    if (hasAnyApiKey) {
-      return [
-        { id: 'openai', name: 'OpenAI', hasKey: hasApiKey.openai },
-        { id: 'google', name: 'Google (Gemini)', hasKey: hasApiKey.google },
-        { id: 'anthropic', name: 'Anthropic (Claude)', hasKey: hasApiKey.anthropic }
-      ];
-    } else {
+    if (!hasAnyApiKey) {
       // APIキーがない場合はデフォルトプロバイダーのみ表示
       const defaultProvider = getDefaultProvider();
       const providerNames = {
@@ -103,9 +97,66 @@ export const ModelsTab = ({
       return [{
         id: defaultProvider,
         name: providerNames[defaultProvider as keyof typeof providerNames],
-        hasKey: false
+        hasKey: false,
+        isDefault: true
       }];
     }
+    
+    // APIキーがある場合は、APIキーが設定されたもの + デフォルトのものを表示
+    const providers = [];
+    const providerInfo = {
+      openai: 'OpenAI',
+      google: 'Google (Gemini)',
+      anthropic: 'Anthropic (Claude)'
+    };
+    
+    // APIキーが設定されたプロバイダーを追加
+    Object.keys(hasApiKey).forEach(providerId => {
+      if (hasApiKey[providerId as keyof typeof hasApiKey]) {
+        providers.push({
+          id: providerId,
+          name: providerInfo[providerId as keyof typeof providerInfo],
+          hasKey: true,
+          isDefault: false
+        });
+      }
+    });
+    
+    // デフォルトプロバイダーも含める（まだ追加されていない場合）
+    const defaultProvider = getDefaultProvider();
+    if (!providers.find(p => p.id === defaultProvider)) {
+      providers.push({
+        id: defaultProvider,
+        name: providerInfo[defaultProvider as keyof typeof providerInfo],
+        hasKey: false,
+        isDefault: true
+      });
+    }
+    
+    return providers;
+  };
+
+  // 表示すべきモデル設定（APIキーが設定されたもの + デフォルト）
+  const getModelProvidersToShow = () => {
+    if (!hasAnyApiKey) {
+      return [getDefaultProvider()];
+    }
+    
+    const providers = [];
+    // APIキーが設定されたプロバイダー
+    Object.keys(hasApiKey).forEach(providerId => {
+      if (hasApiKey[providerId as keyof typeof hasApiKey]) {
+        providers.push(providerId);
+      }
+    });
+    
+    // デフォルトプロバイダーも含める（まだ追加されていない場合）
+    const defaultProvider = getDefaultProvider();
+    if (!providers.includes(defaultProvider)) {
+      providers.push(defaultProvider);
+    }
+    
+    return providers;
   };
 
   return (
@@ -146,7 +197,7 @@ export const ModelsTab = ({
                   className={`font-medium ${!hasAnyApiKey ? "text-gray-400" : ""}`}
                 >
                   {provider.name}
-                  {!hasAnyApiKey && (
+                  {provider.isDefault && (
                     <span className="ml-2 text-xs text-amber-600">(デフォルト)</span>
                   )}
                 </Label>
@@ -159,15 +210,14 @@ export const ModelsTab = ({
           <Label className="text-base font-semibold mb-4 block">選択可能なモデル</Label>
 
           <div className="space-y-4">
-            {/* APIキーがある場合は全プロバイダー、ない場合はデフォルトプロバイダーのみ表示 */}
-            {(hasAnyApiKey ? ["openai", "google", "anthropic"] : [getDefaultProvider()]).map(provider => {
+            {getModelProvidersToShow().map(provider => {
               const providerHasKey = hasApiKey[provider as keyof typeof hasApiKey];
               const availableModelOptions = getAvailableModels(provider);
               const displayValue = getDisplayModel(provider);
 
               return (
                 <div key={provider}>
-                  <Label className={!hasAnyApiKey ? "text-gray-400" : ""}>
+                  <Label className={!providerHasKey ? "text-gray-400" : ""}>
                     {provider === "openai"
                       ? "OpenAI モデル"
                       : provider === "google"

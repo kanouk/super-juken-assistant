@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Key, CheckCircle, XCircle, Loader2, Eye, EyeOff } from "lucide-react";
+import { Key, CheckCircle, XCircle, Loader2, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -108,9 +108,27 @@ export const ApiTab = ({ apiKeys, updateSetting, freeUserApiKeys }: ApiTabProps)
   };
 
   const providers = [
-    { id: 'openai', name: 'OpenAI APIキー', placeholder: 'sk-...' },
-    { id: 'google', name: 'Google AI APIキー', placeholder: 'AI...' },
-    { id: 'anthropic', name: 'Anthropic APIキー', placeholder: 'sk-ant-...' }
+    { 
+      id: 'openai', 
+      name: 'OpenAI APIキー', 
+      placeholder: 'APIキーを入力してください',
+      linkUrl: 'https://platform.openai.com/api-keys',
+      linkText: 'OpenAI API キー取得ページ'
+    },
+    { 
+      id: 'google', 
+      name: 'Google AI APIキー', 
+      placeholder: 'APIキーを入力してください',
+      linkUrl: 'https://makersuite.google.com/app/apikey',
+      linkText: 'Google AI Studio API キー取得ページ'
+    },
+    { 
+      id: 'anthropic', 
+      name: 'Anthropic APIキー', 
+      placeholder: 'APIキーを入力してください',
+      linkUrl: 'https://console.anthropic.com/settings/keys',
+      linkText: 'Anthropic Console API キー取得ページ'
+    }
   ];
 
   return (
@@ -134,10 +152,21 @@ export const ApiTab = ({ apiKeys, updateSetting, freeUserApiKeys }: ApiTabProps)
         
         {providers.map((provider) => (
           <div key={provider.id}>
-            <Label htmlFor={`${provider.id}-key`} className="text-sm font-medium text-gray-700">
-              {provider.name}
-            </Label>
-            <div className="flex gap-2 mt-2">
+            <div className="flex items-center justify-between mb-2">
+              <Label htmlFor={`${provider.id}-key`} className="text-sm font-medium text-gray-700">
+                {provider.name}
+              </Label>
+              <a
+                href={provider.linkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+              >
+                {provider.linkText}
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+            <div className="flex gap-2">
               <div className="flex-1 relative">
                 <Input
                   id={`${provider.id}-key`}
@@ -148,7 +177,7 @@ export const ApiTab = ({ apiKeys, updateSetting, freeUserApiKeys }: ApiTabProps)
                     // Reset verification status when key changes
                     setVerificationStatus(prev => ({ ...prev, [provider.id]: 'idle' }));
                   }}
-                  placeholder={freeUserApiKeys?.[provider.id as keyof typeof freeUserApiKeys] ? "デフォルトキー適用中" : provider.placeholder}
+                  placeholder={provider.placeholder}
                   className="border-2 border-gray-200 focus:border-green-500 text-sm lg:text-base pr-10"
                 />
                 <Button
