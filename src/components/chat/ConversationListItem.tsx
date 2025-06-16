@@ -1,137 +1,116 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Edit2, Trash2, Check, X } from 'lucide-react';
+import { Trash2, MessageSquare, Clock } from "lucide-react";
+import { formatDistanceToNow } from 'date-fns';
+import { ja } from 'date-fns/locale';
+import { supabase } from "@/integrations/supabase/client";
+import QuestionTags from './QuestionTags';
 
-export interface Conversation {
+interface Conversation {
   id: string;
   title: string;
   created_at: string;
+  is_understood: boolean;
+}
+
+interface Tag {
+  id: string;
+  major_category: string;
+  minor_category: string;
   subject: string;
-  user_id: string;
-  is_understood?: boolean;
 }
 
 interface ConversationListItemProps {
   conversation: Conversation;
-  isEditing: boolean;
-  isDeleting: boolean;
-  editingTitle: string;
-  onStartEdit: (conversation: Conversation) => void;
-  onSaveEdit: (conversationId: string) => void;
-  onCancelEdit: () => void;
-  onSetEditingTitle: (value: string) => void;
-  onDelete: (conversationId: string) => void;
-  onSelect: (conversationId: string) => void;
-  formatDate: (dateString: string) => string;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 const ConversationListItem: React.FC<ConversationListItemProps> = ({
   conversation,
-  isEditing,
-  isDeleting,
-  editingTitle,
-  onStartEdit,
-  onSaveEdit,
-  onCancelEdit,
-  onSetEditingTitle,
-  onDelete,
+  isSelected,
   onSelect,
-  formatDate,
+  onDelete
 }) => {
+  const [tags, setTags] = useState<Tag[]>([]);
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('question_tags')
+          .select(`
+            tag_master (
+              id,
+              major_category,
+              minor_category,
+              subject
+            )
+          `)
+          .eq('conversation_id', conversation.id);
+
+        if (error) {
+          console.error('Error fetching tags:', error);
+          return;
+        }
+
+        const tagData = data?.map(item => item.tag_master).filter(Boolean) || [];
+        setTags(tagData as Tag[]);
+      } catch (error) {
+        console.error('Failed to fetch conversation tags:', error);
+      }
+    };
+
+    fetchTags();
+  }, [conversation.id]);
+
   return (
     <div
-      className="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group w-full"
+      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+        isSelected 
+          ? 'bg-blue-50 border-blue-200' 
+          : 'bg-white border-gray-200 hover:bg-gray-50'
+      }`}
       onClick={() => onSelect(conversation.id)}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          {isEditing ? (
-            <div className="flex items-center gap-1 lg:gap-2">
-              <Input
-                value={editingTitle}
-                onChange={(e) => onSetEditingTitle(e.target.value)}
-                className="text-sm h-7 lg:h-8"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    onSaveEdit(conversation.id);
-                  } else if (e.key === 'Escape') {
-                    onCancelEdit();
-                  }
-                }}
-                onClick={(e) => e.stopPropagation()}
-                autoFocus
-              />
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 w-7 lg:h-8 lg:w-8 p-0 flex-shrink-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSaveEdit(conversation.id);
-                }}
-              >
-                <Check className="h-3 w-3" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 w-7 lg:h-8 lg:w-8 p-0 flex-shrink-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCancelEdit();
-                }}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 lg:gap-2">
-              <h3 className="font-medium text-sm truncate flex-1">{conversation.title}</h3>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover:opacity-100 shrink-0">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onStartEdit(conversation);
-                  }}
-                >
-                  <Edit2 className="h-3 w-3" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm('この会話を削除してもよろしいですか？')) {
-                      onDelete(conversation.id);
-                    }
-                  }}
-                  disabled={isDeleting}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center space-x-2 min-w-0 flex-1">
+          <MessageSquare className="h-4 w-4 text-gray-500 flex-shrink-0" />
+          <h3 className="font-medium text-sm text-gray-900 truncate">
+            {conversation.title}
+          </h3>
+          {conversation.is_understood && (
+            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full flex-shrink-0">
+              理解済み
+            </span>
           )}
-          <div className="flex items-center justify-between mt-1">
-            <p className="text-xs text-gray-500">
-              {formatDate(conversation.created_at)}
-            </p>
-            {conversation.is_understood && (
-              <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-300 text-xs px-2 py-0.5 flex items-center gap-1">
-                <CheckCircle className="h-3 w-3" />
-                理解済み
-              </Badge>
-            )}
-          </div>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(conversation.id);
+          }}
+          className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 flex-shrink-0"
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
       </div>
+      
+      <div className="flex items-center text-xs text-gray-500 mb-2">
+        <Clock className="h-3 w-3 mr-1" />
+        <span>
+          {formatDistanceToNow(new Date(conversation.created_at), {
+            addSuffix: true,
+            locale: ja
+          })}
+        </span>
+      </div>
+
+      <QuestionTags tags={tags} className="mt-2" />
     </div>
   );
 };

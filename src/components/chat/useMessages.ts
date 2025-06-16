@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +47,27 @@ export function useMessages({
       }, 100);
     }
   }, [messages.length]);
+
+  // バックグラウンドでタグ付けを実行する関数
+  const performAutoTagging = async (conversationId: string, questionContent: string, subjectName: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('auto-tag-question', {
+        body: {
+          conversationId,
+          questionContent,
+          subject: subjectName
+        }
+      });
+
+      if (error) {
+        console.error('Auto-tagging error:', error);
+      } else {
+        console.log('Auto-tagging completed successfully');
+      }
+    } catch (error) {
+      console.error('Failed to perform auto-tagging:', error);
+    }
+  };
 
   const handleSendMessage = async (content: string, images: ImageData[] = []) => {
     if (!content.trim() && images.length === 0) return;
@@ -174,6 +194,11 @@ export function useMessages({
             : msg
         )
       );
+
+      // バックグラウンドで自動タグ付けを実行（エラーが発生してもメイン処理には影響しない）
+      performAutoTagging(conversationId, content, subject).catch(error => {
+        console.error('Background auto-tagging failed:', error);
+      });
 
       refetchConversations();
       setTimeout(() => {

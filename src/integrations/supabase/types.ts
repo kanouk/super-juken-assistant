@@ -178,6 +178,45 @@ export type Database = {
         }
         Relationships: []
       }
+      question_tags: {
+        Row: {
+          assigned_at: string
+          assignment_method: string
+          conversation_id: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assignment_method?: string
+          conversation_id: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assignment_method?: string
+          conversation_id?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_tags_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           api_keys: Json | null
