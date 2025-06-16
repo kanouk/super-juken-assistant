@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMessages } from './useMessages';
@@ -57,16 +56,6 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     conversationsHook.setSelectedConversationId(null);
     setShowConversations(false);
     conversationsHook.setConversationUnderstood(false);
-    // 新しいチャット開始時に初期メッセージを表示
-    const japaneseName = SUBJECT_JAPANESE_NAMES[subject] || subject;
-    const welcomeMessage: MessageType = {
-      id: 'welcome-' + Date.now(),
-      content: `${japaneseName}の学習をサポートします。何でも気軽に質問してください！`,
-      isUser: false,
-      timestamp: new Date(),
-      isUnderstood: false,
-    };
-    messagesHook.setMessages([welcomeMessage]);
   };
 
   const handleShowHistory = () => {
@@ -101,16 +90,8 @@ export const useChatScreen = (props: UseChatScreenProps) => {
         messagesHook.setMessages(messages);
       });
     } else {
-      // 新しい会話の場合、初期メッセージを設定
-      const japaneseName = SUBJECT_JAPANESE_NAMES[subject] || subject;
-      const welcomeMessage: MessageType = {
-        id: 'welcome-' + Date.now(),
-        content: `${japaneseName}の学習をサポートします。何でも気軽に質問してください！`,
-        isUser: false,
-        timestamp: new Date(),
-        isUnderstood: false,
-      };
-      messagesHook.setMessages([welcomeMessage]);
+      // 新しい会話の場合、メッセージをクリア
+      messagesHook.setMessages([]);
       conversationsHook.setSelectedConversationId(null);
     }
   }, [userId, subject, conversationId]);
