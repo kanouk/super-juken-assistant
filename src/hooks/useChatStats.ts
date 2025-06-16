@@ -7,6 +7,9 @@ interface ChatStats {
   dailyCost: number;
   totalCost: number;
   dailyQuestions: number;
+  today_understood?: number;
+  total_questions?: number;
+  understood_by_subject?: Record<string, number>;
 }
 
 // グローバルなインスタンスカウンタ（デバッグ用）
@@ -25,6 +28,9 @@ export const useChatStats = (userId: string | undefined) => {
     dailyCost: 0,
     totalCost: 0,
     dailyQuestions: 0,
+    today_understood: 0,
+    total_questions: 0,
+    understood_by_subject: {},
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -59,6 +65,9 @@ export const useChatStats = (userId: string | undefined) => {
           dailyCost: 0,
           totalCost: 0,
           dailyQuestions: 0,
+          today_understood: 0,
+          total_questions: 0,
+          understood_by_subject: {},
         });
         setIsLoading(false);
         return;
@@ -88,6 +97,9 @@ export const useChatStats = (userId: string | undefined) => {
         dailyCost,
         totalCost,
         dailyQuestions,
+        today_understood: understoodCount || 0,
+        total_questions: totalCost || 0,
+        understood_by_subject: {},
       });
     } catch (err) {
       console.error('[ChatStats] Error fetching chat stats:', err);

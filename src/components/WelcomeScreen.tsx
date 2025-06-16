@@ -28,7 +28,7 @@ const WelcomeScreen = ({
 }: WelcomeScreenProps) => {
   const { profile, isLoading: isLoadingProfile } = useProfile();
   const { settings } = useSettings();
-  const { stats } = useChatStats();
+  const chatStats = useChatStats(profile?.id);
 
   // Get visible and sorted subjects from settings
   const visibleSubjects = settings.subjectConfigs
@@ -61,24 +61,10 @@ const WelcomeScreen = ({
     };
   });
 
-  const calculateDaysLeft = (targetDate: string) => {
-    const today = new Date();
-    const target = new Date(targetDate);
-    const diffTime = target.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
-  };
-
-  // 教科ごとの理解数を計算
-  const getUnderstoodBySubject = ()=> {
-    const subjectCounts = {};
-    if (stats?.understood_by_subject) {
-      Object.entries(stats.understood_by_subject).forEach(([subject, count]) => {
-        const legacyData = legacySubjects.find(s => s.id === subject);
-        const displayName = legacyData?.name || subject;
-        subjectCounts[displayName] = count;
-      });
-    }
+  // 教科ごとの理解数を計算（今はダミーデータを返す）
+  const getUnderstoodBySubject = () => {
+    const subjectCounts: Record<string, number> = {};
+    // TODO: 実際のデータが利用可能になったら実装
     return subjectCounts;
   };
 
@@ -129,7 +115,7 @@ const WelcomeScreen = ({
           </CardContent>
         </Card>
 
-        {/* Stats - Updated with 4 items */}
+        {/* Stats - 4 items as requested */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <TooltipProvider>
             <Tooltip>
@@ -137,7 +123,7 @@ const WelcomeScreen = ({
                 <Card className="bg-green-50 border-green-200 cursor-help">
                   <CardContent className="p-4 text-center">
                     <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-green-800">{stats?.today_understood || 0}</p>
+                    <p className="text-2xl font-bold text-green-800">{chatStats.understoodCount}</p>
                     <p className="text-sm text-green-600">本日理解した数</p>
                   </CardContent>
                 </Card>
@@ -186,7 +172,7 @@ const WelcomeScreen = ({
           <Card className="bg-purple-50 border-purple-200">
             <CardContent className="p-4 text-center">
               <TrendingUp className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-purple-800">{dailyQuestions}</p>
+              <p className="text-2xl font-bold text-purple-800">{chatStats.dailyQuestions}</p>
               <p className="text-sm text-purple-600">本日の質問数</p>
             </CardContent>
           </Card>
@@ -194,7 +180,7 @@ const WelcomeScreen = ({
           <Card className="bg-orange-50 border-orange-200">
             <CardContent className="p-4 text-center">
               <User className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-orange-800">{stats?.total_questions || 0}</p>
+              <p className="text-2xl font-bold text-orange-800">{chatStats.totalCost || 0}</p>
               <p className="text-sm text-orange-600">累計質問数</p>
             </CardContent>
           </Card>
@@ -227,45 +213,6 @@ const WelcomeScreen = ({
             </div>
           </CardContent>
         </Card>
-
-        {/* Goals Display */}
-        {profile?.exam_settings && (profile.exam_settings.kyotsu.name || profile.exam_settings.todai.name) && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Target className="h-6 w-6 text-red-600" />
-                <span>あなたの目標</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {profile.exam_settings.kyotsu.name && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <h3 className="font-medium text-red-800 mb-1">第1ゴール</h3>
-                    <p className="text-lg font-bold text-red-900">{profile.exam_settings.kyotsu.name}</p>
-                    {profile.exam_settings.kyotsu.date && (
-                      <p className="text-sm text-red-600 mt-1">
-                        {calculateDaysLeft(profile.exam_settings.kyotsu.date)}日後 ({profile.exam_settings.kyotsu.date})
-                      </p>
-                    )}
-                  </div>
-                )}
-                
-                {profile.exam_settings.todai.name && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h3 className="font-medium text-blue-800 mb-1">第2ゴール</h3>
-                    <p className="text-lg font-bold text-blue-900">{profile.exam_settings.todai.name}</p>
-                    {profile.exam_settings.todai.date && (
-                      <p className="text-sm text-blue-600 mt-1">
-                        {calculateDaysLeft(profile.exam_settings.todai.date)}日後 ({profile.exam_settings.todai.date})
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );

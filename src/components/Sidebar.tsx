@@ -48,7 +48,7 @@ const Sidebar = ({
 }: SidebarProps) => {
   const { profile, isLoading: isLoadingProfile } = useProfile();
   const { settings } = useSettings();
-  const { stats } = useChatStats();
+  const chatStats = useChatStats(profile?.id);
   const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({
     subjects: true, // Default to open
     countdown: true,
@@ -118,16 +118,10 @@ const Sidebar = ({
     />
   );
 
-  // 教科ごとの理解数を計算
+  // 教科ごとの理解数を計算（今はダミーデータを返す）
   const getUnderstoodBySubject = () => {
-    const subjectCounts = {};
-    if (stats?.understood_by_subject) {
-      Object.entries(stats.understood_by_subject).forEach(([subject, count]) => {
-        const legacyData = legacySubjects.find(s => s.id === subject);
-        const displayName = legacyData?.name || subject;
-        subjectCounts[displayName] = count;
-      });
-    }
+    const subjectCounts: Record<string, number> = {};
+    // TODO: 実際のデータが利用可能になったら実装
     return subjectCounts;
   };
 
@@ -136,22 +130,22 @@ const Sidebar = ({
   return (
     <div className="w-80 bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col h-screen shadow-lg">
       {/* Header - Made smaller and more subtle */}
-      <div className="p-4 border-b border-gray-200 bg-white">
-        <div className="flex items-center space-x-2 mb-3">
-          <div className="p-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-sm">
-            <GraduationCap className="h-5 w-5 text-white" />
+      <div className="p-3 border-b border-gray-200 bg-white">
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="p-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-md shadow-sm">
+            <GraduationCap className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">受験アシスタント</h1>
+            <h1 className="text-sm font-semibold text-gray-900">受験アシスタント</h1>
             <p className="text-xs text-gray-500">AI学習サポート</p>
           </div>
         </div>
 
         {/* User Profile Section */}
-        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-sm transition-all duration-200">
-          <Avatar className="h-8 w-8 border border-gray-200">
+        <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-sm transition-all duration-200">
+          <Avatar className="h-7 w-7 border border-gray-200">
             <AvatarImage src={profile?.avatar_url || undefined} />
-            <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold text-sm">
+            <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold text-xs">
               {profile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
@@ -300,7 +294,7 @@ const Sidebar = ({
                     <p className="font-semibold">教科別理解数：</p>
                     {Object.entries(understoodBySubject).length > 0 ? (
                       Object.entries(understoodBySubject).map(([subject, count]) => (
-                        <p key={subject} className="text-sm">{subject}: {count}個</p>
+                        <p key={subject} className="text-sm">{subject}: {String(count)}個</p>
                       ))
                     ) : (
                       <p className="text-sm">まだ理解した内容がありません</p>
