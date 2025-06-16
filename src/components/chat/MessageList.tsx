@@ -32,7 +32,7 @@ const MessageList: React.FC<MessageListProps> = ({
       role: msg.isUser ? 'user' : 'assistant',
       created_at: msg.timestamp.toISOString(),
       timestamp: msg.timestamp.toISOString(),
-      subject: '', // Default empty subject for legacy messages
+      subject: 'other', // Default subject for legacy messages
       image_url: msg.images?.[0]?.url,
       is_understood: msg.isUnderstood
     };
