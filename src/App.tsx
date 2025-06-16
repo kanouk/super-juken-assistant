@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import AppPage from "./pages/AppPage";
 import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
+import MathTest from "./pages/MathTest";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/app" element={<AppPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/math-test" element={<MathTest />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
