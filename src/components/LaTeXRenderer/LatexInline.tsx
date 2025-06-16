@@ -21,16 +21,7 @@ const LatexInline: React.FC<LatexInlineProps> = ({ math, colorScheme }) => {
           lineHeight: '1'
         }}
       >
-        <InlineMath 
-          math={math}
-          settings={{
-            displayMode: false,
-            throwOnError: false,
-            strict: false,
-            trust: false,
-            output: 'html'
-          }}
-        />
+        <InlineMath math={math} />
       </span>
     );
   } catch (error) {
