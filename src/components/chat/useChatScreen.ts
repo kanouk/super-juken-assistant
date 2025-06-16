@@ -70,14 +70,23 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     setConversationUnderstood,
   });
 
+  // Update subject and subjectName when props change
   useEffect(() => {
-    if (initialSubject) {
+    if (initialSubject && initialSubject !== subject) {
+      console.log('Subject changed from', subject, 'to', initialSubject);
       setSubject(initialSubject);
+      // Clear messages when subject changes
+      setMessages([]);
+      setSelectedConversationId(null);
+      setConversationUnderstood(false);
     }
+  }, [initialSubject, subject, setMessages, setSelectedConversationId, setConversationUnderstood]);
+
+  useEffect(() => {
     if (initialSubjectName) {
       setSubjectName(initialSubjectName);
     }
-  }, [initialSubject, initialSubjectName]);
+  }, [initialSubjectName]);
 
   useEffect(() => {
     loadConversations();

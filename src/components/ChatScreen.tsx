@@ -4,6 +4,7 @@ import ChatMainView from "./chat/ChatMainView";
 import ConversationHistoryView from "./chat/ConversationHistoryView";
 import { useChatScreen, UseChatScreenProps } from "./chat/useChatScreen";
 import { ImageData, Message } from "./chat/types";
+import { legacySubjects } from './sidebar/legacySubjects';
 
 interface ChatScreenProps extends UseChatScreenProps {
   onBackToWelcome?: () => void;
@@ -38,6 +39,10 @@ const ChatScreen = (props: ChatScreenProps) => {
       handleQuickAction,
     }
   } = useChatScreen(props);
+
+  // Get the proper subject name from legacySubjects
+  const subjectConfig = legacySubjects.find(s => s.id === subject) || legacySubjects.find(s => s.id === 'other');
+  const displaySubjectName = subjectConfig?.name || subjectName;
 
   // Convert Message[] to MessageType[] format for compatibility
   const convertedMessages = messages.map((msg: Message) => ({
@@ -75,7 +80,7 @@ const ChatScreen = (props: ChatScreenProps) => {
     return (
       <ConversationHistoryView
         subject={subject}
-        subjectName={subjectName}
+        subjectName={displaySubjectName}
         currentModel={currentModel}
         onBackToList={handleBackToChat}
         isMobile={props.isMobile}
@@ -91,7 +96,7 @@ const ChatScreen = (props: ChatScreenProps) => {
   return (
     <ChatMainView
       subject={subject}
-      subjectName={subjectName}
+      subjectName={displaySubjectName}
       currentModel={currentModel}
       messages={convertedMessages}
       isLoading={isLoading}
