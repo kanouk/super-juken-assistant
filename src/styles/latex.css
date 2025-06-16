@@ -1,0 +1,112 @@
+
+/* LaTeX専用CSS - 単一行強制とレイアウト制御 */
+
+:root {
+  --latex-inline-max-height: 1.5em;
+  --latex-inline-overflow: hidden;
+  --latex-block-margin: 1.5rem 0;
+  --latex-error-bg-light: #fef2f2;
+  --latex-error-text-light: #dc2626;
+  --latex-error-bg-dark: #7f1d1d;
+  --latex-error-text-dark: #fca5a5;
+}
+
+/* インライン数式の強制単一行表示 */
+.latex-inline-container {
+  display: inline-flex;
+  align-items: baseline;
+  max-height: var(--latex-inline-max-height);
+  overflow: var(--latex-inline-overflow);
+  vertical-align: baseline;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.latex-inline-container .katex {
+  display: inline-block !important;
+  vertical-align: baseline !important;
+  line-height: 1 !important;
+  max-height: var(--latex-inline-max-height) !important;
+  overflow: hidden !important;
+}
+
+.latex-inline-container .katex .katex-html {
+  display: inline-block !important;
+  vertical-align: baseline !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+}
+
+/* ブロック数式の中央揃え */
+.latex-block-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: var(--latex-block-margin);
+  width: 100%;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+}
+
+.latex-block-container .katex-display {
+  margin: 0 !important;
+  text-align: center !important;
+}
+
+/* エラー表示のスタイル */
+.latex-error {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+.latex-error--light {
+  background-color: var(--latex-error-bg-light);
+  color: var(--latex-error-text-light);
+}
+
+.latex-error--dark {
+  background-color: var(--latex-error-bg-dark);
+  color: var(--latex-error-text-dark);
+}
+
+/* 化学式専用のスタイル */
+.chemistry-formula {
+  font-family: "Times New Roman", serif;
+  display: inline-block;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.chemistry-formula sub {
+  font-size: 0.75em;
+  vertical-align: sub;
+}
+
+.chemistry-formula sup {
+  font-size: 0.75em;
+  vertical-align: super;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 640px) {
+  .latex-block-container {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 0.5rem;
+  }
+  
+  .latex-inline-container {
+    max-width: 200px;
+  }
+  
+  .latex-error {
+    max-width: 200px;
+  }
+}
