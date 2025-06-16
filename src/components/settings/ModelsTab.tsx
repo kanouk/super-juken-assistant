@@ -36,7 +36,7 @@ export const ModelsTab = ({
   // いずれかのAPIキーが設定されているかどうか
   const hasAnyApiKey = hasApiKey.openai || hasApiKey.google || hasApiKey.anthropic;
 
-  // 管理者指定のデフォルトプロバイダーを取得
+  // デフォルトプロバイダーを取得
   const getDefaultProvider = () => {
     if (freeUserModels?.openai) return 'openai';
     if (freeUserModels?.google) return 'google';
@@ -44,7 +44,7 @@ export const ModelsTab = ({
     return 'openai'; // フォールバック
   };
 
-  // 表示用のプロバイダー（APIキーがない場合は管理者デフォルト）
+  // 表示用のプロバイダー（APIキーがない場合はデフォルト）
   const displayProvider = hasAnyApiKey ? selectedProvider : getDefaultProvider();
 
   // プロバイダー変更のハンドラー（APIキーがある場合のみ動作）
@@ -66,7 +66,7 @@ export const ModelsTab = ({
     if (hasApiKey[provider as keyof typeof hasApiKey]) {
       return availableModels?.[provider] ?? [];
     }
-    // APIキーがない場合は管理者デフォルトモデルのみ
+    // APIキーがない場合はデフォルトモデルのみ
     if (freeUserModels?.[provider] && availableModels?.[provider]) {
       return availableModels[provider].filter(
         m => m.value === freeUserModels[provider]
@@ -80,8 +80,32 @@ export const ModelsTab = ({
     if (hasApiKey[provider as keyof typeof hasApiKey]) {
       return models[provider as keyof typeof models] || "";
     }
-    // APIキーがない場合は管理者デフォルト
+    // APIキーがない場合はデフォルト
     return freeUserModels?.[provider] || "";
+  };
+
+  // 有効なプロバイダーのリスト（APIキーがある場合は全て、ない場合はデフォルトのみ）
+  const getVisibleProviders = () => {
+    if (hasAnyApiKey) {
+      return [
+        { id: 'openai', name: 'OpenAI', hasKey: hasApiKey.openai },
+        { id: 'google', name: 'Google (Gemini)', hasKey: hasApiKey.google },
+        { id: 'anthropic', name: 'Anthropic (Claude)', hasKey: hasApiKey.anthropic }
+      ];
+    } else {
+      // APIキーがない場合はデフォルトプロバイダーのみ表示
+      const defaultProvider = getDefaultProvider();
+      const providerNames = {
+        openai: 'OpenAI',
+        google: 'Google (Gemini)',
+        anthropic: 'Anthropic (Claude)'
+      };
+      return [{
+        id: defaultProvider,
+        name: providerNames[defaultProvider as keyof typeof providerNames],
+        hasKey: false
+      }];
+    }
   };
 
   return (
@@ -95,7 +119,7 @@ export const ModelsTab = ({
       <CardContent className="p-6 space-y-8">
         {!hasAnyApiKey && (
           <div className="text-sm text-gray-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-4">
-            ⚠️ APIキーが設定されていないため、管理者が指定したデフォルトのプロバイダーとモデルのみ利用できます。
+            ⚠️ APIキーが設定されていないため、デフォルトのプロバイダーとモデルのみ利用できます。
             <br />
             他のプロバイダーやモデルを利用したい場合は、まずAPI設定でAPIキーを登録してください。
           </div>
@@ -109,57 +133,25 @@ export const ModelsTab = ({
             className="space-y-3"
             disabled={!hasAnyApiKey}
           >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem 
-                value="openai" 
-                id="openai" 
-                disabled={!hasAnyApiKey}
-                className={!hasAnyApiKey ? "opacity-50" : ""} 
-              />
-              <Label 
-                htmlFor="openai" 
-                className={`font-medium ${!hasAnyApiKey ? "text-gray-400" : ""}`}
-              >
-                OpenAI
-                {!hasAnyApiKey && displayProvider === "openai" && (
-                  <span className="ml-2 text-xs text-amber-600">(管理者デフォルト)</span>
-                )}
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem 
-                value="google" 
-                id="google" 
-                disabled={!hasAnyApiKey}
-                className={!hasAnyApiKey ? "opacity-50" : ""} 
-              />
-              <Label 
-                htmlFor="google" 
-                className={`font-medium ${!hasAnyApiKey ? "text-gray-400" : ""}`}
-              >
-                Google (Gemini)
-                {!hasAnyApiKey && displayProvider === "google" && (
-                  <span className="ml-2 text-xs text-amber-600">(管理者デフォルト)</span>
-                )}
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem 
-                value="anthropic" 
-                id="anthropic" 
-                disabled={!hasAnyApiKey}
-                className={!hasAnyApiKey ? "opacity-50" : ""} 
-              />
-              <Label 
-                htmlFor="anthropic" 
-                className={`font-medium ${!hasAnyApiKey ? "text-gray-400" : ""}`}
-              >
-                Anthropic (Claude)
-                {!hasAnyApiKey && displayProvider === "anthropic" && (
-                  <span className="ml-2 text-xs text-amber-600">(管理者デフォルト)</span>
-                )}
-              </Label>
-            </div>
+            {getVisibleProviders().map(provider => (
+              <div key={provider.id} className="flex items-center space-x-2">
+                <RadioGroupItem 
+                  value={provider.id} 
+                  id={provider.id} 
+                  disabled={!hasAnyApiKey}
+                  className={!hasAnyApiKey ? "opacity-50" : ""} 
+                />
+                <Label 
+                  htmlFor={provider.id} 
+                  className={`font-medium ${!hasAnyApiKey ? "text-gray-400" : ""}`}
+                >
+                  {provider.name}
+                  {!hasAnyApiKey && (
+                    <span className="ml-2 text-xs text-amber-600">(デフォルト)</span>
+                  )}
+                </Label>
+              </div>
+            ))}
           </RadioGroup>
         </div>
 
@@ -167,14 +159,15 @@ export const ModelsTab = ({
           <Label className="text-base font-semibold mb-4 block">選択可能なモデル</Label>
 
           <div className="space-y-4">
-            {["openai", "google", "anthropic"].map(provider => {
+            {/* APIキーがある場合は全プロバイダー、ない場合はデフォルトプロバイダーのみ表示 */}
+            {(hasAnyApiKey ? ["openai", "google", "anthropic"] : [getDefaultProvider()]).map(provider => {
               const providerHasKey = hasApiKey[provider as keyof typeof hasApiKey];
               const availableModelOptions = getAvailableModels(provider);
               const displayValue = getDisplayModel(provider);
 
               return (
                 <div key={provider}>
-                  <Label className={!providerHasKey ? "text-gray-400" : ""}>
+                  <Label className={!hasAnyApiKey ? "text-gray-400" : ""}>
                     {provider === "openai"
                       ? "OpenAI モデル"
                       : provider === "google"
@@ -190,7 +183,7 @@ export const ModelsTab = ({
                       <SelectValue 
                         placeholder={
                           !providerHasKey && freeUserModels?.[provider]
-                            ? `管理者デフォルト: ${availableModelOptions.find(m => m.value === freeUserModels[provider])?.label || freeUserModels[provider]}`
+                            ? `デフォルト: ${availableModelOptions.find(m => m.value === freeUserModels[provider])?.label || freeUserModels[provider]}`
                             : "モデルを選択"
                         } 
                       />
@@ -200,7 +193,7 @@ export const ModelsTab = ({
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                           {!providerHasKey && (
-                            <span className="ml-2 text-xs text-amber-600">(管理者デフォルト)</span>
+                            <span className="ml-2 text-xs text-amber-600">(デフォルト)</span>
                           )}
                         </SelectItem>
                       ))}

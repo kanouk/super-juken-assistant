@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Key, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Key, CheckCircle, XCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,9 +32,15 @@ export const ApiTab = ({ apiKeys, updateSetting, freeUserApiKeys }: ApiTabProps)
     anthropic: 'idle'
   });
 
-  // APIキーが1つもセットされていなければ管理者デフォルトを使っている状態
-  const userKeySet =
-    !!apiKeys.openai || !!apiKeys.google || !!apiKeys.anthropic;
+  const [showPassword, setShowPassword] = useState<{
+    openai: boolean;
+    google: boolean;
+    anthropic: boolean;
+  }>({
+    openai: false,
+    google: false,
+    anthropic: false
+  });
 
   const verifyApiKey = async (provider: string) => {
     const apiKey = apiKeys[provider as keyof typeof apiKeys];
@@ -94,6 +100,13 @@ export const ApiTab = ({ apiKeys, updateSetting, freeUserApiKeys }: ApiTabProps)
     }
   };
 
+  const togglePasswordVisibility = (provider: string) => {
+    setShowPassword(prev => ({
+      ...prev,
+      [provider]: !prev[provider as keyof typeof prev]
+    }));
+  };
+
   const providers = [
     { id: 'openai', name: 'OpenAI APIキー', placeholder: 'sk-...' },
     { id: 'google', name: 'Google AI APIキー', placeholder: 'AI...' },
@@ -109,17 +122,15 @@ export const ApiTab = ({ apiKeys, updateSetting, freeUserApiKeys }: ApiTabProps)
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {!userKeySet && (
-          <div className="text-sm text-gray-600 bg-emerald-50 border border-emerald-200 rounded px-3 py-2 mb-2">
-            💡 <strong>APIキーを登録しなくても最低限のチャット利用ができます。</strong>
-            <br />
-            より多くのモデルや最新モデルを使いたい場合は、ご自身のAPIキーを入力してください。
-            <br />
-            <span className="text-xs text-emerald-700 mt-1 block">
-              ※ APIキーを設定すると、モデル設定画面でプロバイダーとモデルの選択が可能になります。
-            </span>
-          </div>
-        )}
+        <div className="text-sm text-gray-600 bg-emerald-50 border border-emerald-200 rounded px-3 py-2 mb-2">
+          💡 <strong>APIキーを登録しなくても基本的なチャット利用ができます。</strong>
+          <br />
+          より多くのモデルや最新モデルを使いたい場合は、ご自身のAPIキーを入力してください。
+          <br />
+          <span className="text-xs text-emerald-700 mt-1 block">
+            ※ APIキーを設定すると、モデル設定画面でプロバイダーとモデルの選択が可能になります。
+          </span>
+        </div>
         
         {providers.map((provider) => (
           <div key={provider.id}>
@@ -127,18 +138,33 @@ export const ApiTab = ({ apiKeys, updateSetting, freeUserApiKeys }: ApiTabProps)
               {provider.name}
             </Label>
             <div className="flex gap-2 mt-2">
-              <Input
-                id={`${provider.id}-key`}
-                type="password"
-                value={apiKeys[provider.id as keyof typeof apiKeys]}
-                onChange={(e) => {
-                  updateSetting(`apiKeys.${provider.id}`, e.target.value);
-                  // Reset verification status when key changes
-                  setVerificationStatus(prev => ({ ...prev, [provider.id]: 'idle' }));
-                }}
-                placeholder={freeUserApiKeys?.[provider.id as keyof typeof freeUserApiKeys] ? "管理者デフォルトキー適用中" : provider.placeholder}
-                className="flex-1 border-2 border-gray-200 focus:border-green-500 text-sm lg:text-base"
-              />
+              <div className="flex-1 relative">
+                <Input
+                  id={`${provider.id}-key`}
+                  type={showPassword[provider.id as keyof typeof showPassword] ? "text" : "password"}
+                  value={apiKeys[provider.id as keyof typeof apiKeys]}
+                  onChange={(e) => {
+                    updateSetting(`apiKeys.${provider.id}`, e.target.value);
+                    // Reset verification status when key changes
+                    setVerificationStatus(prev => ({ ...prev, [provider.id]: 'idle' }));
+                  }}
+                  placeholder={freeUserApiKeys?.[provider.id as keyof typeof freeUserApiKeys] ? "デフォルトキー適用中" : provider.placeholder}
+                  className="border-2 border-gray-200 focus:border-green-500 text-sm lg:text-base pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => togglePasswordVisibility(provider.id)}
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                >
+                  {showPassword[provider.id as keyof typeof showPassword] ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </Button>
+              </div>
               <Button
                 type="button"
                 variant="outline"
