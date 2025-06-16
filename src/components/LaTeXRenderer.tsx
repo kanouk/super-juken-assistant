@@ -7,11 +7,12 @@ interface LaTeXRendererProps {
   content: string;
   className?: string;
   colorScheme?: "user" | "assistant";
+  debugMode?: boolean;
 }
 
-// 新しい実装への移行用ラッパー
+// 改良されたMarkdown+LaTeX統合レンダラー
 const LaTeXRenderer: React.FC<LaTeXRendererProps> = (props) => {
-  console.log('LaTeXRenderer: Using new MarkdownLatexRenderer implementation');
+  console.log('LaTeXRenderer: Using enhanced MarkdownLatexRenderer with LaTeX parser');
   return <MarkdownLatexRenderer {...props} />;
 };
 

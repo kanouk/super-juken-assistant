@@ -1,21 +1,22 @@
 
 import React, { useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
+import { LaTeXParser } from '../utils/latexParser';
 import 'katex/dist/katex.min.css';
 
 interface MarkdownLatexRendererProps {
   content: string;
   className?: string;
   colorScheme?: "user" | "assistant";
+  debugMode?: boolean;
 }
 
 const MarkdownLatexRenderer: React.FC<MarkdownLatexRendererProps> = ({
   content,
   className = '',
   colorScheme = 'assistant',
+  debugMode = false,
 }) => {
   const baseColorClass = useMemo(() => 
     colorScheme === 'user'
@@ -24,24 +25,22 @@ const MarkdownLatexRenderer: React.FC<MarkdownLatexRendererProps> = ({
   , [colorScheme]);
 
   const processedContent = useMemo(() => {
-    console.log('MarkdownLatexRenderer: Processing content:', content.substring(0, 100) + '...');
+    console.log('MarkdownLatexRenderer: Processing content with debug mode:', debugMode);
     
-    // 日本語の¥記号を\に正規化
-    return content.replace(/¥/g, '\\');
-  }, [content]);
+    // デバッグモードを設定
+    LaTeXParser.setDebugMode(debugMode);
+    
+    // LaTeX部分を解析・保護
+    const parseResult = LaTeXParser.parse(content);
+    
+    return parseResult;
+  }, [content, debugMode]);
 
-  return (
-    <div 
-      className={`${baseColorClass} ${className} leading-relaxed markdown-latex-container`}
-      style={{ 
-        wordBreak: 'keep-all', 
-        whiteSpace: 'normal',
-        overflowWrap: 'anywhere'
-      }}
-    >
+  const renderedContent = useMemo(() => {
+    // Markdownをレンダリング
+    const markdownHtml = (
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
+        remarkPlugins={[remarkGfm]}
         components={{
           // ヘッダー要素
           h1: ({ children }) => (
@@ -169,8 +168,23 @@ const MarkdownLatexRenderer: React.FC<MarkdownLatexRendererProps> = ({
           ),
         }}
       >
-        {processedContent}
+        {processedContent.processedContent}
       </ReactMarkdown>
+    );
+
+    return markdownHtml;
+  }, [processedContent, colorScheme]);
+
+  return (
+    <div 
+      className={`${baseColorClass} ${className} leading-relaxed markdown-latex-container`}
+      style={{ 
+        wordBreak: 'keep-all', 
+        whiteSpace: 'normal',
+        overflowWrap: 'anywhere'
+      }}
+    >
+      {renderedContent}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 
-/* Markdown + LaTeX統合レンダラー専用CSS */
+/* Enhanced Markdown + LaTeX統合レンダラー専用CSS */
 
 .markdown-latex-container {
   /* 基本設定 */
@@ -8,10 +8,24 @@
   word-wrap: break-word;
 }
 
-/* KaTeX数式の基本スタイリング */
+/* KaTeX数式の基本スタイリング - 仕様に基づく調整 */
 .markdown-latex-container .katex {
   font-size: 1.1em;
   line-height: 1.4;
+  display: inline-block;
+  text-align: left;
+  vertical-align: middle;
+}
+
+/* KaTeXブロック数式の設定 - 仕様に基づく調整 */
+.markdown-latex-container .katex-display {
+  display: block !important;
+  text-align: center !important;
+  margin: 1em 0 !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5em 0;
+  max-width: 100%;
 }
 
 /* インライン数式のスタイリング */
@@ -25,15 +39,49 @@
   white-space: nowrap;
 }
 
-/* ブロック数式のスタイリング */
-.markdown-latex-container .katex-display {
-  display: block;
-  margin: 1.5em 0;
+/* 分数の縦方向配置調整 */
+.markdown-latex-container .katex .frac-line {
+  border-bottom-width: 0.04em;
+}
+
+.markdown-latex-container .katex .frac .frac-num,
+.markdown-latex-container .katex .frac .frac-den {
   text-align: center;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0.5em 0;
-  max-width: 100%;
+}
+
+.markdown-latex-container .katex .frac {
+  vertical-align: middle;
+  text-align: center;
+}
+
+/* 上付き・下付き文字の調整 */
+.markdown-latex-container .katex .supsub {
+  vertical-align: baseline;
+}
+
+.markdown-latex-container .katex .sup {
+  vertical-align: super;
+  font-size: 0.7em;
+}
+
+.markdown-latex-container .katex .sub {
+  vertical-align: sub;
+  font-size: 0.7em;
+}
+
+/* ベクトル記号の調整 */
+.markdown-latex-container .katex .vec {
+  position: relative;
+}
+
+.markdown-latex-container .katex .vec::after {
+  content: '';
+  position: absolute;
+  top: -0.1em;
+  left: 0;
+  right: 0;
+  height: 0.05em;
+  background: currentColor;
 }
 
 /* 長い数式の横スクロール対応 */
@@ -43,8 +91,22 @@
   min-width: min-content;
 }
 
+/* 行列表示の調整 */
+.markdown-latex-container .katex .arraycolsep {
+  width: 0.5em;
+}
+
+.markdown-latex-container .katex .array {
+  text-align: center;
+}
+
+.markdown-latex-container .katex .pmatrix {
+  text-align: center;
+}
+
 /* エラー表示のスタイリング */
-.markdown-latex-container .katex-error {
+.markdown-latex-container .katex-error,
+.markdown-latex-container .latex-error {
   color: #cc0000;
   border: 1px solid #cc0000;
   background-color: #fff5f5;
@@ -52,6 +114,7 @@
   border-radius: 0.3em;
   font-family: monospace;
   font-size: 0.9em;
+  display: inline-block;
 }
 
 /* レスポンシブ対応 */
@@ -133,4 +196,18 @@
   height: 1px;
   overflow: hidden;
   clip: rect(1px, 1px, 1px, 1px);
+}
+
+/* デバッグモード用のスタイル */
+.debug-mode .latex-placeholder {
+  background-color: yellow;
+  border: 1px dashed red;
+  padding: 2px;
+}
+
+.debug-mode .latex-match {
+  background-color: lightblue;
+  border: 1px solid blue;
+  margin: 2px;
+  padding: 2px;
 }
