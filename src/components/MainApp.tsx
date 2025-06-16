@@ -101,7 +101,7 @@ const MainApp = () => {
       case 'settings':
         return (
           <SettingsScreen
-            onBack={handleBackTo Welcome}
+            onBack={handleBackToWelcome}
             onToggleSidebar={handleToggleSidebar}
             isMobile={isMobile}
           />
