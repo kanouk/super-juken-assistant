@@ -24,7 +24,8 @@ const LaTeXRenderer = ({
   const ProcessedText = ({ children }: { children: string }) => {
     // 日本語キーボードの¥記号も\として扱う
     const normalizedText = children.replace(/¥/g, '\\');
-    const parts = normalizedText.split(/(\\[[(][\s\S]*?\\[)\]]|\$[^$\n]+?\$)/);
+    // Fixed regex pattern to properly match \(...\) and $...$ patterns
+    const parts = normalizedText.split(/(\\[(][\s\S]*?\\[)]|\$[^$\n]+?\$)/);
     
     return (
       <>
