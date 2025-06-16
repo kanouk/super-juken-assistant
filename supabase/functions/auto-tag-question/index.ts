@@ -16,8 +16,11 @@ serve(async (req) => {
   try {
     const { conversationId, questionContent, subject } = await req.json();
     
+    console.log('Auto-tagging request:', { conversationId, subject, contentLength: questionContent?.length });
+    
     if (!conversationId || !questionContent) {
-      throw new Error('Missing required parameters');
+      console.error('Missing required parameters:', { conversationId: !!conversationId, questionContent: !!questionContent });
+      throw new Error('Missing required parameters: conversationId and questionContent are required');
     }
 
     const supabase = createClient(
@@ -27,8 +30,10 @@ serve(async (req) => {
 
     // 教科が指定されていない場合は、質問内容から判定
     let determinedSubject = subject;
-    if (!subject) {
+    if (!subject || subject === 'other') {
+      console.log('Determining subject from question content...');
       determinedSubject = await determineSubject(questionContent);
+      console.log('Determined subject:', determinedSubject);
     }
 
     // 該当教科のタグ一覧を取得
@@ -39,7 +44,7 @@ serve(async (req) => {
 
     if (tagsError) {
       console.error('Failed to fetch tags:', tagsError);
-      return new Response(JSON.stringify({ error: 'Failed to fetch tags' }), {
+      return new Response(JSON.stringify({ error: 'Failed to fetch tags', details: tagsError }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -47,46 +52,74 @@ serve(async (req) => {
 
     if (!tags || tags.length === 0) {
       console.log(`No tags found for subject: ${determinedSubject}`);
-      return new Response(JSON.stringify({ success: true, message: 'No tags available for this subject' }), {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: 'No tags available for this subject', 
+        subject: determinedSubject,
+        tagsCount: 0 
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    console.log(`Found ${tags.length} tags for subject: ${determinedSubject}`);
+
     // LLMにタグ選択を依頼
     const selectedTags = await selectTagsWithLLM(questionContent, determinedSubject, tags);
+    console.log('Selected tags:', selectedTags?.length || 0);
 
     // 選択されたタグを質問に関連付け
     if (selectedTags && selectedTags.length > 0) {
-      const insertData = selectedTags.map(tag => ({
-        conversation_id: conversationId,
-        tag_id: tag.id,
-        assignment_method: 'auto'
-      }));
-
-      const { error: insertError } = await supabase
+      // 既存のタグを確認（重複挿入を防ぐ）
+      const { data: existingTags } = await supabase
         .from('question_tags')
-        .insert(insertData);
+        .select('tag_id')
+        .eq('conversation_id', conversationId);
 
-      if (insertError) {
-        console.error('Failed to insert question tags:', insertError);
-        return new Response(JSON.stringify({ error: 'Failed to save tags' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+      const existingTagIds = new Set(existingTags?.map(t => t.tag_id) || []);
+      const newTags = selectedTags.filter(tag => !existingTagIds.has(tag.id));
+
+      if (newTags.length > 0) {
+        const insertData = newTags.map(tag => ({
+          conversation_id: conversationId,
+          tag_id: tag.id,
+          assignment_method: 'auto'
+        }));
+
+        const { error: insertError } = await supabase
+          .from('question_tags')
+          .insert(insertData);
+
+        if (insertError) {
+          console.error('Failed to insert question tags:', insertError);
+          return new Response(JSON.stringify({ error: 'Failed to save tags', details: insertError }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        console.log(`Successfully inserted ${newTags.length} new tags`);
+      } else {
+        console.log('All selected tags already exist for this conversation');
       }
     }
 
     return new Response(JSON.stringify({ 
       success: true, 
       subject: determinedSubject, 
-      tagsCount: selectedTags?.length || 0 
+      tagsCount: selectedTags?.length || 0,
+      message: 'Auto-tagging completed successfully'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('Error in auto-tag-question function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error', 
+      message: error.message,
+      timestamp: new Date().toISOString()
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -140,6 +173,7 @@ async function determineSubject(questionContent: string): Promise<string> {
     });
 
     if (!response.ok) {
+      console.error(`OpenAI API error: ${response.status} ${response.statusText}`);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
@@ -184,7 +218,8 @@ async function selectTagsWithLLM(questionContent: string, subject: string, avail
 - 質問内容に最も適したタグを1〜3個選択してください
 - 以下のJSON形式で回答してください：
 {"selected_tags": [{"major": "大分類名", "minor": "中分類名"}, ...]}
-- JSON以外の文字は含めないでください`
+- JSON以外の文字は含めないでください
+- 該当するタグがない場合は空の配列を返してください`
           },
           {
             role: 'user',
@@ -204,11 +239,14 @@ ${tagsList}`
     });
 
     if (!response.ok) {
+      console.error(`OpenAI API error: ${response.status} ${response.statusText}`);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
     const responseText = data.choices[0].message.content.trim();
+    
+    console.log('LLM response:', responseText);
     
     // JSON解析
     const parsed = JSON.parse(responseText);
@@ -225,6 +263,7 @@ ${tagsList}`
       })
       .filter(Boolean);
 
+    console.log(`Validated ${validTags.length} out of ${selectedTags.length} selected tags`);
     return validTags;
 
   } catch (error) {

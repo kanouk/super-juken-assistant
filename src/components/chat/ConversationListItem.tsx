@@ -50,10 +50,12 @@ const ConversationListItem: React.FC<ConversationListItemProps> = ({
   formatDate
 }) => {
   const [tags, setTags] = useState<Tag[]>([]);
+  const [isLoadingTags, setIsLoadingTags] = useState(true);
 
   useEffect(() => {
     const fetchTags = async () => {
       try {
+        setIsLoadingTags(true);
         const { data, error } = await supabase
           .from('question_tags')
           .select(`
@@ -75,6 +77,8 @@ const ConversationListItem: React.FC<ConversationListItemProps> = ({
         setTags(tagData as Tag[]);
       } catch (error) {
         console.error('Failed to fetch conversation tags:', error);
+      } finally {
+        setIsLoadingTags(false);
       }
     };
 
@@ -168,7 +172,16 @@ const ConversationListItem: React.FC<ConversationListItemProps> = ({
           <span>{formatDate(conversation.created_at)}</span>
         </div>
 
-        <QuestionTags tags={tags} className="mt-2" />
+        {!isLoadingTags && tags.length > 0 && (
+          <QuestionTags tags={tags} className="mt-2" />
+        )}
+        
+        {isLoadingTags && (
+          <div className="mt-2 flex space-x-1">
+            <div className="h-4 w-12 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        )}
       </div>
     </div>
   );
