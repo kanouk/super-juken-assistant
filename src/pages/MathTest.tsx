@@ -1,11 +1,11 @@
 
 import React from 'react';
-import MathDisplay from '../components/MathDisplay';
+import UnifiedMarkdownLatexRenderer from '../components/UnifiedMarkdownLatexRenderer';
 import '../styles/math-display.css';
 
 const sampleContent = `# 数学の例
 
-これは$a^2 + b^2 = c^2$というピタゴラスの定理です。
+これは$E = mc^2$というアインシュタインの有名な式です。
 
 ## 1. ベクトルの内積
 
@@ -13,13 +13,22 @@ $$\\vec{a} \\cdot \\vec{b} = |\\vec{a}||\\vec{b}|\\cos\\theta$$
 
 ここで$\\theta$は2つのベクトルのなす角度です。
 
-## 2. 向き
+## 2. 複雑な積分
 
-外積は「新しいベクトル」になります。
+$$\\int_{0}^{\\infty} e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}$$
 
-その向きは$\\vec{a}$から$\\vec{b}$へ"右ねじ"を回す方向、つまり2つのベクトルが作る面に垂直な向きになります。
+## 3. 無限級数
 
-## 3. 成分表示
+$$\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6}$$
+
+## 4. 行列
+
+$$\\begin{pmatrix}
+a & b \\\\
+c & d
+\\end{pmatrix}$$
+
+## 5. ベクトルの外積
 
 3次元空間で
 
@@ -33,7 +42,7 @@ a_3b_1 - a_1b_3 \\\\
 a_1b_2 - a_2b_1
 \\end{pmatrix}$$
 
-## 4. 分数の例
+## 6. 分数の例
 
 分数は$\\frac{a}{b}$のように表示されます。
 
@@ -102,16 +111,26 @@ $$\\ce{CH3COOH + C2H5OH ->[\\ce{H+}] CH3COOC2H5 + H2O}$$
 const MathTest = () => {
   return (
     <div className="container mx-auto p-8 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-8">Math Display Test</h1>
+      <h1 className="text-3xl font-bold mb-8">Unified Math Display Test</h1>
       
       <div className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4">数学</h2>
-        <MathDisplay content={sampleContent} />
+        <h2 className="text-2xl font-semibold mb-4">数学（Assistant色スキーム）</h2>
+        <UnifiedMarkdownLatexRenderer content={sampleContent} colorScheme="assistant" />
       </div>
       
-      <div>
-        <h2 className="text-2xl font-semibold mb-4">化学</h2>
-        <MathDisplay content={chemistryContent} />
+      <div className="mb-12 bg-gray-800 p-6 rounded-lg">
+        <h2 className="text-2xl font-semibold mb-4 text-white">数学（User色スキーム）</h2>
+        <UnifiedMarkdownLatexRenderer content={sampleContent} colorScheme="user" />
+      </div>
+      
+      <div className="mb-12">
+        <h2 className="text-2xl font-semibold mb-4">化学（Assistant色スキーム）</h2>
+        <UnifiedMarkdownLatexRenderer content={chemistryContent} colorScheme="assistant" />
+      </div>
+      
+      <div className="bg-gray-800 p-6 rounded-lg">
+        <h2 className="text-2xl font-semibold mb-4 text-white">化学（User色スキーム）</h2>
+        <UnifiedMarkdownLatexRenderer content={chemistryContent} colorScheme="user" />
       </div>
     </div>
   );

@@ -13,6 +13,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding: 1rem 0;
+  margin: 1rem 0;
 }
 
 .math-content p {
@@ -59,4 +60,21 @@
 /* 上付き・下付き文字の調整 */
 .math-content .katex .msupsub {
   font-size: 0.8em;
+}
+
+/* カラースキーム対応 */
+.math-content.text-white {
+  color: white;
+}
+
+.math-content.text-white .katex {
+  color: white;
+}
+
+.math-content.text-gray-800 {
+  color: #1f2937;
+}
+
+.math-content.text-gray-800 .katex {
+  color: #1f2937;
 }

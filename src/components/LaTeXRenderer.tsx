@@ -1,6 +1,6 @@
 
 import React from 'react';
-import MarkdownLatexRenderer from './MarkdownLatexRenderer';
+import UnifiedMarkdownLatexRenderer from './UnifiedMarkdownLatexRenderer';
 import '../styles/markdown-latex.css';
 
 interface LaTeXRendererProps {
@@ -12,8 +12,8 @@ interface LaTeXRendererProps {
 
 // 改良されたMarkdown+LaTeX統合レンダラー
 const LaTeXRenderer: React.FC<LaTeXRendererProps> = (props) => {
-  console.log('LaTeXRenderer: Using enhanced MarkdownLatexRenderer with LaTeX parser');
-  return <MarkdownLatexRenderer {...props} />;
+  console.log('LaTeXRenderer: Using enhanced UnifiedMarkdownLatexRenderer with LaTeX parser');
+  return <UnifiedMarkdownLatexRenderer {...props} />;
 };
 
 export default LaTeXRenderer;
