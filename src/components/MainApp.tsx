@@ -92,6 +92,8 @@ const MainApp = () => {
         return (
           <ChatScreen
             subject={chatState.subject}
+            subjectName={chatState.subject}
+            userId={userId}
             conversationId={chatState.conversationId}
             onBackToWelcome={handleBackToWelcome}
             onToggleSidebar={handleToggleSidebar}
