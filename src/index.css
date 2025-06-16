@@ -124,7 +124,7 @@
     font-size: 1.1em;
   }
 
-  /* ブロック数式：横スクロール対応で切れる問題を解決 */
+  /* ブロック数式：横スクロール対応 */
   .katex-display {
     margin: 1.2em 0;
     overflow-x: auto;
@@ -185,7 +185,7 @@
     }
   }
 
-  /* スクroll防止のためのユーティリティクラス */
+  /* スクロール防止のためのユーティリティクラス */
   .prevent-scroll {
     overflow: hidden !important;
   }

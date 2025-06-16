@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Message } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import MarkdownRenderer from '../MarkdownRenderer';
+import ChatMessageRenderer from '../ChatMessageRenderer';
 import QuickActions from './QuickActions';
 import { useProfile } from '@/hooks/useProfile';
 import MessageItemFooter from './MessageItemFooter';
@@ -67,7 +68,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                       />
                     </div>
                   )}
-                  <MarkdownRenderer content={message.content} colorScheme="user" />
+                  <ChatMessageRenderer content={message.content} colorScheme="user" />
                 </CardContent>
               </Card>
             </div>
@@ -99,7 +100,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 </div>
               )}
 
-              <MarkdownRenderer content={message.content} colorScheme="assistant" />
+              <ChatMessageRenderer content={message.content} colorScheme="assistant" />
               
               {/* フッター：モデル名・コスト・コピーボタンは常に表示 */}
               <div className="flex w-full">
