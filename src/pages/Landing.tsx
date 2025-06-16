@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,8 +43,6 @@ const Landing = () => {
   ];
 
   const stats = [
-    { number: "10,000+", label: "解決した問題数" },
-    { number: "95%", label: "ユーザー満足度" },
     { number: "24/7", label: "いつでもアクセス" },
     { number: "全教科", label: "対応科目" }
   ];
@@ -93,7 +92,7 @@ const Landing = () => {
                 onClick={() => navigate('/login')}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
               >
-                無料で始める
+                始める
               </Button>
             </div>
           </div>
@@ -125,14 +124,13 @@ const Landing = () => {
               onClick={() => navigate('/login')}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-lg px-8 py-3"
             >
-              今すぐ無料で体験する
+              今すぐ体験する
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <p className="text-sm text-gray-500">無料トライアル • クレジットカード不要</p>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">
@@ -226,15 +224,14 @@ const Landing = () => {
             あなたの合格への第一歩を、今すぐ踏み出そう
           </h3>
           <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-            無料トライアルで、AIアシスタントによる学習サポートの効果を実感してください。
-            クレジットカードは不要です。
+            AIアシスタントによる学習サポートの効果を実感してください。
           </p>
           <Button 
             size="lg" 
             onClick={() => navigate('/login')}
             className="bg-white text-blue-600 hover:bg-gray-50 text-lg px-8 py-3 font-semibold"
           >
-            無料で始める
+            始める
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
