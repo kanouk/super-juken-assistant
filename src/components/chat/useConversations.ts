@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageType } from './types';
+import { Message } from './types';
 
 export function useConversations(userId: string | undefined, subject: string) {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -47,16 +47,20 @@ export function useConversations(userId: string | undefined, subject: string) {
 
       if (error) throw error;
 
-      // ここでmodel, costも含めて整形
-      const formattedMessages: MessageType[] = messagesData.map((msg) => ({
+      // ここでmodel, costも含めて整形 - Message型に統一
+      const formattedMessages: Message[] = messagesData.map((msg) => ({
         id: msg.id?.toString?.() ?? '',
+        db_id: msg.id,
         content: msg.content,
-        isUser: msg.role === 'user',
-        timestamp: new Date(msg.created_at),
-        images: msg.image_url ? [{ url: msg.image_url }] : undefined,
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        created_at: msg.created_at,
+        timestamp: msg.created_at,
+        subject: msg.subject || subject,
+        image_url: msg.image_url || undefined,
         model: msg.model || undefined,
         cost: typeof msg.cost === 'number' ? msg.cost : undefined,
-        isUnderstood: msg.is_understood,
+        is_understood: msg.is_understood,
+        conversation_id: conversationId,
       }));
 
       setSelectedConversationId(conversationId);
