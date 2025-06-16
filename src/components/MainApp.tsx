@@ -1,175 +1,164 @@
 
-import { useState, useEffect } from 'react';
-import Sidebar from './Sidebar';
+import React, { useState, useEffect } from 'react';
+import { useProfile } from '@/hooks/useProfile';
+import { useSettings } from '@/hooks/useSettings';
+import { useChatStats } from '@/hooks/useChatStats';
+import WelcomeScreen from './WelcomeScreen';
 import ChatScreen from './ChatScreen';
 import SettingsScreen from './SettingsScreen';
 import ProfileScreen from './ProfileScreen';
-import WelcomeScreen from './WelcomeScreen';
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
-import { useChatStats } from '@/hooks/useChatStats';
-import { useIsMobile } from '@/hooks/use-mobile';
-import type { User } from '@supabase/supabase-js';
+import Sidebar from './Sidebar';
+import { supabase } from '@/integrations/supabase/client';
+
+type Screen = 'welcome' | 'chat' | 'settings' | 'profile';
+
+interface ChatState {
+  subject: string;
+  conversationId?: string;
+}
 
 const MainApp = () => {
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<'welcome' | 'chat' | 'settings' | 'profile'>('welcome');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const isMobile = useIsMobile();
+  const [currentScreen, setCurrentScreen] = useState<Screen>('welcome');
+  const [chatState, setChatState] = useState<ChatState>({ subject: '' });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+
+  const { profile } = useProfile();
+  const { settings } = useSettings();
+  const chatStats = useChatStats(userId);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUser(user);
+      setUserId(user?.id);
     };
     getUser();
   }, []);
-  
-  const { 
-    understoodCount, 
-    dailyCost, 
-    totalCost, 
-    dailyQuestions, 
-    isLoading: isLoadingStats, 
-    error: statsError 
-  } = useChatStats(currentUser?.id);
 
-  useEffect(() => {
-    if (statsError) {
-      toast({
-        title: "統計データの取得エラー",
-        description: "統計データの取得に失敗しました: " + statsError.message,
-        variant: "destructive",
-      });
-    }
-  }, [statsError, toast]);
-
-  const subjectNames: { [key: string]: string } = {
-    math: '数学',
-    chemistry: '化学',
-    biology: '生物',
-    english: '英語',
-    japanese: '国語',
-    geography: '地理',
-    information: '情報',
-    other: 'その他'
-  };
-
-  const handleSubjectChange = (subject: string) => {
-    setSelectedSubject(subject);
-    setCurrentView('chat');
+  const handleSubjectSelect = (subject: string) => {
+    setChatState({ subject });
+    setCurrentScreen('chat');
     if (isMobile) {
-      setSidebarOpen(false);
-    }
-  };
-
-  const handleSettingsClick = () => {
-    setCurrentView('settings');
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
-  };
-
-  const handleProfileClick = () => {
-    setCurrentView('profile');
-    if (isMobile) {
-      setSidebarOpen(false);
+      setIsSidebarOpen(false);
     }
   };
 
   const handleBackToWelcome = () => {
-    setCurrentView('welcome');
-    setSelectedSubject(null);
+    setCurrentScreen('welcome');
+    setChatState({ subject: '' });
   };
 
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      toast({
-        title: "ログアウト完了",
-        description: "ログアウトしました。",
-      });
-      
-      navigate('/');
-    } catch (error: any) {
-      console.error('Logout error:', error);
-      toast({
-        title: "エラー",
-        description: "ログアウトに失敗しました。",
-        variant: "destructive",
-      });
+  const handleToggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const handleOpenConversation = (conversationId: string, subject: string) => {
+    setChatState({ subject, conversationId });
+    setCurrentScreen('chat');
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'welcome':
+        return (
+          <WelcomeScreen
+            onSubjectSelect={handleSubjectSelect}
+            onToggleSidebar={handleToggleSidebar}
+            isMobile={isMobile}
+            dailyQuestions={chatStats.dailyQuestions}
+            understoodCount={chatStats.understoodCount}
+          />
+        );
+      case 'chat':
+        return (
+          <ChatScreen
+            subject={chatState.subject}
+            conversationId={chatState.conversationId}
+            onBackToWelcome={handleBackToWelcome}
+            onToggleSidebar={handleToggleSidebar}
+            isMobile={isMobile}
+          />
+        );
+      case 'settings':
+        return (
+          <SettingsScreen
+            onBack={handleBackToWelcome}
+            onToggleSidebar={handleToggleSidebar}
+            isMobile={isMobile}
+          />
+        );
+      case 'profile':
+        return (
+          <ProfileScreen
+            onBack={handleBackToWelcome}
+            onToggleSidebar={handleToggleSidebar}
+            isMobile={isMobile}
+          />
+        );
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 relative overflow-hidden">
-      {/* Mobile Overlay */}
-      {isMobile && sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      
+    <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className={`
-        ${isMobile ? 'fixed inset-y-0 left-0 z-50' : 'relative'}
-        ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
-        transition-transform duration-300 ease-in-out
-        lg:translate-x-0 lg:static lg:inset-0
-        h-full
-      `}>
-        <Sidebar
-          selectedSubject={selectedSubject || ''}
-          onSubjectChange={handleSubjectChange}
-          onSettingsClick={handleSettingsClick}
-          onProfileClick={handleProfileClick}
-          onLogout={handleLogout}
-          dailyQuestions={dailyQuestions}
-          totalCost={totalCost}
-          understoodCount={understoodCount}
-          dailyCostProp={dailyCost}
-          isLoadingStats={isLoadingStats}
-        />
-      </div>
-      
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {currentView === 'welcome' ? (
-          <WelcomeScreen
-            onSubjectSelect={handleSubjectChange}
-            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-            isMobile={isMobile}
-            dailyQuestions={dailyQuestions}
-            understoodCount={understoodCount}
-          />
-        ) : currentView === 'chat' && selectedSubject ? (
-          <ChatScreen
-            subject={selectedSubject}
-            subjectName={subjectNames[selectedSubject]}
-            userId={currentUser?.id}
-            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-            isMobile={isMobile}
-          />
-        ) : currentView === 'settings' ? (
-          <SettingsScreen 
-            onBack={handleBackToWelcome}
-            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-            isMobile={isMobile}
-          />
-        ) : (
-          <ProfileScreen 
-            onBack={handleBackToWelcome}
-            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+      <div
+        className={`${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } transition-transform duration-300 ease-in-out ${
+          isMobile ? 'fixed inset-y-0 left-0 z-50 w-80' : 'relative'
+        } ${isMobile ? '' : isSidebarOpen ? 'w-80' : 'w-0'}`}
+      >
+        {(isSidebarOpen || !isMobile) && (
+          <Sidebar
+            profile={profile}
+            settings={settings}
+            dailyQuestions={chatStats.dailyQuestions}
+            understoodCount={chatStats.today_understood || 0}
+            totalQuestions={chatStats.totalQuestions || 0}
+            questionsDiff={chatStats.questionsDiff}
+            understoodDiff={chatStats.understoodDiff}
+            isStatsLoading={chatStats.isLoading}
+            onNavigate={(screen) => setCurrentScreen(screen)}
+            onSubjectSelect={handleSubjectSelect}
+            onOpenConversation={handleOpenConversation}
+            onCloseSidebar={() => setIsSidebarOpen(false)}
             isMobile={isMobile}
           />
         )}
+      </div>
+
+      {/* Overlay for mobile */}
+      {isMobile && isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Main content */}
+      <div className={`flex-1 ${isMobile ? 'w-full' : ''}`}>
+        {renderScreen()}
       </div>
     </div>
   );

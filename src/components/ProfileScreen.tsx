@@ -18,7 +18,6 @@ interface ProfileScreenProps {
 }
 
 const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
-  // Use the hook for profile data and loading state
   const { profile: loadedProfile, isLoading: isProfileLoading, refetchProfile, uploadAvatar } = useProfile();
   
   const [profileData, setProfileData] = useState<UserProfile>({
@@ -26,6 +25,7 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     email: '',
     avatar_url: '',
     show_countdown: true,
+    show_stats: true,
     exam_settings: {
       kyotsu: { name: '共通テスト', date: '2026-01-17' },
       todai: { name: '東大二次試験', date: '2026-02-25' }
@@ -42,23 +42,20 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     }
   }, [loadedProfile]);
 
-  // Removed manual loadProfile, as useProfile handles it.
-
   const handleSave = async () => {
     setIsSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found');
 
-      // Ensure exam_settings is stringified correctly if it's complex or could be null/undefined by mistake
-      // The current UserProfile type ensures exam_settings is always present, but good practice for looser types.
       const examSettingsJson = JSON.parse(JSON.stringify(profileData.exam_settings));
 
       const updates = {
         display_name: profileData.display_name || null,
-        email: profileData.email || null, // Email update might be restricted by Supabase policies / email change flow
+        email: profileData.email || null,
         avatar_url: profileData.avatar_url || null,
         show_countdown: profileData.show_countdown,
+        show_stats: profileData.show_stats,
         exam_settings: examSettingsJson,
         mbti: profileData.mbti === "不明" ? null : profileData.mbti,
       };
@@ -74,8 +71,8 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
         title: "保存完了",
         description: "プロフィールが更新されました。",
       });
-      await refetchProfile(); // Refetch profile to ensure UI consistency, especially if other tabs use useProfile
-      onBack(); // Navigate back after successful save
+      await refetchProfile();
+      onBack();
     } catch (error: any) {
       console.error('Profile save error:', error);
       toast({
@@ -93,12 +90,10 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
   };
 
   const handleAvatarUpload = async (file: File): Promise<string | null> => {
-    if (!uploadAvatar) return null; // uploadAvatar might not be available if useProfile hasn't initialized fully (edge case)
+    if (!uploadAvatar) return null;
     
     const newAvatarUrl = await uploadAvatar(file);
     if (newAvatarUrl) {
-      // The useProfile hook already updates its internal state and DB.
-      // We also update local component state for immediate reflection if not relying solely on hook's propagation.
       setProfileData(prev => ({ ...prev, avatar_url: newAvatarUrl }));
     }
     return newAvatarUrl;
@@ -110,6 +105,10 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
 
   const handleShowCountdownChange = (checked: boolean) => {
     setProfileData(prev => ({ ...prev, show_countdown: checked }));
+  };
+
+  const handleShowStatsChange = (checked: boolean) => {
+    setProfileData(prev => ({ ...prev, show_stats: checked }));
   };
 
   const updateExamSetting = (exam: 'kyotsu' | 'todai', field: 'name' | 'date', value: string) => {
@@ -125,7 +124,7 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     }));
   };
 
-  if (isProfileLoading && !loadedProfile) { // Show loading indicator if profile is loading for the first time
+  if (isProfileLoading && !loadedProfile) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -145,8 +144,10 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
         />
         <MbtiCard mbti={profileData.mbti} onMbtiChange={handleMbtiChange} />
         <DisplaySettingsCard 
-          showCountdown={profileData.show_countdown} 
-          onShowCountdownChange={handleShowCountdownChange} 
+          showCountdown={profileData.show_countdown}
+          showStats={profileData.show_stats}
+          onShowCountdownChange={handleShowCountdownChange}
+          onShowStatsChange={handleShowStatsChange}
         />
         <ExamSettingsCard 
           examSettings={profileData.exam_settings} 

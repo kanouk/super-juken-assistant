@@ -25,17 +25,25 @@ export const useProfile = () => {
       if (error) throw error;
 
       if (data) {
-        // デフォルトの試験設定（第1ゴールのみ）
+        // 管理者設定から第1ゴールを取得
+        const { data: adminData } = await supabase
+          .from('admin_settings')
+          .select('setting_value')
+          .eq('setting_key', 'default_first_goal')
+          .single();
+
+        const defaultFirstGoal = adminData?.setting_value || { name: '共通テスト', date: '2026-01-17' };
+
+        // デフォルトの試験設定（第1ゴールは管理者設定から取得）
         const defaultExamSettings: ExamSettings = {
-          kyotsu: { name: '共通テスト', date: '2026-01-17' },
+          kyotsu: defaultFirstGoal,
           todai: { name: '', date: '' }
         };
 
         // exam_settingsの型安全な処理
         let examSettings = defaultExamSettings;
-        // === 修正: nullや不正な場合はデフォルト採用 ===
         if (data.exam_settings && isValidExamSettings(data.exam_settings)) {
-          examSettings = data.exam_settings as ExamSettings; // Cast after validation
+          examSettings = data.exam_settings as ExamSettings;
         } else if (data.exam_settings === null) {
           examSettings = defaultExamSettings;
         }
@@ -45,6 +53,7 @@ export const useProfile = () => {
           email: data.email || user.email,
           avatar_url: data.avatar_url,
           show_countdown: data.show_countdown ?? true,
+          show_stats: data.show_stats ?? true,
           exam_settings: examSettings,
           mbti: data.mbti || null,
         });
@@ -71,7 +80,7 @@ export const useProfile = () => {
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true }); // Use upsert to overwrite if file exists (e.g. re-upload)
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) {
         console.error('Avatar upload error:', uploadError);
@@ -86,7 +95,6 @@ export const useProfile = () => {
         throw new Error('Could not get public URL for avatar');
       }
       
-      // Update profile in DB with new avatar_url
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrlData.publicUrl })

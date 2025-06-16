@@ -19,7 +19,8 @@ interface AdminSettings {
   free_user_api_keys: Record<string, string>;
   available_models: Record<string, Array<{label: string, value: string}>>;
   free_user_models: Record<string, string>;
-  mbti_instructions: Record<string, string>; // MBTIタイプ別
+  mbti_instructions: Record<string, string>;
+  default_first_goal: { name: string; date: string };
 }
 
 export const useAdminSettings = () => {
@@ -30,7 +31,8 @@ export const useAdminSettings = () => {
     free_user_api_keys: {},
     available_models: {},
     free_user_models: {},
-    mbti_instructions: {}, // 追加
+    mbti_instructions: {},
+    default_first_goal: { name: '共通テスト', date: '2026-01-17' },
   });
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();

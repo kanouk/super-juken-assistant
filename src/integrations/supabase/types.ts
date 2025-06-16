@@ -150,6 +150,7 @@ export type Database = {
           mbti: string | null
           passcode: string
           show_countdown: boolean | null
+          show_stats: boolean | null
         }
         Insert: {
           avatar_url?: string | null
@@ -161,6 +162,7 @@ export type Database = {
           mbti?: string | null
           passcode?: string
           show_countdown?: boolean | null
+          show_stats?: boolean | null
         }
         Update: {
           avatar_url?: string | null
@@ -172,6 +174,7 @@ export type Database = {
           mbti?: string | null
           passcode?: string
           show_countdown?: boolean | null
+          show_stats?: boolean | null
         }
         Relationships: []
       }
