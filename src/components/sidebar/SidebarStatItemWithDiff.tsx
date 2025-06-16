@@ -21,7 +21,15 @@ const SidebarStatItemWithDiff: React.FC<SidebarStatItemWithDiffProps> = ({
   iconColor
 }) => {
   const getDiffDisplay = () => {
-    if (diff === undefined || diff === 0) return null;
+    if (diff === undefined || diff === null) return null;
+    
+    if (diff === 0) {
+      return (
+        <div className="flex items-center text-xs text-gray-500 ml-2">
+          <span>±0</span>
+        </div>
+      );
+    }
     
     const isPositive = diff > 0;
     const DiffIcon = isPositive ? TrendingUp : TrendingDown;

@@ -51,8 +51,24 @@ export const useChatStats = (userId: string | undefined) => {
     try {
       setError(null);
 
-      const today = new Date().toISOString().split('T')[0];
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      // 正確な日付範囲を設定
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+      const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+      const dayAfterYesterday = new Date(yesterday.getTime() + 24 * 60 * 60 * 1000);
+
+      const todayStart = today.toISOString();
+      const todayEnd = tomorrow.toISOString();
+      const yesterdayStart = yesterday.toISOString();
+      const yesterdayEnd = dayAfterYesterday.toISOString();
+
+      console.log('Date ranges:', {
+        todayStart,
+        todayEnd,
+        yesterdayStart,
+        yesterdayEnd
+      });
 
       const { data: conversations, error: conversationsError } = await supabase
         .from('conversations')
@@ -86,8 +102,8 @@ export const useChatStats = (userId: string | undefined) => {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('is_understood', true)
-        .gte('understood_at', `${today}T00:00:00.000Z`)
-        .lt('understood_at', `${today}T23:59:59.999Z`);
+        .gte('understood_at', todayStart)
+        .lt('understood_at', todayEnd);
       if (todayUnderstoodError) throw todayUnderstoodError;
 
       // 昨日理解した数
@@ -96,8 +112,8 @@ export const useChatStats = (userId: string | undefined) => {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('is_understood', true)
-        .gte('understood_at', `${yesterday}T00:00:00.000Z`)
-        .lt('understood_at', `${yesterday}T23:59:59.999Z`);
+        .gte('understood_at', yesterdayStart)
+        .lt('understood_at', yesterdayEnd);
       if (yesterdayUnderstoodError) throw yesterdayUnderstoodError;
 
       // 累計理解した数
@@ -125,16 +141,16 @@ export const useChatStats = (userId: string | undefined) => {
       const { data: todayData, error: todayError } = await supabase
         .from('messages')
         .select('cost, role')
-        .gte('created_at', `${today}T00:00:00.000Z`)
-        .lt('created_at', `${today}T23:59:59.999Z`)
+        .gte('created_at', todayStart)
+        .lt('created_at', todayEnd)
         .in('conversation_id', conversationIds);
       if (todayError) throw todayError;
 
       const { data: yesterdayData, error: yesterdayError } = await supabase
         .from('messages')
         .select('role')
-        .gte('created_at', `${yesterday}T00:00:00.000Z`)
-        .lt('created_at', `${yesterday}T23:59:59.999Z`)
+        .gte('created_at', yesterdayStart)
+        .lt('created_at', yesterdayEnd)
         .in('conversation_id', conversationIds);
       if (yesterdayError) throw yesterdayError;
 
@@ -145,6 +161,14 @@ export const useChatStats = (userId: string | undefined) => {
 
       const understoodDiff = (todayUnderstoodCount || 0) - (yesterdayUnderstoodCount || 0);
       const questionsDiff = dailyQuestions - yesterdayQuestions;
+
+      console.log('Stats calculated:', {
+        todayUnderstoodCount,
+        yesterdayUnderstoodCount,
+        totalUnderstoodCount,
+        understoodDiff,
+        questionsDiff
+      });
 
       setStats({
         understoodCount: totalUnderstoodCount || 0,
