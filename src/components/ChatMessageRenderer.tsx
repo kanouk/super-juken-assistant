@@ -16,45 +16,121 @@ interface ChatMessageRendererProps {
 const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colorScheme }) => {
   const isUser = colorScheme === 'user';
   
-  // KaTeXオプション - 化学式サポートを含む完全版
+  // Enhanced KaTeX options with comprehensive chemical formula support
   const katexOptions = {
     strict: false,
     throwOnError: false,
     output: 'html',
     trust: true,
+    globalGroup: true,
     macros: {
-      "\\ce": "\\mathrm{#1}",  // 化学式の簡易サポート
+      // Chemical formula support
+      "\\ce": "\\mathrm{#1}",
       "\\pu": "\\mathrm{#1}",
+      
+      // Mathematical symbols
       "\\vec": "\\overrightarrow{#1}",
       "\\R": "\\mathbb{R}",
       "\\N": "\\mathbb{N}",
       "\\Z": "\\mathbb{Z}",
       "\\Q": "\\mathbb{Q}",
       "\\C": "\\mathbb{C}",
-      "\\begin{pmatrix}": "\\begin{pmatrix}",
-      "\\end{pmatrix}": "\\end{pmatrix}"
+      
+      // Matrix environments
+      "\\bmat": "\\begin{bmatrix}#1\\end{bmatrix}",
+      "\\pmat": "\\begin{pmatrix}#1\\end{pmatrix}",
+      "\\vmat": "\\begin{vmatrix}#1\\end{vmatrix}",
+      
+      // Common operators
+      "\\d": "\\mathrm{d}",
+      "\\e": "\\mathrm{e}",
+      "\\i": "\\mathrm{i}",
+      
+      // Chemical arrows and symbols
+      "\\yields": "\\rightarrow",
+      "\\equilibrium": "\\rightleftharpoons",
+      
+      // Physics and chemistry units
+      "\\unit": "\\,\\mathrm{#1}",
+      "\\mol": "\\,\\mathrm{mol}",
+      "\\kg": "\\,\\mathrm{kg}",
+      "\\m": "\\,\\mathrm{m}",
+      "\\s": "\\,\\mathrm{s}",
+      "\\A": "\\,\\mathrm{A}",
+      "\\K": "\\,\\mathrm{K}",
+      "\\J": "\\,\\mathrm{J}",
+      "\\Pa": "\\,\\mathrm{Pa}",
+      "\\V": "\\,\\mathrm{V}",
+      "\\W": "\\,\\mathrm{W}",
+      "\\Hz": "\\,\\mathrm{Hz}",
+      "\\N": "\\,\\mathrm{N}",
+      "\\C": "\\,\\mathrm{C}",
+      "\\F": "\\,\\mathrm{F}",
+      "\\Omega": "\\,\\Omega"
     }
   };
 
-  // コンテンツの前処理
+  // Enhanced content preprocessing for comprehensive LaTeX support
   const processContent = (text: string) => {
-    // 角括弧の数式記法を標準記法に変換（オプション）
-    let processed = text
-      // 単独行の [ ] をブロック数式に変換
-      .replace(/^\s*\[\s*([^\]]+)\s*\]\s*$/gm, '$$\n$1\n$$')
-      // ブロック数式の前後に改行を確保
-      .replace(/([^\n])\$\$/g, '$1\n$$')
-      .replace(/\$\$([^\n])/g, '$$\n$1');
+    let processed = text;
+    
+    // Step 1: Normalize different LaTeX delimiters
+    // Convert \( \) to $ $ for inline math
+    processed = processed.replace(/\\\((.*?)\\\)/gs, '$$$1$$');
+    
+    // Convert \[ \] to $$ $$ for display math
+    processed = processed.replace(/\\\[(.*?)\\\]/gs, '$$$$\n$1\n$$$$');
+    
+    // Step 2: Handle standalone bracketed expressions as display math
+    processed = processed.replace(/^\s*\[\s*([^\]]+)\s*\]\s*$/gm, '$$$$\n$1\n$$$$');
+    
+    // Step 3: Ensure proper spacing around display math blocks
+    processed = processed.replace(/([^\n$])\$\$/g, '$1\n$$$$');
+    processed = processed.replace(/\$\$([^\n$])/g, '$$$$\n$1');
+    
+    // Step 4: Handle multi-line environments properly
+    processed = processed.replace(/(\\begin\{(?:align|gather|equation|eqnarray|multline|split)\*?\}.*?\\end\{(?:align|gather|equation|eqnarray|multline|split)\*?\})/gs, (match) => {
+      // Ensure the environment is wrapped in display math if not already
+      if (!match.startsWith('$$') && !match.endsWith('$$')) {
+        return `$$$$\n${match}\n$$$$`;
+      }
+      return match;
+    });
+    
+    // Step 5: Handle chemical formulas - ensure \ce{} is properly recognized
+    processed = processed.replace(/\\ce\{([^}]+)\}/g, '\\ce{$1}');
+    
+    // Step 6: Fix common escape issues
+    processed = processed.replace(/\\&/g, '&');
+    processed = processed.replace(/\\_/g, '_');
+    
+    // Step 7: Ensure chemical equations are in math mode
+    processed = processed.replace(/(\$\\ce\{[^}]+\}\$)/g, '$1');
+    processed = processed.replace(/(^|[^$])\\ce\{([^}]+)\}([^$]|$)/g, '$1$$\\ce{$2}$$$3');
+    
+    // Step 8: Clean up excessive newlines around math blocks
+    processed = processed.replace(/\$\$\s*\n\s*\n\s*/g, '$$$$\n');
+    processed = processed.replace(/\s*\n\s*\n\s*\$\$/g, '\n$$$$');
     
     return processed;
   };
 
-  // 基本テキストスタイル
+  // Error handling wrapper for math rendering
+  const renderWithErrorHandling = (content: string) => {
+    try {
+      return processContent(content);
+    } catch (error) {
+      console.warn('LaTeX processing error:', error);
+      return content; // Fallback to original content
+    }
+  };
+
+  // Base text styling
   const baseTextClass = `font-sans text-[15px] leading-[1.7] break-words ${
     isUser ? 'text-white' : 'text-gray-900'
   }`;
 
-  // 見出しスタイル（改善版）
+  // Enhanced heading styles
   const getHeadingClass = (level: number) => {
     const baseClass = `font-semibold ${isUser ? 'text-white' : 'text-gray-900'}`;
     switch (level) {
@@ -71,7 +147,7 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
     }
   };
 
-  // テーブルスタイル（改善版）
+  // Enhanced table styles
   const tableStyles = {
     wrapper: `overflow-x-auto my-4 rounded-lg ${
       isUser ? 'bg-black/10 shadow-inner' : 'bg-white shadow-sm border border-gray-200'
@@ -91,7 +167,7 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
     tr: `${isUser ? 'hover:bg-white/5' : 'hover:bg-gray-50'} transition-colors`
   };
 
-  // コードスタイル
+  // Code styling
   const codeStyles = {
     inline: `font-mono text-[0.9em] px-[0.3em] py-[0.1em] rounded ${
       isUser 
@@ -101,26 +177,26 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
     block: 'my-4 rounded-lg overflow-hidden shadow-sm'
   };
 
-  // 引用スタイル
+  // Quote styling
   const blockquoteClass = `my-4 pl-4 pr-3 py-0.5 border-l-4 ${
     isUser 
       ? 'bg-blue-500/10 border-blue-400 text-blue-100' 
       : 'bg-blue-50 border-blue-400 text-blue-800'
   }`;
 
-  // リンクスタイル
+  // Link styling
   const linkClass = `${
     isUser ? 'text-blue-300 hover:text-blue-200' : 'text-blue-600 hover:text-blue-800'
   } underline decoration-1 underline-offset-2 transition-colors`;
 
-  // 水平線スタイル
+  // Horizontal rule styling
   const hrClass = `my-8 border-0 h-[2px] ${
     isUser 
       ? 'bg-gradient-to-r from-transparent via-white/20 to-transparent' 
       : 'bg-gradient-to-r from-transparent via-gray-300 to-transparent'
   }`;
 
-  // リストスタイル
+  // List styling
   const listStyles = {
     ul: `mb-4 pl-6 ${isUser ? 'marker:text-white/60' : 'marker:text-gray-400'}`,
     ol: `mb-4 pl-6 ${isUser ? 'marker:text-white/60' : 'marker:text-gray-400'}`,
@@ -133,7 +209,7 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[[rehypeKatex, katexOptions]]}
         components={{
-          // 見出し
+          // Headings
           h1: ({ children }) => <h1 className={getHeadingClass(1)}>{children}</h1>,
           h2: ({ children }) => <h2 className={getHeadingClass(2)}>{children}</h2>,
           h3: ({ children }) => <h3 className={getHeadingClass(3)}>{children}</h3>,
@@ -141,15 +217,15 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
           h5: ({ children }) => <h5 className={getHeadingClass(4)}>{children}</h5>,
           h6: ({ children }) => <h6 className={getHeadingClass(4)}>{children}</h6>,
 
-          // 段落
+          // Paragraphs
           p: ({ children }) => <p className="mb-4 leading-relaxed">{children}</p>,
 
-          // リスト
+          // Lists
           ul: ({ children }) => <ul className={`${listStyles.ul} list-disc`}>{children}</ul>,
           ol: ({ children }) => <ol className={`${listStyles.ol} list-decimal`}>{children}</ol>,
           li: ({ children }) => <li className={listStyles.li}>{children}</li>,
 
-          // テーブル
+          // Tables
           table: ({ children }) => (
             <div className={tableStyles.wrapper}>
               <table className={tableStyles.table}>{children}</table>
@@ -161,7 +237,7 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
           th: ({ children }) => <th className={tableStyles.th}>{children}</th>,
           td: ({ children }) => <td className={tableStyles.td}>{children}</td>,
 
-          // コードブロック
+          // Enhanced code blocks
           code: ({ children, className, ...rest }) => {
             const match = /language-(\w+)/.exec(className || '');
             const isInline = !match;
@@ -190,12 +266,12 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
             );
           },
 
-          // 引用
+          // Blockquotes
           blockquote: ({ children }) => (
             <blockquote className={blockquoteClass}>{children}</blockquote>
           ),
 
-          // リンク
+          // Links
           a: ({ href, children }) => (
             <a 
               href={href} 
@@ -207,7 +283,7 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
             </a>
           ),
 
-          // 画像
+          // Images
           img: ({ src, alt }) => (
             <img 
               src={src} 
@@ -217,27 +293,25 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
             />
           ),
 
-          // 強調
+          // Text formatting
           strong: ({ children }) => (
             <strong className={`font-semibold ${isUser ? 'text-white' : 'text-gray-900'}`}>
               {children}
             </strong>
           ),
 
-          // イタリック
           em: ({ children }) => (
             <em className="italic">{children}</em>
           ),
 
-          // 取り消し線
           del: ({ children }) => (
             <del className="line-through opacity-60">{children}</del>
           ),
 
-          // 水平線
+          // Horizontal rules
           hr: () => <hr className={hrClass} />,
 
-          // タスクリスト用のチェックボックス
+          // Task list checkboxes
           input: ({ type, checked, ...props }) => {
             if (type === 'checkbox') {
               return (
@@ -258,7 +332,7 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
           }
         }}
       >
-        {processContent(content)}
+        {renderWithErrorHandling(content)}
       </ReactMarkdown>
     </div>
   );
