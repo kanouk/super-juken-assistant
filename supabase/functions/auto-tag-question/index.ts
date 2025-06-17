@@ -14,13 +14,21 @@ serve(async (req) => {
   }
 
   try {
-    const { conversationId, questionContent, subject } = await req.json();
+    const { conversationId, conversationContent, subject } = await req.json();
     
-    console.log('Auto-tagging request:', { conversationId, subject, contentLength: questionContent?.length });
+    console.log('Auto-tagging request:', { 
+      conversationId, 
+      subject, 
+      hasQuestion: !!conversationContent?.question,
+      hasAnswer: !!conversationContent?.answer 
+    });
     
-    if (!conversationId || !questionContent) {
-      console.error('Missing required parameters:', { conversationId: !!conversationId, questionContent: !!questionContent });
-      throw new Error('Missing required parameters: conversationId and questionContent are required');
+    if (!conversationId || !conversationContent?.question) {
+      console.error('Missing required parameters:', { 
+        conversationId: !!conversationId, 
+        question: !!conversationContent?.question 
+      });
+      throw new Error('Missing required parameters: conversationId and question are required');
     }
 
     const supabase = createClient(
@@ -31,8 +39,8 @@ serve(async (req) => {
     // 教科が指定されていない場合は、質問内容から判定
     let determinedSubject = subject;
     if (!subject || subject === 'other') {
-      console.log('Determining subject from question content...');
-      determinedSubject = await determineSubject(questionContent);
+      console.log('Determining subject from conversation content...');
+      determinedSubject = await determineSubject(conversationContent.question);
       console.log('Determined subject:', determinedSubject);
     }
 
@@ -64,8 +72,8 @@ serve(async (req) => {
 
     console.log(`Found ${tags.length} tags for subject: ${determinedSubject}`);
 
-    // LLMにタグ選択を依頼
-    const selectedTags = await selectTagsWithLLM(questionContent, determinedSubject, tags);
+    // LLMにタグ選択を依頼（質問+回答を使用）
+    const selectedTags = await selectTagsWithLLM(conversationContent, determinedSubject, tags);
     console.log('Selected tags:', selectedTags?.length || 0);
 
     // 選択されたタグを質問に関連付け
@@ -189,7 +197,7 @@ async function determineSubject(questionContent: string): Promise<string> {
   }
 }
 
-async function selectTagsWithLLM(questionContent: string, subject: string, availableTags: any[]): Promise<any[]> {
+async function selectTagsWithLLM(conversationContent: any, subject: string, availableTags: any[]): Promise<any[]> {
   const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
   if (!openAIApiKey) {
     console.error('OpenAI API key not found');
@@ -199,6 +207,11 @@ async function selectTagsWithLLM(questionContent: string, subject: string, avail
   const tagsList = availableTags.map(tag => 
     `"${tag.major_category} > ${tag.minor_category}"`
   ).join('\n');
+
+  // 質問と回答を組み合わせた分析用テキストを作成
+  const analysisText = conversationContent.answer 
+    ? `【質問】\n${conversationContent.question}\n\n【回答】\n${conversationContent.answer}`
+    : `【質問】\n${conversationContent.question}`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -212,10 +225,11 @@ async function selectTagsWithLLM(questionContent: string, subject: string, avail
         messages: [
           {
             role: 'system',
-            content: `以下の受験生の質問内容を分析し、適切な分野タグを選択してください。
+            content: `以下の受験生の質問と回答内容を分析し、適切な分野タグを選択してください。
 
 【指示】
-- 質問内容に最も適したタグを1〜3個選択してください
+- 質問内容と回答内容の両方を参考にして、最も適したタグを1〜3個選択してください
+- 回答内容から具体的な分野や単元を特定できる場合は、それを重視してください
 - 以下のJSON形式で回答してください：
 {"selected_tags": [{"major": "大分類名", "minor": "中分類名"}, ...]}
 - JSON以外の文字は含めないでください
@@ -223,8 +237,7 @@ async function selectTagsWithLLM(questionContent: string, subject: string, avail
           },
           {
             role: 'user',
-            content: `【質問内容】
-${questionContent}
+            content: `${analysisText}
 
 【対象教科】
 ${subject}
@@ -234,7 +247,7 @@ ${tagsList}`
           }
         ],
         temperature: 0.1,
-        max_tokens: 200
+        max_tokens: 300
       }),
     });
 

@@ -35,15 +35,30 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Optimized auto-tagging function with proper error handling
-  const performAutoTagging = useCallback(async (conversationId: string, questionContent: string) => {
+  // Auto-tagging function for when conversation is understood
+  const performAutoTagging = useCallback(async (conversationId: string, messages: Message[]) => {
     try {
       console.log('Starting auto-tagging for conversation:', conversationId);
       
+      // Get the user's question and AI's response
+      const userMessage = messages.find(msg => msg.role === 'user');
+      const assistantMessage = messages.find(msg => msg.role === 'assistant');
+      
+      if (!userMessage) {
+        console.log('No user message found for tagging');
+        return false;
+      }
+
+      const conversationContent = {
+        question: userMessage.content,
+        answer: assistantMessage?.content || '',
+        subject: subject
+      };
+
       const { data, error } = await supabase.functions.invoke('auto-tag-question', {
         body: {
           conversationId,
-          questionContent,
+          conversationContent,
           subject
         }
       });
@@ -59,6 +74,8 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
           title: "自動タグ付け完了",
           description: `${data.tagsCount}個のタグが自動的に付与されました。`,
         });
+      } else {
+        console.log('Auto-tagging completed but no tags were applied');
       }
       
       return true;
@@ -173,13 +190,6 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         console.error('Failed to save AI message:', aiMessageError);
       }
 
-      // Perform auto-tagging in background after AI response is complete
-      setTimeout(() => {
-        performAutoTagging(conversationId!, content).catch(error => {
-          console.error('Background auto-tagging failed:', error);
-        });
-      }, 1000); // Delay to avoid race conditions
-
     } catch (error) {
       console.error('Send message error:', error);
       toast({
@@ -190,12 +200,13 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, profile, subject, currentModel, selectedConversationId, setSelectedConversationId, createConversation, toast, performAutoTagging]);
+  }, [messages, profile, subject, currentModel, selectedConversationId, setSelectedConversationId, createConversation, toast]);
 
   const handleUnderstood = useCallback(async () => {
     if (!selectedConversationId) return;
 
     try {
+      // Update conversation as understood
       await updateConversation(selectedConversationId, null, true);
       setConversationUnderstood(true);
       
@@ -204,10 +215,20 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         onConfettiTrigger();
       }
       
-      toast({
-        title: "完了",
-        description: "この質問を理解したことを記録しました。",
-      });
+      // Perform auto-tagging with the complete conversation
+      const taggingSuccess = await performAutoTagging(selectedConversationId, messages);
+      
+      if (taggingSuccess) {
+        toast({
+          title: "完了",
+          description: "この質問を理解したことを記録し、自動タグ付けを実行しました。",
+        });
+      } else {
+        toast({
+          title: "完了",
+          description: "この質問を理解したことを記録しました。",
+        });
+      }
     } catch (error) {
       console.error("Failed to update conversation:", error);
       toast({
@@ -216,7 +237,7 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         variant: "destructive",
       });
     }
-  }, [selectedConversationId, updateConversation, setConversationUnderstood, onConfettiTrigger, toast]);
+  }, [selectedConversationId, updateConversation, setConversationUnderstood, onConfettiTrigger, toast, messages, performAutoTagging]);
 
   return {
     messages,
