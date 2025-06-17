@@ -15,7 +15,7 @@ interface ChatMessageRendererProps {
 const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colorScheme }) => {
   const isUser = colorScheme === 'user';
   
-  // Enhanced KaTeX options with comprehensive chemical formula support
+  // 完全なKaTeX設定（化学式サポート含む）
   const katexOptions = {
     strict: false,
     throwOnError: false,
@@ -23,104 +23,111 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
     trust: true,
     globalGroup: true,
     macros: {
-      // Chemical formula support
+      // 化学式サポート
       "\\ce": "\\mathrm{#1}",
       "\\pu": "\\mathrm{#1}",
       
-      // Mathematical symbols
-      "\\vec": "\\overrightarrow{#1}",
+      // 数学記号
       "\\R": "\\mathbb{R}",
       "\\N": "\\mathbb{N}",
       "\\Z": "\\mathbb{Z}",
       "\\Q": "\\mathbb{Q}",
       "\\C": "\\mathbb{C}",
       
-      // Matrix environments
+      // 行列環境
       "\\bmat": "\\begin{bmatrix}#1\\end{bmatrix}",
       "\\pmat": "\\begin{pmatrix}#1\\end{pmatrix}",
       "\\vmat": "\\begin{vmatrix}#1\\end{vmatrix}",
       
-      // Common operators
+      // 一般的な演算子
       "\\d": "\\mathrm{d}",
       "\\e": "\\mathrm{e}",
       "\\i": "\\mathrm{i}",
       
-      // Chemical arrows and symbols
+      // 化学反応の矢印
       "\\yields": "\\rightarrow",
       "\\equilibrium": "\\rightleftharpoons",
       
-      // Physics and chemistry units (using different names to avoid conflicts)
+      // 単位記号（化学・物理）
       "\\unit": "\\,\\mathrm{#1}",
-      "\\umol": "\\,\\mathrm{mol}",
-      "\\ukg": "\\,\\mathrm{kg}",
-      "\\um": "\\,\\mathrm{m}",
-      "\\us": "\\,\\mathrm{s}",
-      "\\uA": "\\,\\mathrm{A}",
-      "\\uK": "\\,\\mathrm{K}",
-      "\\uJ": "\\,\\mathrm{J}",
-      "\\uPa": "\\,\\mathrm{Pa}",
-      "\\uV": "\\,\\mathrm{V}",
-      "\\uW": "\\,\\mathrm{W}",
-      "\\uHz": "\\,\\mathrm{Hz}",
-      "\\uN": "\\,\\mathrm{N}",
-      "\\uC": "\\,\\mathrm{C}",
-      "\\uF": "\\,\\mathrm{F}",
-      "\\uOhm": "\\,\\Omega"
+      "\\mol": "\\,\\mathrm{mol}",
+      "\\kg": "\\,\\mathrm{kg}",
+      "\\meter": "\\,\\mathrm{m}",
+      "\\second": "\\,\\mathrm{s}",
+      "\\ampere": "\\,\\mathrm{A}",
+      "\\kelvin": "\\,\\mathrm{K}",
+      "\\joule": "\\,\\mathrm{J}",
+      "\\pascal": "\\,\\mathrm{Pa}",
+      "\\volt": "\\,\\mathrm{V}",
+      "\\watt": "\\,\\mathrm{W}",
+      "\\hertz": "\\,\\mathrm{Hz}",
+      "\\newton": "\\,\\mathrm{N}",
+      "\\coulomb": "\\,\\mathrm{C}",
+      "\\farad": "\\,\\mathrm{F}",
+      "\\ohm": "\\,\\Omega"
     }
   };
 
-  // Enhanced content preprocessing for comprehensive LaTeX support
+  // 強化されたコンテンツ前処理関数
   const processContent = (text: string) => {
     let processed = text;
     
-    // Step 1: Normalize different LaTeX delimiters
-    // Convert \( \) to $ $ for inline math
-    processed = processed.replace(/\\\((.*?)\\\)/gs, '$$$1$$');
-    
-    // Convert \[ \] to $$ $$ for display math
-    processed = processed.replace(/\\\[(.*?)\\\]/gs, '$$$$\n$1\n$$$$');
-    
-    // Step 2: Handle standalone bracketed expressions as display math
-    processed = processed.replace(/^\s*\[\s*([^\]]+)\s*\]\s*$/gm, '$$$$\n$1\n$$$$');
-    
-    // Step 3: Ensure proper spacing around display math blocks
-    processed = processed.replace(/([^\n$])\$\$/g, '$1\n$$$$');
-    processed = processed.replace(/\$\$([^\n$])/g, '$$$$\n$1');
-    
-    // Step 4: Handle multi-line environments properly
-    processed = processed.replace(/(\\begin\{(?:align|gather|equation|eqnarray|multline|split)\*?\}.*?\\end\{(?:align|gather|equation|eqnarray|multline|split)\*?\})/gs, (match) => {
-      // Ensure the environment is wrapped in display math if not already
-      if (!match.startsWith('$$') && !match.endsWith('$$')) {
-        return `$$$$\n${match}\n$$$$`;
-      }
-      return match;
-    });
-    
-    // Step 5: Handle chemical formulas - ensure \ce{} is properly recognized
-    processed = processed.replace(/\\ce\{([^}]+)\}/g, '\\ce{$1}');
-    
-    // Step 6: Fix common escape issues
-    processed = processed.replace(/\\&/g, '&');
-    processed = processed.replace(/\\_/g, '_');
-    
-    // Step 7: Ensure chemical equations are in math mode
-    processed = processed.replace(/(\$\\ce\{[^}]+\}\$)/g, '$1');
-    processed = processed.replace(/(^|[^$])\\ce\{([^}]+)\}([^$]|$)/g, '$1$$\\ce{$2}$$$3');
-    
-    // Step 8: Clean up excessive newlines around math blocks
-    processed = processed.replace(/\$\$\s*\n\s*\n\s*/g, '$$$$\n');
-    processed = processed.replace(/\s*\n\s*\n\s*\$\$/g, '\n$$$$');
-    
-    return processed;
+    try {
+      // Step 1: LaTeX区切り文字の正規化
+      // \( \) を $ $ に変換（インライン数式）
+      processed = processed.replace(/\\\((.*?)\\\)/gs, '$$$1$$');
+      
+      // \[ \] を $$ $$ に変換（ディスプレイ数式）
+      processed = processed.replace(/\\\[(.*?)\\\]/gs, '$$$$\n$1\n$$$$');
+      
+      // Step 2: 単独の括弧付き式をディスプレイ数式として処理
+      processed = processed.replace(/^\s*\[\s*([^\]]+)\s*\]\s*$/gm, '$$$$\n$1\n$$$$');
+      
+      // Step 3: 数式環境の処理
+      const mathEnvironments = ['align', 'gather', 'equation', 'eqnarray', 'multline', 'split'];
+      mathEnvironments.forEach(env => {
+        const pattern = new RegExp(`(\\\\begin\\{${env}\\*?\\}.*?\\\\end\\{${env}\\*?\\})`, 'gs');
+        processed = processed.replace(pattern, (match) => {
+          if (!match.trim().startsWith('$$') && !match.trim().endsWith('$$')) {
+            return `$$$$\n${match}\n$$$$`;
+          }
+          return match;
+        });
+      });
+      
+      // Step 4: 化学式の処理
+      // 化学式が数式モードに含まれていることを確認
+      processed = processed.replace(/(^|[^$])\\ce\{([^}]+)\}([^$]|$)/g, '$1$$\\ce{$2}$$$3');
+      
+      // Step 5: ディスプレイ数式の改行処理
+      processed = processed.replace(/([^\n$])\$\$/g, '$1\n$$$$');
+      processed = processed.replace(/\$\$([^\n$])/g, '$$$$\n$1');
+      
+      // Step 6: エスケープ文字の修正
+      processed = processed.replace(/\\&/g, '&');
+      processed = processed.replace(/\\_(?![a-zA-Z])/g, '_');
+      
+      // Step 7: 過剰な改行の削除
+      processed = processed.replace(/\$\$\s*\n\s*\n\s*/g, '$$$$\n');
+      processed = processed.replace(/\s*\n\s*\n\s*\$\$/g, '\n$$$$');
+      
+      // Step 8: 分数記法の修正
+      processed = processed.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '\\frac{$1}{$2}');
+      
+      return processed;
+    } catch (error) {
+      console.warn('LaTeX前処理エラー:', error);
+      return text; // エラー時は元のテキストを返す
+    }
   };
 
-  // Error handling wrapper for math rendering
+  // エラーハンドリング付きレンダリング
   const renderWithErrorHandling = (content: string) => {
     try {
       return processContent(content);
     } catch (error) {
-      console.warn('LaTeX processing error:', error);
-      return content; // Fallback to original content
+      console.error('数式レンダリングエラー:', error);
+      return content;
     }
   };
 
