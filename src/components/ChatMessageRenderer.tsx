@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -50,23 +49,23 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
       "\\yields": "\\rightarrow",
       "\\equilibrium": "\\rightleftharpoons",
       
-      // Physics and chemistry units
+      // Physics and chemistry units (using different names to avoid conflicts)
       "\\unit": "\\,\\mathrm{#1}",
-      "\\mol": "\\,\\mathrm{mol}",
-      "\\kg": "\\,\\mathrm{kg}",
-      "\\m": "\\,\\mathrm{m}",
-      "\\s": "\\,\\mathrm{s}",
-      "\\A": "\\,\\mathrm{A}",
-      "\\K": "\\,\\mathrm{K}",
-      "\\J": "\\,\\mathrm{J}",
-      "\\Pa": "\\,\\mathrm{Pa}",
-      "\\V": "\\,\\mathrm{V}",
-      "\\W": "\\,\\mathrm{W}",
-      "\\Hz": "\\,\\mathrm{Hz}",
-      "\\N": "\\,\\mathrm{N}",
-      "\\C": "\\,\\mathrm{C}",
-      "\\F": "\\,\\mathrm{F}",
-      "\\Omega": "\\,\\Omega"
+      "\\umol": "\\,\\mathrm{mol}",
+      "\\ukg": "\\,\\mathrm{kg}",
+      "\\um": "\\,\\mathrm{m}",
+      "\\us": "\\,\\mathrm{s}",
+      "\\uA": "\\,\\mathrm{A}",
+      "\\uK": "\\,\\mathrm{K}",
+      "\\uJ": "\\,\\mathrm{J}",
+      "\\uPa": "\\,\\mathrm{Pa}",
+      "\\uV": "\\,\\mathrm{V}",
+      "\\uW": "\\,\\mathrm{W}",
+      "\\uHz": "\\,\\mathrm{Hz}",
+      "\\uN": "\\,\\mathrm{N}",
+      "\\uC": "\\,\\mathrm{C}",
+      "\\uF": "\\,\\mathrm{F}",
+      "\\uOhm": "\\,\\Omega"
     }
   };
 
