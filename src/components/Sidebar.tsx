@@ -10,7 +10,6 @@ import SidebarStatsSection from "./sidebar/SidebarStatsSection";
 import SidebarFooter from "./sidebar/SidebarFooter";
 import { getDisplaySubjects } from "./sidebar/sidebarUtils";
 import { legacySubjects } from "./sidebar/legacySubjects";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 
 interface SidebarProps {
   profile: UserProfile | null;
@@ -67,12 +66,7 @@ const Sidebar = ({
   }, []);
 
   return (
-    <div className={`${isOpen ? 'w-80' : 'w-12'} bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col h-screen shadow-lg transition-all duration-300 relative`}>
-      {/* Unified Toggle Button using SidebarTrigger */}
-      <div className="absolute -right-3 top-4 z-50">
-        <SidebarTrigger className="w-6 h-6 p-0 bg-white border border-gray-200 rounded-full shadow-md hover:bg-gray-50" />
-      </div>
-
+    <div className={`${isOpen ? 'w-80' : 'w-12'} bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col h-screen shadow-lg transition-all duration-300`}>
       {isOpen && (
         <>
           <SidebarHeader
