@@ -1,7 +1,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Bot, ChevronLeft, ChevronRight } from "lucide-react";
+import { Bot } from "lucide-react";
 import { UserProfile } from '@/types/profile';
 import { supabase } from "@/integrations/supabase/client";
 import SidebarHeader from "./sidebar/SidebarHeader";
@@ -11,6 +10,7 @@ import SidebarStatsSection from "./sidebar/SidebarStatsSection";
 import SidebarFooter from "./sidebar/SidebarFooter";
 import { getDisplaySubjects } from "./sidebar/sidebarUtils";
 import { legacySubjects } from "./sidebar/legacySubjects";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 interface SidebarProps {
   profile: UserProfile | null;
@@ -66,22 +66,12 @@ const Sidebar = ({
     setOpenCollapsibles(prev => ({ ...prev, [id]: isOpen }));
   }, []);
 
-  const handleToggleClick = () => {
-    console.log('Toggle button clicked, current isOpen:', isOpen);
-    onToggleSidebar();
-  };
-
   return (
     <div className={`${isOpen ? 'w-80' : 'w-12'} bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col h-screen shadow-lg transition-all duration-300 relative`}>
-      {/* Toggle Button - Fixed positioning */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleToggleClick}
-        className={`absolute ${isOpen ? '-right-3' : '-right-3'} top-4 z-50 w-6 h-6 p-0 bg-white border border-gray-200 rounded-full shadow-md hover:bg-gray-50 transition-all duration-300`}
-      >
-        {isOpen ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-      </Button>
+      {/* Unified Toggle Button using SidebarTrigger */}
+      <div className="absolute -right-3 top-4 z-50">
+        <SidebarTrigger className="w-6 h-6 p-0 bg-white border border-gray-200 rounded-full shadow-md hover:bg-gray-50" />
+      </div>
 
       {isOpen && (
         <>

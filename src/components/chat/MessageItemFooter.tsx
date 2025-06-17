@@ -33,15 +33,15 @@ const MessageItemFooter: React.FC<MessageItemFooterProps> = ({
 
   return (
     <div className="mt-6 pt-3 border-t border-gray-100">
-      <div className="flex items-center justify-between text-xs text-gray-400">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center gap-2">
           {model && (
-            <span className="font-mono">
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full border">
               {getModelDisplayName(model)}
             </span>
           )}
           {typeof cost !== 'undefined' && (
-            <span className="font-mono">
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-50 text-green-700 rounded-full border border-green-200">
               ¥{Number(cost).toFixed(4)}
             </span>
           )}
@@ -50,9 +50,9 @@ const MessageItemFooter: React.FC<MessageItemFooterProps> = ({
           type="button"
           aria-label="回答をコピー"
           onClick={handleCopy}
-          className="p-1 rounded hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+          className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-gray-500 hover:text-gray-700 shadow-sm hover:shadow-md"
         >
-          <Copy className="w-3 h-3" />
+          <Copy className="w-4 h-4" />
         </button>
       </div>
     </div>

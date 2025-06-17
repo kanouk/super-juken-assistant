@@ -38,9 +38,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   return (
     <div className={`${subjectConfig?.color || 'bg-gray-100'} border-b border-gray-200 p-4 flex items-center justify-between`}>
       <div className="flex items-center space-x-3">
-        <Button variant="ghost" size="sm" onClick={onBack}>
+        <Button variant="ghost" size="sm" onClick={onBack} className="md:flex hidden">
           <ArrowLeft className="h-4 w-4 mr-2" />
           戻る
+        </Button>
+        
+        {/* Mobile back button - icon only */}
+        <Button variant="ghost" size="sm" onClick={onBack} className="md:hidden">
+          <ArrowLeft className="h-4 w-4" />
         </Button>
         
         <div className="flex items-center space-x-2">
@@ -48,14 +53,19 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             {subjectConfig?.icon && <subjectConfig.icon className="h-5 w-5" />}
           </div>
           <div className="flex flex-col">
-            <h1 className="text-lg font-semibold text-gray-900">
+            {/* Desktop: Full subject name */}
+            <h1 className="text-lg font-semibold text-gray-900 hidden md:block">
               {subjectConfig?.name || subjectName}
             </h1>
-            {/* Show tags for the current conversation if available and valid */}
+            {/* Mobile: Short subject name */}
+            <h1 className="text-base font-semibold text-gray-900 md:hidden">
+              {(subjectConfig?.name || subjectName).substring(0, 8)}
+            </h1>
+            {/* Show tags for the current conversation if available and valid - hide on mobile */}
             {conversationId && (
               <MessageTags 
                 conversationId={conversationId} 
-                className="mt-1" 
+                className="mt-1 hidden md:block" 
               />
             )}
           </div>
@@ -64,14 +74,26 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
       <div className="flex items-center space-x-2">
         {showHistoryButton && onShowHistory && (
-          <Button variant="outline" size="sm" onClick={onShowHistory}>
-            <History className="h-4 w-4 mr-2" />
-            履歴
-          </Button>
+          <>
+            {/* Desktop button */}
+            <Button variant="outline" size="sm" onClick={onShowHistory} className="hidden md:flex">
+              <History className="h-4 w-4 mr-2" />
+              履歴
+            </Button>
+            {/* Mobile button - icon only */}
+            <Button variant="outline" size="sm" onClick={onShowHistory} className="md:hidden">
+              <History className="h-4 w-4" />
+            </Button>
+          </>
         )}
-        <Button variant="outline" size="sm" onClick={onNewChat}>
+        {/* Desktop button */}
+        <Button variant="outline" size="sm" onClick={onNewChat} className="hidden md:flex">
           <Plus className="h-4 w-4 mr-2" />
           新しい質問
+        </Button>
+        {/* Mobile button - icon only */}
+        <Button variant="outline" size="sm" onClick={onNewChat} className="md:hidden">
+          <Plus className="h-4 w-4" />
         </Button>
       </div>
     </div>
