@@ -31,50 +31,32 @@ const MessageItemFooter: React.FC<MessageItemFooterProps> = ({
     if (onCopyToClipboard) onCopyToClipboard(content);
   };
 
-  // フッターは必ず表示。model/costがなければ非表示テキストなし/空欄
   return (
-    <div
-      className="
-        flex items-center gap-4 
-        justify-end
-        mt-4
-        pr-2
-        z-20
-        bg-white/95 backdrop-blur
-        rounded-xl
-        shadow-lg
-        border border-gray-100
-        w-fit
-        ml-auto
-        px-3 py-1
-      "
-      style={{ position: "static" }}
-    >
-      {model ? (
-        <span className="text-xs text-gray-400 font-mono min-w-[90px] select-text">
-          {getModelDisplayName(model)}
-        </span>
-      ) : (
-        <span className="text-xs text-gray-200 font-mono min-w-[90px] select-text">&nbsp;</span>
-      )}
-      {typeof cost !== 'undefined' ? (
-        <span className="text-xs text-gray-400 font-mono select-text">¥{Number(cost).toFixed(4)}</span>
-      ) : (
-        <span className="text-xs text-gray-200 font-mono select-text">&nbsp;</span>
-      )}
-      <button
-        type="button"
-        aria-label="回答をコピー"
-        onClick={handleCopy}
-        className="ml-4 p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all text-gray-400 hover:text-gray-600"
-        tabIndex={0}
-        style={{ fontSize: 0 }}
-      >
-        <Copy className="w-4 h-4" />
-      </button>
+    <div className="mt-6 pt-3 border-t border-gray-100">
+      <div className="flex items-center justify-between text-xs text-gray-400">
+        <div className="flex items-center gap-4">
+          {model && (
+            <span className="font-mono">
+              {getModelDisplayName(model)}
+            </span>
+          )}
+          {typeof cost !== 'undefined' && (
+            <span className="font-mono">
+              ¥{Number(cost).toFixed(4)}
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          aria-label="回答をコピー"
+          onClick={handleCopy}
+          className="p-1 rounded hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+        >
+          <Copy className="w-3 h-3" />
+        </button>
+      </div>
     </div>
   );
 };
 
 export default MessageItemFooter;
-
