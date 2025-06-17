@@ -17,15 +17,15 @@ const QuickActions: React.FC<QuickActionsProps> = ({
   disabled = false 
 }) => {
   return (
-    <div className="flex flex-wrap gap-3 justify-center">
+    <div className="flex flex-wrap gap-2 sm:gap-3 justify-center px-2 sm:px-4 py-3">
       <Button 
         variant="outline" 
         size="sm" 
         onClick={() => onQuickAction('もっとわかりやすく教えてください')} 
         disabled={disabled}
-        className="h-10 px-4 text-sm bg-white border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-200 font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+        className="h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm bg-white border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-200 font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <Brain className="mr-2 h-4 w-4" /> 
+        <Brain className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> 
         <span className="hidden sm:inline">もっとわかりやすく</span>
         <span className="sm:hidden">簡単に</span>
       </Button>
@@ -34,9 +34,9 @@ const QuickActions: React.FC<QuickActionsProps> = ({
         size="sm" 
         onClick={() => onQuickAction('具体例をあげてください')} 
         disabled={disabled}
-        className="h-10 px-4 text-sm bg-white border-2 border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 hover:shadow-md transition-all duration-200 font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+        className="h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm bg-white border-2 border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 hover:shadow-md transition-all duration-200 font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <Lightbulb className="mr-2 h-4 w-4" /> 
+        <Lightbulb className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> 
         <span className="hidden sm:inline">具体例を教えて</span>
         <span className="sm:hidden">具体例</span>
       </Button>
@@ -44,7 +44,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
         variant="outline" 
         size="sm" 
         onClick={onUnderstood} 
-        className={`h-10 px-4 text-sm font-medium rounded-full transition-all duration-200 ${
+        className={`h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 ${
           isUnderstood 
             ? 'bg-green-50 border-2 border-green-300 text-green-700 cursor-not-allowed opacity-75 shadow-inner' 
             : disabled
@@ -55,13 +55,13 @@ const QuickActions: React.FC<QuickActionsProps> = ({
       >
         {isUnderstood ? (
           <>
-            <CheckCircle className="mr-2 h-4 w-4" />
+            <CheckCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">理解済み！</span>
             <span className="sm:hidden">済み</span>
           </>
         ) : (
           <>
-            <ThumbsUp className="mr-2 h-4 w-4" /> 
+            <ThumbsUp className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> 
             <span className="hidden sm:inline">完全に理解した！</span>
             <span className="sm:hidden">理解！</span>
           </>

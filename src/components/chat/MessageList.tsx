@@ -13,6 +13,7 @@ interface MessageListProps {
   onQuickAction: (prompt: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   conversationUnderstood: boolean;
+  isMobile?: boolean;
 }
 
 const MessageList: React.FC<MessageListProps> = ({
@@ -22,7 +23,10 @@ const MessageList: React.FC<MessageListProps> = ({
   onQuickAction,
   messagesEndRef,
   conversationUnderstood,
+  isMobile = false,
 }) => {
+  // モバイルでのQuickActions表示を考慮した追加マージン
+  const quickActionsHeight = 80;
 
   return (
     <ScrollArea className="h-full min-h-0 flex-1">
@@ -64,6 +68,12 @@ const MessageList: React.FC<MessageListProps> = ({
             </div>
           </div>
         )}
+        
+        {/* モバイルでQuickActionsが表示される場合の追加余白 */}
+        {isMobile && messages.length > 0 && !conversationUnderstood && (
+          <div style={{ height: `${quickActionsHeight}px` }} />
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
     </ScrollArea>

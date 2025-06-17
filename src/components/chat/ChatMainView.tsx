@@ -50,7 +50,8 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
   conversationUnderstood,
   onBackToWelcome,
 }) => {
-  const inputBarHeight = 98;
+  // モバイルでのインプットボックス高さを考慮
+  const mobileInputHeight = conversationUnderstood ? 140 : 160; // 理解済み状態では少し高く
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-white">
@@ -64,7 +65,9 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
         messages={messages}
         showHistoryButton={showHistoryButton}
       />
-      <div className={`flex-1 min-h-0 h-0 flex flex-col overflow-hidden ${isMobile ? `pb-[${inputBarHeight}px]` : ''}`}>
+      <div className={`flex-1 min-h-0 h-0 flex flex-col overflow-hidden ${
+        isMobile ? `pb-[${mobileInputHeight}px]` : ''
+      }`}>
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col overflow-hidden">
             <ChatEmptyState subjectName={subjectName} />
@@ -78,6 +81,7 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
               onQuickAction={onQuickAction}
               messagesEndRef={messagesEndRef}
               conversationUnderstood={conversationUnderstood}
+              isMobile={isMobile}
             />
           </div>
         )}
