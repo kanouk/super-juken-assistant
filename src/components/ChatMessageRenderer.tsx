@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -74,35 +73,48 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
     let processed = text;
     
     try {
-      // Step 1: 不正な数式ブロックの修正
-      // 単独の$を$$に変換（行の開始または終了にある場合）
-      processed = processed.replace(/^\$([^$\n]+)\$$/gm, '$$$$\n$1\n$$$$');
+      console.log('LaTeX処理開始:', processed.substring(0, 200));
       
-      // Step 2: LaTeX区切り文字の正規化
-      // \( \) を $ $ に変換（インライン数式）
-      processed = processed.replace(/\\\((.*?)\\\)/gs, '$$$1$$');
+      // Step 1: 不正な改行文字の修正（単独の \ を \\ に変換）
+      processed = processed.replace(/(?<!\\)\\(?![\\a-zA-Z{}])/g, '\\\\');
       
-      // \[ \] を $$ $$ に変換（ディスプレイ数式）
-      processed = processed.replace(/\\\[(.*?)\\\]/gs, '$$$$\n$1\n$$$$');
+      // Step 2: 数式環境の完全処理（アスタリスク付き含む）
+      const mathEnvironments = [
+        'align', 'align*', 'gather', 'gather*', 'equation', 'equation*', 
+        'eqnarray', 'eqnarray*', 'multline', 'multline*', 'split',
+        'cases', 'matrix', 'pmatrix', 'bmatrix', 'vmatrix', 'Vmatrix'
+      ];
       
-      // Step 3: 数式環境の処理（より安全に）
-      const mathEnvironments = ['align', 'gather', 'equation', 'eqnarray', 'multline', 'split'];
       mathEnvironments.forEach(env => {
-        const pattern = new RegExp(`(\\\\begin\\{${env}\\*?\\}[\\s\\S]*?\\\\end\\{${env}\\*?\\})`, 'g');
+        // エスケープされた環境名でマッチング
+        const escapedEnv = env.replace('*', '\\*');
+        const pattern = new RegExp(`(\\\\begin\\{${escapedEnv}\\}[\\s\\S]*?\\\\end\\{${escapedEnv}\\})`, 'g');
+        
         processed = processed.replace(pattern, (match) => {
+          console.log(`${env}環境を検出:`, match.substring(0, 50));
           // 既に$$で囲まれていない場合のみ追加
           if (!match.trim().startsWith('$$') && !match.trim().endsWith('$$')) {
-            return `$$$$\n${match.trim()}\n$$$$`;
+            return `$$\n${match.trim()}\n$$`;
           }
           return match;
         });
       });
       
-      // Step 4: 化学式の処理（安全に）
-      processed = processed.replace(/(^|[^$])\\ce\{([^}]+)\}([^$]|$)/g, '$1$$$$\\ce{$2}$$$$$3');
+      // Step 3: 不正な数式ブロックの修正
+      // 単独の$を$$に変換（行の開始または終了にある場合）
+      processed = processed.replace(/^\$([^$\n]+)\$$/gm, '$$\n$1\n$$');
       
-      // Step 5: 不完全な$$の修正
-      // 単独の$$を検出して修正
+      // Step 4: LaTeX区切り文字の正規化
+      // \( \) を $ $ に変換（インライン数式）
+      processed = processed.replace(/\\\((.*?)\\\)/gs, '$$$1$$');
+      
+      // \[ \] を $$ $$ に変換（ディスプレイ数式）
+      processed = processed.replace(/\\\[(.*?)\\\]/gs, '$$\n$1\n$$');
+      
+      // Step 5: 化学式の処理（安全に）
+      processed = processed.replace(/(^|[^$])\\ce\{([^}]+)\}([^$]|$)/g, '$1$$\\ce{$2}$$$3');
+      
+      // Step 6: 不完全な$$の修正
       const lines = processed.split('\n');
       const fixedLines = [];
       let inMathBlock = false;
@@ -110,23 +122,23 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         
-        if (line === '$$$$' || line === '$$') {
+        if (line === '$$') {
           if (inMathBlock) {
-            fixedLines.push('$$$$');
+            fixedLines.push('$$');
             inMathBlock = false;
           } else {
-            fixedLines.push('$$$$');
+            fixedLines.push('$$');
             inMathBlock = true;
           }
-        } else if (line.startsWith('$$$$') && line.length > 4) {
+        } else if (line.startsWith('$$') && line.length > 2) {
           // 開始と内容が同じ行にある場合
-          fixedLines.push('$$$$');
-          fixedLines.push(line.substring(4));
+          fixedLines.push('$$');
+          fixedLines.push(line.substring(2));
           inMathBlock = true;
-        } else if (line.endsWith('$$$$') && line.length > 4) {
+        } else if (line.endsWith('$$') && line.length > 2) {
           // 内容と終了が同じ行にある場合
-          fixedLines.push(line.substring(0, line.length - 4));
-          fixedLines.push('$$$$');
+          fixedLines.push(line.substring(0, line.length - 2));
+          fixedLines.push('$$');
           inMathBlock = false;
         } else {
           fixedLines.push(lines[i]);
@@ -135,28 +147,31 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
       
       // 未閉じの数式ブロックを修正
       if (inMathBlock) {
-        fixedLines.push('$$$$');
+        fixedLines.push('$$');
+        console.log('未閉じの数式ブロックを修正しました');
       }
       
       processed = fixedLines.join('\n');
       
-      // Step 6: エスケープ文字の修正
+      // Step 7: エスケープ文字の修正
       processed = processed.replace(/\\&/g, '&');
       processed = processed.replace(/\\_(?![a-zA-Z])/g, '_');
       
-      // Step 7: 過剰な空行の削除
-      processed = processed.replace(/\$\$\$\$\s*\n\s*\n+/g, '$$$$\n');
-      processed = processed.replace(/\n+\s*\$\$\$\$/g, '\n$$$$');
+      // Step 8: 過剰な空行の削除
+      processed = processed.replace(/\$\$\s*\n\s*\n+/g, '$$\n');
+      processed = processed.replace(/\n+\s*\$\$/g, '\n$$');
       
-      // Step 8: 分数記法の修正
+      // Step 9: 分数記法の修正
       processed = processed.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '\\frac{$1}{$2}');
       
+      console.log('LaTeX処理完了:', processed.substring(0, 200));
       return processed;
     } catch (error) {
       console.warn('LaTeX前処理エラー:', error);
-      // エラー時は元のテキストを返すが、最低限の安全な処理を行う
-      return text.replace(/\\\[(.*?)\\\]/gs, '$$$$\n$1\n$$$$')
-                 .replace(/\\\((.*?)\\\)/gs, '$$$1$$');
+      // エラー時は最低限の安全な処理を行う
+      return text.replace(/\\\[(.*?)\\\]/gs, '$$\n$1\n$$')
+                 .replace(/\\\((.*?)\\\)/gs, '$$$1$$')
+                 .replace(/(?<!\\)\\(?![\\a-zA-Z{}])/g, '\\\\');
     }
   };
 
