@@ -164,9 +164,12 @@ export const useAdminUsers = () => {
 
   const addAdminUser = async (userId: string, role: string) => {
     try {
+      // Ensure role is properly typed
+      const validRole = role as 'admin' | 'super_admin';
+      
       const { error } = await supabase
         .from('admin_users')
-        .insert({ user_id: userId, role });
+        .insert([{ user_id: userId, role: validRole }]);
 
       if (error) {
         console.error('Error adding admin user:', error);
