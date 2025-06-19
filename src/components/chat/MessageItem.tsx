@@ -20,6 +20,7 @@ interface MessageItemProps {
   isUnderstood?: boolean;
   disabled?: boolean;
   currentModel?: string;
+  isTagging?: boolean;
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({
@@ -33,6 +34,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   isUnderstood,
   disabled = false,
   currentModel,
+  isTagging = false,
 }) => {
   const { profile } = useProfile();
 
@@ -125,6 +127,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 onUnderstood={onUnderstood}
                 isUnderstood={isUnderstood || message.is_understood}
                 disabled={disabled}
+                isTagging={isTagging}
               />
             </div>
           </div>

@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -33,19 +32,26 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTagging, setIsTagging] = useState(false);
   const { toast } = useToast();
 
   // Auto-tagging function for when conversation is understood
   const performAutoTagging = useCallback(async (conversationId: string, messages: Message[]) => {
     try {
-      console.log('Starting auto-tagging for conversation:', conversationId);
+      console.log('🏷️ Starting auto-tagging for conversation:', conversationId);
+      setIsTagging(true);
       
       // Get the user's question and AI's response
       const userMessage = messages.find(msg => msg.role === 'user');
       const assistantMessage = messages.find(msg => msg.role === 'assistant');
       
       if (!userMessage) {
-        console.log('No user message found for tagging');
+        console.log('❌ No user message found for tagging');
+        toast({
+          title: "タグ付けエラー",
+          description: "ユーザーメッセージが見つかりません。",
+          variant: "destructive",
+        });
         return false;
       }
 
@@ -55,6 +61,7 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         subject: subject
       };
 
+      console.log('📤 Sending auto-tagging request...');
       const { data, error } = await supabase.functions.invoke('auto-tag-question', {
         body: {
           conversationId,
@@ -63,25 +70,52 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         }
       });
 
+      console.log('📥 Auto-tagging response:', data);
+      
       if (error) {
-        console.error('Auto-tagging error:', error);
+        console.error('❌ Auto-tagging error:', error);
+        toast({
+          title: "自動タグ付けエラー",
+          description: `タグ付けに失敗しました: ${error.message}`,
+          variant: "destructive",
+        });
         return false;
       }
 
-      if (data?.success && data.tagsCount > 0) {
-        console.log(`Auto-tagging successful: ${data.tagsCount} tags applied`);
-        toast({
-          title: "自動タグ付け完了",
-          description: `${data.tagsCount}個のタグが自動的に付与されました。`,
-        });
+      if (data?.success) {
+        if (data.tagsCount > 0) {
+          console.log(`✅ Auto-tagging successful: ${data.tagsCount} tags applied`);
+          toast({
+            title: "自動タグ付け完了",
+            description: `${data.tagsCount}個のタグが自動的に付与されました。\n教科: ${data.subject}\n利用可能タグ数: ${data.availableTags}`,
+          });
+        } else {
+          console.log('ℹ️ Auto-tagging completed but no tags were applied');
+          toast({
+            title: "タグ付け完了",
+            description: `教科「${data.subject}」で処理しましたが、適用可能なタグがありませんでした。\n利用可能タグ数: ${data.availableTags}`,
+          });
+        }
       } else {
-        console.log('Auto-tagging completed but no tags were applied');
+        console.log('⚠️ Auto-tagging completed with warnings');
+        toast({
+          title: "タグ付け警告",
+          description: data?.message || "タグ付け処理が完了しましたが、予期しない結果でした。",
+          variant: "destructive",
+        });
       }
       
       return true;
     } catch (error) {
-      console.error('Auto-tagging failed:', error);
+      console.error('💥 Auto-tagging failed:', error);
+      toast({
+        title: "自動タグ付けエラー",
+        description: `予期しないエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`,
+        variant: "destructive",
+      });
       return false;
+    } finally {
+      setIsTagging(false);
     }
   }, [subject, toast]);
 
@@ -218,19 +252,12 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
       // Perform auto-tagging with the complete conversation
       const taggingSuccess = await performAutoTagging(selectedConversationId, messages);
       
-      if (taggingSuccess) {
-        toast({
-          title: "完了",
-          description: "この質問を理解したことを記録し、自動タグ付けを実行しました。",
-        });
-      } else {
-        toast({
-          title: "完了",
-          description: "この質問を理解したことを記録しました。",
-        });
+      if (!taggingSuccess) {
+        console.warn('⚠️ Auto-tagging was not successful, but conversation was marked as understood');
       }
+      
     } catch (error) {
-      console.error("Failed to update conversation:", error);
+      console.error("❌ Failed to update conversation:", error);
       toast({
         title: "エラー",
         description: "理解したことの記録に失敗しました。",
@@ -243,6 +270,7 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
     messages,
     setMessages,
     isLoading,
+    isTagging,
     handleSendMessage,
     handleUnderstood,
   };

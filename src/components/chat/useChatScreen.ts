@@ -62,6 +62,7 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     messages,
     setMessages,
     isLoading,
+    isTagging,
     handleSendMessage,
     handleUnderstood: messageHandleUnderstood,
   } = useMessageHandling({
@@ -134,6 +135,7 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     subjectName,
     messages,
     isLoading,
+    isTagging,
     selectedImages,
     showConfetti,
     showConversations,

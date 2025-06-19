@@ -1,73 +1,99 @@
 
 import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Brain, Lightbulb, ThumbsUp, CheckCircle } from 'lucide-react';
+import { Heart, RotateCcw, HelpCircle, Lightbulb } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface QuickActionsProps {
   onQuickAction: (prompt: string) => void;
   onUnderstood: () => void;
   isUnderstood?: boolean;
   disabled?: boolean;
+  isTagging?: boolean;
 }
 
-const QuickActions: React.FC<QuickActionsProps> = ({ 
-  onQuickAction, 
-  onUnderstood, 
-  isUnderstood,
-  disabled = false 
+const QuickActions: React.FC<QuickActionsProps> = ({
+  onQuickAction,
+  onUnderstood,
+  isUnderstood = false,
+  disabled = false,
+  isTagging = false
 }) => {
+  const quickActions = [
+    {
+      icon: RotateCcw,
+      label: "もう一度説明して",
+      prompt: "今の説明をもう少し詳しく、別の方法で説明してください。"
+    },
+    {
+      icon: HelpCircle,
+      label: "例題を出して",
+      prompt: "この内容に関連する例題や練習問題を出してください。"
+    },
+    {
+      icon: Lightbulb,
+      label: "関連する内容を教えて",
+      prompt: "この内容に関連する他の重要なポイントや応用例を教えてください。"
+    }
+  ];
+
   return (
-    <div className="flex flex-wrap gap-2 sm:gap-3 justify-center px-2 sm:px-4 py-3">
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => onQuickAction('もっとわかりやすく教えてください')} 
-        disabled={disabled}
-        className="h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm bg-white border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-200 font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Brain className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> 
-        <span className="hidden sm:inline">もっとわかりやすく</span>
-        <span className="sm:hidden">簡単に</span>
-      </Button>
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => onQuickAction('具体例をあげてください')} 
-        disabled={disabled}
-        className="h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm bg-white border-2 border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 hover:shadow-md transition-all duration-200 font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Lightbulb className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> 
-        <span className="hidden sm:inline">具体例を教えて</span>
-        <span className="sm:hidden">具体例</span>
-      </Button>
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={onUnderstood} 
-        className={`h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 ${
-          isUnderstood 
-            ? 'bg-green-50 border-2 border-green-300 text-green-700 cursor-not-allowed opacity-75 shadow-inner' 
-            : disabled
-            ? 'bg-gray-50 border-2 border-gray-200 text-gray-400 cursor-not-allowed opacity-50'
-            : 'bg-white border-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:shadow-md cursor-pointer'
-        }`}
-        disabled={isUnderstood || disabled}
-      >
-        {isUnderstood ? (
-          <>
-            <CheckCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">理解済み！</span>
-            <span className="sm:hidden">済み</span>
-          </>
-        ) : (
-          <>
-            <ThumbsUp className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> 
-            <span className="hidden sm:inline">完全に理解した！</span>
-            <span className="sm:hidden">理解！</span>
-          </>
-        )}
-      </Button>
-    </div>
+    <Card className="shadow-sm border border-gray-100">
+      <CardContent className="p-4">
+        <div className="space-y-3">
+          {/* 理解ボタン */}
+          <div className="flex justify-center">
+            <Button
+              onClick={onUnderstood}
+              disabled={disabled || isUnderstood || isTagging}
+              className={`px-6 py-2 ${
+                isUnderstood 
+                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+              }`}
+              size="sm"
+            >
+              {isTagging ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  タグ付け中...
+                </>
+              ) : isUnderstood ? (
+                <>
+                  <Heart className="h-4 w-4 mr-2 fill-current" />
+                  理解済み
+                </>
+              ) : (
+                <>
+                  <Heart className="h-4 w-4 mr-2" />
+                  完全に理解した！
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* クイックアクション */}
+          {!isUnderstood && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {quickActions.map((action, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onQuickAction(action.prompt)}
+                  disabled={disabled || isTagging}
+                  className="flex items-center justify-center text-xs py-2 px-3 h-auto border-gray-200 hover:bg-gray-50"
+                >
+                  <action.icon className="h-3 w-3 mr-1 flex-shrink-0" />
+                  <span className="truncate">{action.label}</span>
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

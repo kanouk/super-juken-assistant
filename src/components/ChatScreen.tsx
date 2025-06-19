@@ -18,6 +18,7 @@ const ChatScreen = (props: ChatScreenProps) => {
       subjectName,
       messages,
       isLoading,
+      isTagging,
       selectedImages,
       showConfetti,
       showConversations,
@@ -83,6 +84,7 @@ const ChatScreen = (props: ChatScreenProps) => {
       currentModel={currentModel}
       messages={messages}
       isLoading={isLoading}
+      isTagging={isTagging}
       selectedImages={imageData}
       setSelectedImages={handleSetImages}
       onSendMessage={handleSendMessage}

@@ -16,19 +16,26 @@ serve(async (req) => {
   try {
     const { conversationId, conversationContent, subject } = await req.json();
     
-    console.log('Auto-tagging request:', { 
-      conversationId, 
-      subject, 
-      hasQuestion: !!conversationContent?.question,
-      hasAnswer: !!conversationContent?.answer 
-    });
+    console.log('=== AUTO-TAGGING REQUEST START ===');
+    console.log('Conversation ID:', conversationId);
+    console.log('Subject:', subject);
+    console.log('Has Question:', !!conversationContent?.question);
+    console.log('Has Answer:', !!conversationContent?.answer);
+    console.log('Question length:', conversationContent?.question?.length || 0);
+    console.log('Answer length:', conversationContent?.answer?.length || 0);
     
     if (!conversationId || !conversationContent?.question) {
-      console.error('Missing required parameters:', { 
+      console.error('❌ Missing required parameters:', { 
         conversationId: !!conversationId, 
         question: !!conversationContent?.question 
       });
-      throw new Error('Missing required parameters: conversationId and question are required');
+      return new Response(JSON.stringify({ 
+        error: 'Missing required parameters: conversationId and question are required',
+        success: false 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const supabase = createClient(
@@ -39,46 +46,58 @@ serve(async (req) => {
     // 教科が指定されていない場合は、質問内容から判定
     let determinedSubject = subject;
     if (!subject || subject === 'other') {
-      console.log('Determining subject from conversation content...');
+      console.log('🔍 Determining subject from conversation content...');
       determinedSubject = await determineSubject(conversationContent.question);
-      console.log('Determined subject:', determinedSubject);
+      console.log('✅ Determined subject:', determinedSubject);
     }
 
     // 該当教科のタグ一覧を取得
+    console.log('📚 Fetching tags for subject:', determinedSubject);
     const { data: tags, error: tagsError } = await supabase
       .from('tag_master')
       .select('id, major_category, minor_category')
       .eq('subject', determinedSubject);
 
     if (tagsError) {
-      console.error('Failed to fetch tags:', tagsError);
-      return new Response(JSON.stringify({ error: 'Failed to fetch tags', details: tagsError }), {
+      console.error('❌ Failed to fetch tags:', tagsError);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to fetch tags', 
+        details: tagsError,
+        success: false 
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    console.log(`📊 Found ${tags?.length || 0} tags for subject: ${determinedSubject}`);
+    
     if (!tags || tags.length === 0) {
-      console.log(`No tags found for subject: ${determinedSubject}`);
+      console.log('⚠️ No tags found for subject:', determinedSubject);
       return new Response(JSON.stringify({ 
         success: true, 
         message: 'No tags available for this subject', 
         subject: determinedSubject,
-        tagsCount: 0 
+        tagsCount: 0,
+        availableTags: []
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`Found ${tags.length} tags for subject: ${determinedSubject}`);
-
     // LLMにタグ選択を依頼（質問+回答を使用）
+    console.log('🤖 Requesting tag selection from LLM...');
     const selectedTags = await selectTagsWithLLM(conversationContent, determinedSubject, tags);
-    console.log('Selected tags:', selectedTags?.length || 0);
+    console.log('✅ LLM selected tags:', selectedTags?.length || 0);
+    
+    if (selectedTags && selectedTags.length > 0) {
+      console.log('📝 Selected tag details:', selectedTags.map(t => `${t.major_category} > ${t.minor_category}`));
+    }
 
     // 選択されたタグを質問に関連付け
     if (selectedTags && selectedTags.length > 0) {
       // 既存のタグを確認（重複挿入を防ぐ）
+      console.log('🔍 Checking for existing tags...');
       const { data: existingTags } = await supabase
         .from('question_tags')
         .select('tag_id')
@@ -87,6 +106,8 @@ serve(async (req) => {
       const existingTagIds = new Set(existingTags?.map(t => t.tag_id) || []);
       const newTags = selectedTags.filter(tag => !existingTagIds.has(tag.id));
 
+      console.log(`📊 Existing tags: ${existingTagIds.size}, New tags to insert: ${newTags.length}`);
+
       if (newTags.length > 0) {
         const insertData = newTags.map(tag => ({
           conversation_id: conversationId,
@@ -94,38 +115,51 @@ serve(async (req) => {
           assignment_method: 'auto'
         }));
 
+        console.log('💾 Inserting new tags:', insertData);
         const { error: insertError } = await supabase
           .from('question_tags')
           .insert(insertData);
 
         if (insertError) {
-          console.error('Failed to insert question tags:', insertError);
-          return new Response(JSON.stringify({ error: 'Failed to save tags', details: insertError }), {
+          console.error('❌ Failed to insert question tags:', insertError);
+          return new Response(JSON.stringify({ 
+            error: 'Failed to save tags', 
+            details: insertError,
+            success: false 
+          }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
 
-        console.log(`Successfully inserted ${newTags.length} new tags`);
+        console.log(`✅ Successfully inserted ${newTags.length} new tags`);
       } else {
-        console.log('All selected tags already exist for this conversation');
+        console.log('ℹ️ All selected tags already exist for this conversation');
       }
+    } else {
+      console.log('⚠️ No tags were selected by LLM');
     }
 
+    console.log('=== AUTO-TAGGING REQUEST END ===');
+    
     return new Response(JSON.stringify({ 
       success: true, 
       subject: determinedSubject, 
       tagsCount: selectedTags?.length || 0,
-      message: 'Auto-tagging completed successfully'
+      message: 'Auto-tagging completed successfully',
+      availableTags: tags?.length || 0,
+      selectedTags: selectedTags?.map(t => ({ major: t.major_category, minor: t.minor_category })) || []
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error in auto-tag-question function:', error);
+    console.error('💥 CRITICAL ERROR in auto-tag-question function:', error);
+    console.error('Error stack:', error.stack);
     return new Response(JSON.stringify({ 
       error: 'Internal server error', 
       message: error.message,
+      success: false,
       timestamp: new Date().toISOString()
     }), {
       status: 500,
@@ -136,12 +170,15 @@ serve(async (req) => {
 
 async function determineSubject(questionContent: string): Promise<string> {
   const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+  console.log('🔑 OpenAI API Key status:', openAIApiKey ? 'Available' : 'Missing');
+  
   if (!openAIApiKey) {
-    console.error('OpenAI API key not found');
+    console.error('❌ OpenAI API key not found');
     return 'その他';
   }
 
   try {
+    console.log('🤖 Calling OpenAI for subject determination...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -180,19 +217,26 @@ async function determineSubject(questionContent: string): Promise<string> {
       }),
     });
 
+    console.log('📡 OpenAI response status:', response.status);
+    
     if (!response.ok) {
-      console.error(`OpenAI API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`❌ OpenAI API error: ${response.status} ${response.statusText}`, errorText);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
     const subject = data.choices[0].message.content.trim();
+    console.log('✅ OpenAI determined subject:', subject);
     
     const validSubjects = ['国語', '数学', '英語', '物理', '化学', '生物', '地学', '世界史', '日本史', '地理', '情報'];
-    return validSubjects.includes(subject) ? subject : 'その他';
+    const result = validSubjects.includes(subject) ? subject : 'その他';
+    console.log('📚 Final subject result:', result);
+    
+    return result;
 
   } catch (error) {
-    console.error('Error determining subject:', error);
+    console.error('❌ Error determining subject:', error);
     return 'その他';
   }
 }
@@ -200,7 +244,7 @@ async function determineSubject(questionContent: string): Promise<string> {
 async function selectTagsWithLLM(conversationContent: any, subject: string, availableTags: any[]): Promise<any[]> {
   const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
   if (!openAIApiKey) {
-    console.error('OpenAI API key not found');
+    console.error('❌ OpenAI API key not found for tag selection');
     return [];
   }
 
@@ -213,7 +257,11 @@ async function selectTagsWithLLM(conversationContent: any, subject: string, avai
     ? `【質問】\n${conversationContent.question}\n\n【回答】\n${conversationContent.answer}`
     : `【質問】\n${conversationContent.question}`;
 
+  console.log('🏷️ Available tags count:', availableTags.length);
+  console.log('📝 Analysis text length:', analysisText.length);
+
   try {
+    console.log('🤖 Calling OpenAI for tag selection...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -251,19 +299,31 @@ ${tagsList}`
       }),
     });
 
+    console.log('📡 OpenAI tag selection response status:', response.status);
+
     if (!response.ok) {
-      console.error(`OpenAI API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`❌ OpenAI API error for tag selection: ${response.status} ${response.statusText}`, errorText);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
     const responseText = data.choices[0].message.content.trim();
     
-    console.log('LLM response:', responseText);
+    console.log('🤖 LLM raw response:', responseText);
     
     // JSON解析
-    const parsed = JSON.parse(responseText);
+    let parsed;
+    try {
+      parsed = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('❌ Failed to parse LLM response as JSON:', parseError);
+      console.error('Raw response was:', responseText);
+      return [];
+    }
+    
     const selectedTags = parsed.selected_tags || [];
+    console.log('🏷️ Parsed selected tags:', selectedTags);
 
     // 選択されたタグが実際に存在するかチェック
     const validTags = selectedTags
@@ -272,15 +332,18 @@ ${tagsList}`
           tag.major_category === selectedTag.major && 
           tag.minor_category === selectedTag.minor
         );
+        if (!foundTag) {
+          console.warn(`⚠️ Tag not found: ${selectedTag.major} > ${selectedTag.minor}`);
+        }
         return foundTag;
       })
       .filter(Boolean);
 
-    console.log(`Validated ${validTags.length} out of ${selectedTags.length} selected tags`);
+    console.log(`✅ Validated ${validTags.length} out of ${selectedTags.length} selected tags`);
     return validTags;
 
   } catch (error) {
-    console.error('Error selecting tags with LLM:', error);
+    console.error('❌ Error selecting tags with LLM:', error);
     return [];
   }
 }
