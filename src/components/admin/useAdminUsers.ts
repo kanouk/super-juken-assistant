@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -45,7 +44,7 @@ export const useAdminUsers = () => {
 
       console.log('Calling list-users function with user:', session.user.id);
       
-      // Supabase Edgeファンクション経由でユーザーリストを取得
+      // Supabase Edgeファンクション経由でユーザーリストを取得（プラン情報も含む）
       const { data, error } = await supabase.functions.invoke('list-users', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -72,30 +71,9 @@ export const useAdminUsers = () => {
         return;
       }
 
-      // auth.usersのデータとprofilesのプラン情報を結合
-      const usersWithPlanInfo = await Promise.all(
-        data.users.map(async (user: any) => {
-          // profilesテーブルからプラン情報を取得
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('plan, points')
-            .eq('id', user.id)
-            .single();
-
-          return {
-            id: user.id,
-            email: user.email,
-            created_at: user.created_at,
-            last_sign_in_at: user.last_sign_in_at,
-            is_confirmed: user.is_confirmed,
-            plan: profile?.plan || 'free',
-            points: profile?.points || 0,
-          };
-        })
-      );
-      
-      console.log('Successfully fetched users:', usersWithPlanInfo);
-      setUsers(usersWithPlanInfo);
+      // エッジファンクションから返されたデータをそのまま使用（プラン情報も含まれている）
+      console.log('Successfully fetched users with plan info:', data.users);
+      setUsers(data.users);
     } catch (error) {
       console.error('Failed to fetch users:', error);
       toast({

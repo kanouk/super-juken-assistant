@@ -58,7 +58,7 @@ serve(async (req) => {
     console.log("User has admin permissions:", adminData.role);
 
     // users テーブル一覧取得
-    const { data, error } = await supabase.auth.admin.listUsers();
+    const { data: authUsers, error } = await supabase.auth.admin.listUsers();
     if (error) {
       console.error("Error listing users:", error);
       return new Response(JSON.stringify({ error: error.message }), { 
@@ -67,17 +67,39 @@ serve(async (req) => {
       });
     }
 
-    // 必要情報だけ返却
-    const users = data.users.map((u: any) => ({
-      id: u.id,
-      email: u.email,
-      created_at: u.created_at,
-      last_sign_in_at: u.last_sign_in_at,
-      email_confirmed_at: u.email_confirmed_at,
-      is_confirmed: u.email_confirmed_at !== null,
-    }));
+    // プロフィール情報をまとめて取得
+    const userIds = authUsers.users.map((u: any) => u.id);
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, plan, points')
+      .in('id', userIds);
 
-    console.log("Successfully fetched users:", users.length);
+    console.log("Fetched profiles data:", profiles);
+
+    // プロフィールデータをIDでマップ化
+    const profilesMap = new Map();
+    if (profiles) {
+      profiles.forEach((profile) => {
+        profilesMap.set(profile.id, profile);
+      });
+    }
+
+    // ユーザー情報とプロフィール情報を結合
+    const users = authUsers.users.map((u: any) => {
+      const profile = profilesMap.get(u.id);
+      return {
+        id: u.id,
+        email: u.email,
+        created_at: u.created_at,
+        last_sign_in_at: u.last_sign_in_at,
+        email_confirmed_at: u.email_confirmed_at,
+        is_confirmed: u.email_confirmed_at !== null,
+        plan: profile?.plan || 'free',
+        points: profile?.points || 0,
+      };
+    });
+
+    console.log("Successfully fetched users with plan info:", users.length);
 
     return new Response(JSON.stringify({ users }), { 
       headers: { ...corsHeaders, "Content-Type": "application/json" } 
