@@ -13,6 +13,7 @@ interface ChatMainViewProps {
   currentModel: string;
   messages: Message[];
   isLoading: boolean;
+  isTagging: boolean;
   selectedImages: ImageData[];
   setSelectedImages: (imgs: ImageData[]) => void;
   onSendMessage: (content: string, images?: ImageData[]) => void;
@@ -35,6 +36,7 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
   currentModel,
   messages,
   isLoading,
+  isTagging,
   selectedImages,
   setSelectedImages,
   onSendMessage,
