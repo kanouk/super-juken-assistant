@@ -269,8 +269,9 @@ async function selectTagsWithLLM(conversationContent: any, subject: string, avai
     return [];
   }
 
-  const tagsList = availableTags.map(tag => 
-    `"${tag.major_category} > ${tag.minor_category}"`
+  // タグ一覧を番号付きで明確に表示
+  const tagsList = availableTags.map((tag, index) => 
+    `${index + 1}. "${tag.major_category} > ${tag.minor_category}" (ID: ${tag.id})`
   ).join('\n');
 
   // 質問と回答を組み合わせた分析用テキストを作成
@@ -294,11 +295,12 @@ async function selectTagsWithLLM(conversationContent: any, subject: string, avai
         messages: [
           {
             role: 'system',
-            content: `以下の受験生の質問と回答内容を分析し、適切な分野タグを選択してください。
+            content: `以下の受験生の質問と回答内容を分析し、提供されたタグ一覧の中から最も適切なものを選択してください。
 
-【指示】
+【重要な指示】
+- 必ず下記の「選択可能なタグ一覧」の中からのみ選択してください
+- 一覧にないタグは絶対に選択しないでください
 - 質問内容と回答内容の両方を参考にして、最も適したタグを1〜3個選択してください
-- 回答内容から具体的な分野や単元を特定できる場合は、それを重視してください
 - 以下のJSON形式で回答してください：
 {"selected_tags": [{"major": "大分類名", "minor": "中分類名"}, ...]}
 - JSON以外の文字は含めないでください
@@ -312,7 +314,10 @@ async function selectTagsWithLLM(conversationContent: any, subject: string, avai
 ${subject}
 
 【選択可能なタグ一覧】
-${tagsList}`
+以下のタグの中からのみ選択してください：
+${tagsList}
+
+上記のタグ一覧の中で、質問と回答の内容に最も関連するものを選択してください。`
           }
         ],
         temperature: 0.1,
