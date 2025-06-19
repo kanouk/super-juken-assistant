@@ -1,3 +1,4 @@
+
 export interface ExamSettings {
   kyotsu: {
     name: string;
@@ -18,6 +19,8 @@ export interface UserProfile {
   show_stats: boolean;
   exam_settings: ExamSettings;
   mbti: string | null;
+  plan: string | null;
+  points: number | null;
 }
 
 // Type guard for ExamSettings
