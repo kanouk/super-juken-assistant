@@ -8,6 +8,43 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// グローバルなSupabaseクライアントを作成
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
+
+// 管理者設定からOpenAI APIキーを取得する関数
+async function getAdminOpenAIKey(): Promise<string | null> {
+  try {
+    console.log('🔑 Fetching admin OpenAI API key from settings...');
+    const { data, error } = await supabase
+      .from('admin_settings')
+      .select('setting_value')
+      .eq('setting_key', 'free_user_api_keys')
+      .single();
+
+    if (error) {
+      console.error('❌ Failed to fetch admin API keys:', error);
+      return null;
+    }
+
+    const apiKeys = data?.setting_value as Record<string, string>;
+    const openaiKey = apiKeys?.openai;
+    
+    if (!openaiKey) {
+      console.error('❌ OpenAI API key not found in admin settings');
+      return null;
+    }
+
+    console.log('✅ Admin OpenAI API key retrieved successfully');
+    return openaiKey;
+  } catch (error) {
+    console.error('❌ Error fetching admin OpenAI API key:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -37,11 +74,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
 
     // 教科が指定されていない場合は、質問内容から判定
     let determinedSubject = subject;
@@ -190,11 +222,11 @@ serve(async (req) => {
 });
 
 async function determineSubject(questionContent: string): Promise<string> {
-  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-  console.log('🔑 OpenAI API Key status:', openAIApiKey ? 'Available' : 'Missing');
+  const openAIApiKey = await getAdminOpenAIKey();
+  console.log('🔑 Admin OpenAI API Key status:', openAIApiKey ? 'Available' : 'Missing');
   
   if (!openAIApiKey) {
-    console.error('❌ OpenAI API key not found');
+    console.error('❌ Admin OpenAI API key not found');
     return 'その他';
   }
 
@@ -263,9 +295,9 @@ async function determineSubject(questionContent: string): Promise<string> {
 }
 
 async function selectTagsWithLLM(conversationContent: any, subject: string, availableTags: any[]): Promise<any[]> {
-  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+  const openAIApiKey = await getAdminOpenAIKey();
   if (!openAIApiKey) {
-    console.error('❌ OpenAI API key not found for tag selection');
+    console.error('❌ Admin OpenAI API key not found for tag selection');
     return [];
   }
 
