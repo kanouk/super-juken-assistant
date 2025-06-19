@@ -13,8 +13,16 @@ export interface UserAccount {
   points?: number | null;
 }
 
+export interface AdminUser {
+  id: string;
+  user_id: string;
+  role: string;
+  created_at: string;
+}
+
 export const useAdminUsers = () => {
   const [users, setUsers] = useState<UserAccount[]>([]);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -70,6 +78,24 @@ export const useAdminUsers = () => {
     }
   };
 
+  const fetchAdminUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching admin users:', error);
+        return;
+      }
+
+      setAdminUsers(data || []);
+    } catch (error) {
+      console.error('Failed to fetch admin users:', error);
+    }
+  };
+
   const deleteUser = async (userId: string) => {
     try {
       const { error } = await supabase.functions.invoke('delete-user', {
@@ -103,14 +129,84 @@ export const useAdminUsers = () => {
     }
   };
 
+  const deleteAdminUser = async (adminUserId: string) => {
+    try {
+      const { error } = await supabase
+        .from('admin_users')
+        .delete()
+        .eq('id', adminUserId);
+
+      if (error) {
+        console.error('Error deleting admin user:', error);
+        toast({
+          title: "管理者削除に失敗しました",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "管理者が削除されました",
+        description: "管理者が正常に削除されました。",
+      });
+
+      fetchAdminUsers();
+    } catch (error) {
+      console.error('Failed to delete admin user:', error);
+      toast({
+        title: "エラーが発生しました",
+        description: "管理者削除中にエラーが発生しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addAdminUser = async (userId: string, role: string) => {
+    try {
+      const { error } = await supabase
+        .from('admin_users')
+        .insert({ user_id: userId, role });
+
+      if (error) {
+        console.error('Error adding admin user:', error);
+        toast({
+          title: "管理者追加に失敗しました",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "管理者が追加されました",
+        description: "新しい管理者が正常に追加されました。",
+      });
+
+      fetchAdminUsers();
+    } catch (error) {
+      console.error('Failed to add admin user:', error);
+      toast({
+        title: "エラーが発生しました",
+        description: "管理者追加中にエラーが発生しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchAdminUsers();
   }, []);
 
   return {
     users,
+    adminUsers,
     isLoading,
     deleteUser,
+    deleteAdminUser,
+    addAdminUser,
     refreshUsers: fetchUsers,
+    refreshAdminUsers: fetchAdminUsers,
   };
 };

@@ -5,7 +5,16 @@ import { AdminAddUserForm } from "./AdminAddUserForm";
 import { useAdminUsers } from "./useAdminUsers";
 
 export const AdminUsersTab = () => {
-  const { users, isLoading, deleteUser, refreshUsers } = useAdminUsers();
+  const { 
+    users, 
+    adminUsers, 
+    isLoading, 
+    deleteUser, 
+    deleteAdminUser, 
+    addAdminUser, 
+    refreshUsers, 
+    refreshAdminUsers 
+  } = useAdminUsers();
 
   if (isLoading) {
     return (
@@ -22,8 +31,14 @@ export const AdminUsersTab = () => {
         onDelete={deleteUser} 
         onRefresh={refreshUsers}
       />
-      <AdminUserTable />
-      <AdminAddUserForm />
+      <AdminUserTable 
+        adminUsers={adminUsers} 
+        onDelete={deleteAdminUser} 
+      />
+      <AdminAddUserForm 
+        onAdd={addAdminUser}
+        onRefresh={refreshAdminUsers}
+      />
     </div>
   );
 };
