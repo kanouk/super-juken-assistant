@@ -1,158 +1,116 @@
 
-import { useEffect, useState, useCallback } from "react"
-import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-export interface AdminUser {
-  id: string
-  user_id: string
-  role: string
-  created_at: string
-}
 export interface UserAccount {
-  id: string
-  email: string
-  created_at: string
-  last_sign_in_at: string | null
-  is_confirmed: boolean
+  id: string;
+  email: string;
+  created_at: string;
+  last_sign_in_at: string | null;
+  is_confirmed: boolean;
+  plan?: string | null;
+  points?: number | null;
 }
 
-export function useAdminUsers() {
-  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([])
-  const [accountUsers, setAccountUsers] = useState<UserAccount[]>([])
-  const [loading, setLoading] = useState(true)
-  const { toast } = useToast()
+export const useAdminUsers = () => {
+  const [users, setUsers] = useState<UserAccount[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  // 管理テーブル表示
-  const loadAdminUsers = useCallback(async () => {
+  const fetchUsers = async () => {
     try {
-      const res = await fetch('/rest/v1/admin_users?select=*', {
-        headers: {
-          apikey:
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1eXVtemxldmxjeHNudmJ0Y3NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4NzA2NjYsImV4cCI6MjA2NTQ0NjY2Nn0.UsQ_zUjFSvdi8fTNIH4p2U8IxWqrsc7Hlic5qB3hetE",
-        },
-      })
-      const data = await res.json()
-      setAdminUsers(data || [])
-    } catch {
-      toast({ title: "管理者ユーザーの取得に失敗", variant: "destructive" })
-    }
-  }, [toast])
-
-  // ユーザー本体一覧
-  const loadAccountUsers = useCallback(async () => {
-    try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const jwt = sessionData?.session?.access_token
-      if (!jwt) throw new Error("未認証またはセッションが失効しています")
-      const res = await fetch(
-        "https://huyumzlevlcxsnvbtcsd.supabase.co/functions/v1/list-users",
-        {
-          headers: { Authorization: `Bearer ${jwt}` },
-        }
-      )
-      const result = await res.json()
-      if (result?.users) {
-        setAccountUsers(result.users)
-      } else {
-        throw new Error(result?.error || "サーバーエラー")
+      setIsLoading(true);
+      
+      // Supabase Edgeファンクション経由でユーザーリストを取得
+      const { data, error } = await supabase.functions.invoke('list-users');
+      
+      if (error) {
+        console.error('Error fetching users:', error);
+        toast({
+          title: "ユーザー一覧の取得に失敗しました",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
       }
-    } catch (error: any) {
+
+      // auth.usersのデータとprofilesのプラン情報を結合
+      const usersWithPlanInfo = await Promise.all(
+        data.users.map(async (user: any) => {
+          // profilesテーブルからプラン情報を取得
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('plan, points')
+            .eq('id', user.id)
+            .single();
+
+          return {
+            id: user.id,
+            email: user.email,
+            created_at: user.created_at,
+            last_sign_in_at: user.last_sign_in_at,
+            is_confirmed: user.email_confirmed_at !== null,
+            plan: profile?.plan || 'free',
+            points: profile?.points || 0,
+          };
+        })
+      );
+      
+      setUsers(usersWithPlanInfo);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
       toast({
-        title: "ユーザー一覧取得に失敗",
-        description: error?.message,
+        title: "エラーが発生しました",
+        description: "ユーザー一覧の取得中にエラーが発生しました。",
         variant: "destructive",
-      })
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [toast])
+  };
+
+  const deleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('delete-user', {
+        body: { userId }
+      });
+
+      if (error) {
+        console.error('Error deleting user:', error);
+        toast({
+          title: "ユーザー削除に失敗しました",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "ユーザーが削除されました",
+        description: "ユーザーアカウントが正常に削除されました。",
+      });
+
+      // ユーザーリストを再取得
+      fetchUsers();
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      toast({
+        title: "エラーが発生しました",
+        description: "ユーザー削除中にエラーが発生しました。",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
-    setLoading(true)
-    Promise.all([loadAdminUsers(), loadAccountUsers()]).finally(() =>
-      setLoading(false)
-    )
-    // eslint-disable-next-line
-  }, [])
-
-  // ユーザー削除
-  const deleteAccountUser = async (user_id: string) => {
-    try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const jwt = sessionData?.session?.access_token
-      const res = await fetch(
-        "https://huyumzlevlcxsnvbtcsd.supabase.co/functions/v1/delete-user",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${jwt ?? ""}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ user_id }),
-        }
-      )
-      const result = await res.json()
-      if (result?.success) {
-        toast({ title: "ユーザーを削除しました" })
-        setAccountUsers((users) => users.filter((u) => u.id !== user_id))
-        await loadAdminUsers()
-      } else {
-        throw new Error(result?.error || "削除に失敗しました")
-      }
-    } catch (error: any) {
-      toast({
-        title: "ユーザー削除に失敗",
-        description: error?.message,
-        variant: "destructive",
-      })
-    }
-  }
-
-  // 管理者追加
-  const addAdminUser = async (email: string, role: "admin" | "super_admin") => {
-    if (!email.trim()) {
-      toast({ title: "メールアドレスを入力してください", variant: "destructive" })
-      return false
-    }
-    try {
-      toast({
-        title: "機能未実装",
-        description:
-          "この機能は開発中です。直接データベースで管理者を追加してください。",
-        variant: "destructive",
-      })
-      return false
-    } catch (error) {
-      toast({
-        title: "管理者ユーザーの追加に失敗しました",
-        variant: "destructive",
-      })
-      return false
-    }
-  }
-
-  // 管理者削除
-  const removeAdminUser = async (id: string) => {
-    try {
-      const { error } = await supabase.from("admin_users").delete().eq("id", id)
-      if (error) throw error
-      setAdminUsers((prev) => prev.filter((user) => user.id !== id))
-      toast({ title: "管理者ユーザーを削除しました" })
-    } catch {
-      toast({
-        title: "管理者ユーザーの削除に失敗しました",
-        variant: "destructive",
-      })
-    }
-  }
+    fetchUsers();
+  }, []);
 
   return {
-    adminUsers,
-    accountUsers,
-    loading,
-    loadAdminUsers,
-    loadAccountUsers,
-    deleteAccountUser,
-    addAdminUser,
-    removeAdminUser,
-  }
-}
+    users,
+    isLoading,
+    deleteUser,
+    refreshUsers: fetchUsers,
+  };
+};

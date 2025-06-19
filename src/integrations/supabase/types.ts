@@ -149,8 +149,11 @@ export type Database = {
           id: string
           mbti: string | null
           passcode: string
+          plan: string | null
+          points: number | null
           show_countdown: boolean | null
           show_stats: boolean | null
+          stripe_customer_id: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -161,8 +164,11 @@ export type Database = {
           id: string
           mbti?: string | null
           passcode?: string
+          plan?: string | null
+          points?: number | null
           show_countdown?: boolean | null
           show_stats?: boolean | null
+          stripe_customer_id?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -173,8 +179,11 @@ export type Database = {
           id?: string
           mbti?: string | null
           passcode?: string
+          plan?: string | null
+          points?: number | null
           show_countdown?: boolean | null
           show_stats?: boolean | null
+          stripe_customer_id?: string | null
         }
         Relationships: []
       }

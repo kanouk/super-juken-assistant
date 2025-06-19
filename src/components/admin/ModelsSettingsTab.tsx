@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Star } from "lucide-react";
+import { Plus, Trash2, Star, Coins } from "lucide-react";
 import { useState } from "react";
 
 interface ModelsSettingsTabProps {
@@ -85,6 +85,13 @@ export const ModelsSettingsTab = ({ settings, updateSetting }: ModelsSettingsTab
     }));
   };
 
+  const handleModelCostChange = (modelValue: string, cost: number) => {
+    updateSetting('default_model_costs', {
+      ...settings.default_model_costs,
+      [modelValue]: cost
+    });
+  };
+
   const providers = [
     { id: 'openai', name: 'OpenAI' },
     { id: 'google', name: 'Google Gemini' },
@@ -124,6 +131,38 @@ export const ModelsSettingsTab = ({ settings, updateSetting }: ModelsSettingsTab
 
       <Card>
         <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Coins className="h-5 w-5 text-amber-600" />
+            モデル別消費ポイント設定
+          </CardTitle>
+          <CardDescription>各モデルの利用時に消費されるポイント数を設定します</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4">
+            {Object.entries(settings.default_model_costs || {}).map(([modelValue, cost]) => (
+              <div key={modelValue} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border">
+                <div className="flex-1">
+                  <span className="font-medium">{modelValue}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor={`cost-${modelValue}`} className="text-sm">ポイント:</Label>
+                  <Input
+                    id={`cost-${modelValue}`}
+                    type="number"
+                    min="1"
+                    value={cost as number}
+                    onChange={(e) => handleModelCostChange(modelValue, parseInt(e.target.value) || 1)}
+                    className="w-20 text-center"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>利用可能モデル管理</CardTitle>
           <CardDescription>ユーザー設定画面に表示されるモデル一覧を管理します</CardDescription>
         </CardHeader>
@@ -139,41 +178,48 @@ export const ModelsSettingsTab = ({ settings, updateSetting }: ModelsSettingsTab
 
               {/* 既存モデルリスト */}
               <div className="space-y-2">
-                {settings.available_models?.[provider.id]?.map((model: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">{model.label}</span>
-                        {settings.free_user_models?.[provider.id] === model.value && (
-                          <Badge variant="default" className="text-xs">
-                            <Star className="h-3 w-3 mr-1" />
-                            デフォルト
+                {settings.available_models?.[provider.id]?.map((model: any, index: number) => {
+                  const modelCost = settings.default_model_costs?.[model.value] || 1;
+                  return (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">{model.label}</span>
+                          {settings.free_user_models?.[provider.id] === model.value && (
+                            <Badge variant="default" className="text-xs">
+                              <Star className="h-3 w-3 mr-1" />
+                              デフォルト
+                            </Badge>
+                          )}
+                          <Badge variant="outline" className="text-xs bg-amber-50 border-amber-200">
+                            <Coins className="h-3 w-3 mr-1 text-amber-600" />
+                            {modelCost}pt
                           </Badge>
-                        )}
+                        </div>
+                        <span className="text-sm text-gray-600">{model.value}</span>
                       </div>
-                      <span className="text-sm text-gray-600">{model.value}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {settings.free_user_models?.[provider.id] !== model.value && (
+                      <div className="flex items-center space-x-2">
+                        {settings.free_user_models?.[provider.id] !== model.value && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSetAsDefault(provider.id, model.value)}
+                          >
+                            デフォルトに設定
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleSetAsDefault(provider.id, model.value)}
+                          onClick={() => handleRemoveModel(provider.id, index)}
+                          className="text-red-600 hover:text-red-700"
                         >
-                          デフォルトに設定
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRemoveModel(provider.id, index)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* 新しいモデル追加フォーム */}
