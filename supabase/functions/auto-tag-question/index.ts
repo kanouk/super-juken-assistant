@@ -18,7 +18,7 @@ serve(async (req) => {
     
     console.log('=== AUTO-TAGGING REQUEST START ===');
     console.log('Conversation ID:', conversationId);
-    console.log('Subject:', subject);
+    console.log('Input Subject:', subject);
     console.log('Has Question:', !!conversationContent?.question);
     console.log('Has Answer:', !!conversationContent?.answer);
     console.log('Question length:', conversationContent?.question?.length || 0);
@@ -49,6 +49,27 @@ serve(async (req) => {
       console.log('🔍 Determining subject from conversation content...');
       determinedSubject = await determineSubject(conversationContent.question);
       console.log('✅ Determined subject:', determinedSubject);
+    } else {
+      // 英語の教科名を日本語にマッピング
+      const subjectMapping: Record<string, string> = {
+        'math': '数学',
+        'chemistry': '化学',
+        'biology': '生物',
+        'physics': '物理',
+        'english': '英語',
+        'japanese': '国語',
+        'geography': '地理',
+        'history': '日本史',
+        'world_history': '世界史',
+        'earth_science': '地学',
+        'information': '情報',
+        'other': 'その他'
+      };
+      
+      if (subjectMapping[subject]) {
+        determinedSubject = subjectMapping[subject];
+        console.log('🔄 Mapped subject from', subject, 'to', determinedSubject);
+      }
     }
 
     // 該当教科のタグ一覧を取得
