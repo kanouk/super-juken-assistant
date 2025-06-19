@@ -12,42 +12,81 @@ serve(async (req) => {
     return new Response("", { headers: corsHeaders });
   }
 
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-  // JWTチェック
-  const { user } = await supabase.auth.getUser(req.headers.get("authorization")?.replace("Bearer ", ""));
-  if (!user) {
-    return new Response(JSON.stringify({ error: "Not authenticated" }), { status: 401, headers: corsHeaders });
+    // JWTチェック
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      console.error("No authorization header");
+      return new Response(JSON.stringify({ error: "No authorization header" }), { 
+        status: 401, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !user) {
+      console.error("Auth error:", userError);
+      return new Response(JSON.stringify({ error: "Not authenticated" }), { 
+        status: 401, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
+    console.log("Authenticated user:", user.id);
+
+    // super_admin or admin チェック
+    const { data: adminData, error: adminError } = await supabase
+      .from("admin_users")
+      .select("role")
+      .eq("user_id", user.id)
+      .single();
+
+    if (adminError || !adminData || (adminData.role !== "super_admin" && adminData.role !== "admin")) {
+      console.error("Permission denied for user:", user.id, "Admin data:", adminData, "Error:", adminError);
+      return new Response(JSON.stringify({ error: "Permission denied" }), { 
+        status: 403, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
+    console.log("User has admin permissions:", adminData.role);
+
+    // users テーブル一覧取得
+    const { data, error } = await supabase.auth.admin.listUsers();
+    if (error) {
+      console.error("Error listing users:", error);
+      return new Response(JSON.stringify({ error: error.message }), { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
+    // 必要情報だけ返却
+    const users = data.users.map((u: any) => ({
+      id: u.id,
+      email: u.email,
+      created_at: u.created_at,
+      last_sign_in_at: u.last_sign_in_at,
+      email_confirmed_at: u.email_confirmed_at,
+      is_confirmed: u.email_confirmed_at !== null,
+    }));
+
+    console.log("Successfully fetched users:", users.length);
+
+    return new Response(JSON.stringify({ users }), { 
+      headers: { ...corsHeaders, "Content-Type": "application/json" } 
+    });
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    return new Response(JSON.stringify({ error: "Internal server error" }), { 
+      status: 500, 
+      headers: { ...corsHeaders, "Content-Type": "application/json" } 
+    });
   }
-
-  // super_admin or admin チェック
-  const { data: adminData } = await supabase
-    .from("admin_users")
-    .select("role")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!adminData || (adminData.role !== "super_admin" && adminData.role !== "admin")) {
-    return new Response(JSON.stringify({ error: "Permission denied" }), { status: 403, headers: corsHeaders });
-  }
-
-  // users テーブル一覧取得
-  const { data, error } = await supabase.auth.admin.listUsers({}); // supports pagination by default
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
-  }
-
-  // 必要情報だけ返却
-  // user id, email, created_at, last_sign_in_at
-  const users = data.users.map((u: any) => ({
-    id: u.id,
-    email: u.email,
-    created_at: u.created_at,
-    last_sign_in_at: u.last_sign_in_at,
-    is_confirmed: u.confirmed_at !== null,
-  }));
-
-  return new Response(JSON.stringify({ users }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });

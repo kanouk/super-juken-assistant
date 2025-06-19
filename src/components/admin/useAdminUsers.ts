@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -30,9 +31,10 @@ export const useAdminUsers = () => {
       setIsLoading(true);
       
       // 現在のセッションを取得
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (!session) {
+      if (sessionError || !session) {
+        console.error('Session error:', sessionError);
         toast({
           title: "認証エラー",
           description: "ログインが必要です。",
@@ -41,7 +43,7 @@ export const useAdminUsers = () => {
         return;
       }
 
-      console.log('Calling list-users function with session:', session.access_token);
+      console.log('Calling list-users function with user:', session.user.id);
       
       // Supabase Edgeファンクション経由でユーザーリストを取得
       const { data, error } = await supabase.functions.invoke('list-users', {
@@ -54,14 +56,14 @@ export const useAdminUsers = () => {
         console.error('Error fetching users:', error);
         toast({
           title: "ユーザー一覧の取得に失敗しました",
-          description: `エラー: ${error.message}`,
+          description: `エラー: ${error.message || 'Unknown error'}`,
           variant: "destructive",
         });
         return;
       }
 
       if (!data || !data.users) {
-        console.error('No users data returned');
+        console.error('No users data returned:', data);
         toast({
           title: "データエラー",
           description: "ユーザーデータが取得できませんでした。",
@@ -85,7 +87,7 @@ export const useAdminUsers = () => {
             email: user.email,
             created_at: user.created_at,
             last_sign_in_at: user.last_sign_in_at,
-            is_confirmed: user.email_confirmed_at !== null,
+            is_confirmed: user.is_confirmed,
             plan: profile?.plan || 'free',
             points: profile?.points || 0,
           };
