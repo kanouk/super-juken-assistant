@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -73,43 +74,79 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
     let processed = text;
     
     try {
-      // Step 1: LaTeX区切り文字の正規化
+      // Step 1: 不正な数式ブロックの修正
+      // 単独の$を$$に変換（行の開始または終了にある場合）
+      processed = processed.replace(/^\$([^$\n]+)\$$/gm, '$$$$\n$1\n$$$$');
+      
+      // Step 2: LaTeX区切り文字の正規化
       // \( \) を $ $ に変換（インライン数式）
       processed = processed.replace(/\\\((.*?)\\\)/gs, '$$$1$$');
       
       // \[ \] を $$ $$ に変換（ディスプレイ数式）
       processed = processed.replace(/\\\[(.*?)\\\]/gs, '$$$$\n$1\n$$$$');
       
-      // Step 2: 単独の括弧付き式をディスプレイ数式として処理
-      processed = processed.replace(/^\s*\[\s*([^\]]+)\s*\]\s*$/gm, '$$$$\n$1\n$$$$');
-      
-      // Step 3: 数式環境の処理
+      // Step 3: 数式環境の処理（より安全に）
       const mathEnvironments = ['align', 'gather', 'equation', 'eqnarray', 'multline', 'split'];
       mathEnvironments.forEach(env => {
-        const pattern = new RegExp(`(\\\\begin\\{${env}\\*?\\}.*?\\\\end\\{${env}\\*?\\})`, 'gs');
+        const pattern = new RegExp(`(\\\\begin\\{${env}\\*?\\}[\\s\\S]*?\\\\end\\{${env}\\*?\\})`, 'g');
         processed = processed.replace(pattern, (match) => {
+          // 既に$$で囲まれていない場合のみ追加
           if (!match.trim().startsWith('$$') && !match.trim().endsWith('$$')) {
-            return `$$$$\n${match}\n$$$$`;
+            return `$$$$\n${match.trim()}\n$$$$`;
           }
           return match;
         });
       });
       
-      // Step 4: 化学式の処理
-      // 化学式が数式モードに含まれていることを確認
-      processed = processed.replace(/(^|[^$])\\ce\{([^}]+)\}([^$]|$)/g, '$1$$\\ce{$2}$$$3');
+      // Step 4: 化学式の処理（安全に）
+      processed = processed.replace(/(^|[^$])\\ce\{([^}]+)\}([^$]|$)/g, '$1$$$$\\ce{$2}$$$$$3');
       
-      // Step 5: ディスプレイ数式の改行処理
-      processed = processed.replace(/([^\n$])\$\$/g, '$1\n$$$$');
-      processed = processed.replace(/\$\$([^\n$])/g, '$$$$\n$1');
+      // Step 5: 不完全な$$の修正
+      // 単独の$$を検出して修正
+      const lines = processed.split('\n');
+      const fixedLines = [];
+      let inMathBlock = false;
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        if (line === '$$$$' || line === '$$') {
+          if (inMathBlock) {
+            fixedLines.push('$$$$');
+            inMathBlock = false;
+          } else {
+            fixedLines.push('$$$$');
+            inMathBlock = true;
+          }
+        } else if (line.startsWith('$$$$') && line.length > 4) {
+          // 開始と内容が同じ行にある場合
+          fixedLines.push('$$$$');
+          fixedLines.push(line.substring(4));
+          inMathBlock = true;
+        } else if (line.endsWith('$$$$') && line.length > 4) {
+          // 内容と終了が同じ行にある場合
+          fixedLines.push(line.substring(0, line.length - 4));
+          fixedLines.push('$$$$');
+          inMathBlock = false;
+        } else {
+          fixedLines.push(lines[i]);
+        }
+      }
+      
+      // 未閉じの数式ブロックを修正
+      if (inMathBlock) {
+        fixedLines.push('$$$$');
+      }
+      
+      processed = fixedLines.join('\n');
       
       // Step 6: エスケープ文字の修正
       processed = processed.replace(/\\&/g, '&');
       processed = processed.replace(/\\_(?![a-zA-Z])/g, '_');
       
-      // Step 7: 過剰な改行の削除
-      processed = processed.replace(/\$\$\s*\n\s*\n\s*/g, '$$$$\n');
-      processed = processed.replace(/\s*\n\s*\n\s*\$\$/g, '\n$$$$');
+      // Step 7: 過剰な空行の削除
+      processed = processed.replace(/\$\$\$\$\s*\n\s*\n+/g, '$$$$\n');
+      processed = processed.replace(/\n+\s*\$\$\$\$/g, '\n$$$$');
       
       // Step 8: 分数記法の修正
       processed = processed.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '\\frac{$1}{$2}');
@@ -117,7 +154,9 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
       return processed;
     } catch (error) {
       console.warn('LaTeX前処理エラー:', error);
-      return text; // エラー時は元のテキストを返す
+      // エラー時は元のテキストを返すが、最低限の安全な処理を行う
+      return text.replace(/\\\[(.*?)\\\]/gs, '$$$$\n$1\n$$$$')
+                 .replace(/\\\((.*?)\\\)/gs, '$$$1$$');
     }
   };
 
@@ -127,6 +166,7 @@ const ChatMessageRenderer: React.FC<ChatMessageRendererProps> = ({ content, colo
       return processContent(content);
     } catch (error) {
       console.error('数式レンダリングエラー:', error);
+      // エラー時は元のコンテンツをそのまま返す
       return content;
     }
   };
