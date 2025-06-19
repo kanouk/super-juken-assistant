@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -30,14 +29,42 @@ export const useAdminUsers = () => {
     try {
       setIsLoading(true);
       
+      // 現在のセッションを取得
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "認証エラー",
+          description: "ログインが必要です。",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Calling list-users function with session:', session.access_token);
+      
       // Supabase Edgeファンクション経由でユーザーリストを取得
-      const { data, error } = await supabase.functions.invoke('list-users');
+      const { data, error } = await supabase.functions.invoke('list-users', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
       
       if (error) {
         console.error('Error fetching users:', error);
         toast({
           title: "ユーザー一覧の取得に失敗しました",
-          description: error.message,
+          description: `エラー: ${error.message}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!data || !data.users) {
+        console.error('No users data returned');
+        toast({
+          title: "データエラー",
+          description: "ユーザーデータが取得できませんでした。",
           variant: "destructive",
         });
         return;
@@ -65,6 +92,7 @@ export const useAdminUsers = () => {
         })
       );
       
+      console.log('Successfully fetched users:', usersWithPlanInfo);
       setUsers(usersWithPlanInfo);
     } catch (error) {
       console.error('Failed to fetch users:', error);
