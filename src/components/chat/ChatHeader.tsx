@@ -54,8 +54,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         </Button>
         
         <div className="flex items-center space-x-2">
-          <div className={`${subjectConfig.gradient} text-white p-2 rounded-lg flex items-center justify-center min-w-[40px] h-10`}>
-            {subjectConfig.icon && React.createElement(subjectConfig.icon, { className: "h-5 w-5" })}
+          <div className={`bg-gradient-to-br ${subjectConfig.gradient} shadow-md border border-white/20 p-2 rounded-lg flex items-center justify-center min-w-[40px] h-10`}>
+            {subjectConfig.icon && React.createElement(subjectConfig.icon, { 
+              className: "h-5 w-5 text-white drop-shadow-sm" 
+            })}
           </div>
           <div className="flex flex-col">
             {/* Desktop: Full subject name */}
