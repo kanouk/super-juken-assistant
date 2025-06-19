@@ -31,6 +31,8 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
       todai: { name: '東大二次試験', date: '2026-02-25' }
     },
     mbti: null,
+    plan: null,
+    points: null,
   });
   
   const [isSaving, setIsSaving] = useState(false);
