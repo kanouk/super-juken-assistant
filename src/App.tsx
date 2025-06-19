@@ -8,6 +8,7 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import AppPage from "./pages/AppPage";
 import AdminPage from "./pages/AdminPage";
+import BillingPage from "./pages/BillingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/app" element={<AppPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/billing" element={<BillingPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
