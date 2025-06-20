@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Home, Settings, User, CreditCard, ChevronDown, ChevronUp, Bot, X, MessageSquare, BarChart3, Clock, BookOpen, Calculator, Globe, Atom, History } from 'lucide-react';
+import { Home, Settings, User, ChevronDown, ChevronUp, Bot, X, BookOpen, BarChart3 } from 'lucide-react';
 import { UserProfile } from '@/types/profile';
 import { SettingsType } from '@/types/settings';
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import SidebarCountdownSection from "./sidebar/SidebarCountdownSection";
 
 interface SidebarProps {
   profile: UserProfile | null;
@@ -28,15 +29,15 @@ interface SidebarProps {
 }
 
 const subjects = [
-  { name: '数学', id: 'math', icon: Calculator, color: 'from-blue-500 to-blue-600', textColor: 'text-blue-600' },
-  { name: '英語', id: 'english', icon: Globe, color: 'from-green-500 to-green-600', textColor: 'text-green-600' },
-  { name: '理科', id: 'science', icon: Atom, color: 'from-purple-500 to-purple-600', textColor: 'text-purple-600' },
-  { name: '社会', id: 'social', icon: History, color: 'from-orange-500 to-orange-600', textColor: 'text-orange-600' },
-  { name: '物理', id: 'physics', icon: Atom, color: 'from-red-500 to-red-600', textColor: 'text-red-600' },
-  { name: '歴史', id: 'history', icon: History, color: 'from-yellow-500 to-yellow-600', textColor: 'text-yellow-600' },
+  { name: '数学', id: 'math', icon: BookOpen, color: 'from-blue-500 to-blue-600', textColor: 'text-blue-600' },
+  { name: '英語', id: 'english', icon: BookOpen, color: 'from-green-500 to-green-600', textColor: 'text-green-600' },
+  { name: '理科', id: 'science', icon: BookOpen, color: 'from-purple-500 to-purple-600', textColor: 'text-purple-600' },
+  { name: '社会', id: 'social', icon: BookOpen, color: 'from-orange-500 to-orange-600', textColor: 'text-orange-600' },
+  { name: '物理', id: 'physics', icon: BookOpen, color: 'from-red-500 to-red-600', textColor: 'text-red-600' },
+  { name: '歴史', id: 'history', icon: BookOpen, color: 'from-yellow-500 to-yellow-600', textColor: 'text-yellow-600' },
 ];
 
-const SidebarHeader = ({ onToggleSidebar, profile, isMobile }: { onToggleSidebar: () => void, profile: UserProfile | null, isMobile: boolean }) => {
+const SidebarHeader = ({ onToggleSidebar, profile, isMobile, onNavigate }: { onToggleSidebar: () => void, profile: UserProfile | null, isMobile: boolean, onNavigate: (screen: string) => void }) => {
   return (
     <div className="p-4 bg-gradient-to-r from-indigo-600 to-purple-700 text-white">
       <div className="flex items-center justify-between mb-4">
@@ -45,7 +46,7 @@ const SidebarHeader = ({ onToggleSidebar, profile, isMobile }: { onToggleSidebar
             <Bot className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold">AI Tutor</h1>
+            <h1 className="text-lg font-bold">スーパー受験アシスタント</h1>
             <p className="text-sm text-white/80">学習アシスタント</p>
           </div>
         </div>
@@ -79,40 +80,17 @@ const SidebarHeader = ({ onToggleSidebar, profile, isMobile }: { onToggleSidebar
                 </Badge>
               )}
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onNavigate('profile')}
+              className="text-white hover:bg-white/20 p-2"
+            >
+              <User className="h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
-};
-
-const Countdown = () => {
-  const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining());
-
-  function getTimeRemaining() {
-    const now = new Date();
-    const endOfDay = new Date(now);
-    endOfDay.setHours(24, 0, 0, 0);
-    const difference = endOfDay.getTime() - now.getTime();
-    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-    return { hours, minutes, seconds };
-  }
-
-  React.useEffect(() => {
-    const intervalId = setInterval(() => {
-      setTimeRemaining(getTimeRemaining());
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
-  return (
-    <div className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg border">
-      <Clock className="h-3 w-3 inline mr-1" />
-      リセットまで: {timeRemaining.hours}h {timeRemaining.minutes}m {timeRemaining.seconds}s
     </div>
   );
 };
@@ -176,24 +154,16 @@ const StatsSection = ({ dailyQuestions, understoodCount, totalQuestions, questio
           </Card>
         </div>
       )}
-      
-      <Countdown />
     </div>
   );
 };
 
-const SubjectsSection = ({ onSubjectSelect, onOpenConversation }: { onSubjectSelect: (subject: string) => void, onOpenConversation: (conversationId: string, subject: string) => void }) => {
+const SubjectsSection = ({ onSubjectSelect }: { onSubjectSelect: (subject: string) => void }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleSubjectClick = (subject: string) => {
     onSubjectSelect(subject);
   };
-
-  // ダミーの会話履歴データ
-  const conversationHistory = [
-    { id: '1', subject: '数学', lastMessage: '微分の問題を解きました。' },
-    { id: '2', subject: '英語', lastMessage: '長文読解の練習をしました。' },
-  ];
 
   return (
     <div className="p-4 space-y-4">
@@ -220,25 +190,6 @@ const SubjectsSection = ({ onSubjectSelect, onOpenConversation }: { onSubjectSel
           ))}
         </div>
       )}
-      
-      <Separator />
-      
-      <div>
-        <div className="flex items-center space-x-2 mb-3">
-          <MessageSquare className="h-4 w-4 text-gray-600" />
-          <h3 className="font-semibold text-gray-800">会話履歴</h3>
-        </div>
-        <div className="space-y-2">
-          {conversationHistory.map(conversation => (
-            <Card key={conversation.id} className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardContent className="p-3" onClick={() => onOpenConversation(conversation.id, conversation.subject)}>
-                <p className="text-sm font-medium text-gray-800">{conversation.subject}</p>
-                <p className="text-xs text-gray-600 truncate">{conversation.lastMessage}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };
@@ -262,22 +213,6 @@ const NavigationSection = ({ onNavigate }: { onNavigate: (screen: string) => voi
         <Settings className="h-4 w-4 mr-3" />
         設定
       </Button>
-      <Button
-        onClick={() => onNavigate('profile')}
-        variant="ghost"
-        className="w-full justify-start hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
-      >
-        <User className="h-4 w-4 mr-3" />
-        プロフィール
-      </Button>
-      <Button
-        onClick={() => window.location.href = '/billing'}
-        variant="ghost"
-        className="w-full justify-start hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
-      >
-        <CreditCard className="h-4 w-4 mr-3" />
-        課金・プラン
-      </Button>
     </div>
   );
 };
@@ -285,7 +220,7 @@ const NavigationSection = ({ onNavigate }: { onNavigate: (screen: string) => voi
 const SidebarFooter = () => {
   return (
     <div className="p-4 text-center text-gray-500 text-xs border-t bg-gray-50">
-      <p>© 2024 AI Tutor</p>
+      <p>© 2024 スーパー受験アシスタント</p>
     </div>
   );
 };
@@ -306,6 +241,7 @@ const Sidebar = ({
   isMobile,
   isOpen
 }: SidebarProps) => {
+  const [isCountdownOpen, setIsCountdownOpen] = useState(true);
 
   return (
     <div className="w-80 bg-white border-r border-gray-200 h-full flex flex-col shadow-lg">
@@ -313,6 +249,7 @@ const Sidebar = ({
         onToggleSidebar={onToggleSidebar} 
         profile={profile}
         isMobile={isMobile}
+        onNavigate={onNavigate}
       />
       
       {/* Main content */}
@@ -332,10 +269,18 @@ const Sidebar = ({
 
         <Separator />
 
-        <SubjectsSection
-          onSubjectSelect={onSubjectSelect}
-          onOpenConversation={onOpenConversation}
-        />
+        <div className="p-4">
+          <SidebarCountdownSection
+            profile={profile}
+            isOpen={isCountdownOpen}
+            onOpenChange={setIsCountdownOpen}
+            onNavigate={onNavigate}
+          />
+        </div>
+
+        <Separator />
+
+        <SubjectsSection onSubjectSelect={onSubjectSelect} />
       </div>
 
       <SidebarFooter />

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +10,10 @@ import BasicInfoCard from './profile/BasicInfoCard';
 import MbtiCard from './profile/MbtiCard';
 import DisplaySettingsCard from './profile/DisplaySettingsCard';
 import ExamSettingsCard from './profile/ExamSettingsCard';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CreditCard, Star, Zap } from 'lucide-react';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -126,6 +131,45 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     }));
   };
 
+  const handleUpgrade = () => {
+    window.location.href = '/billing';
+  };
+
+  const getPlanDisplayName = (plan: string | null) => {
+    switch (plan) {
+      case 'free':
+        return 'フリープラン';
+      case 'one_time':
+        return '買い切りプラン';
+      case 'premium_monthly':
+        return 'プレミアムプラン（月額）';
+      default:
+        return 'フリープラン';
+    }
+  };
+
+  const getPlanIcon = (plan: string | null) => {
+    switch (plan) {
+      case 'one_time':
+        return <Zap className="h-5 w-5" />;
+      case 'premium_monthly':
+        return <Star className="h-5 w-5" />;
+      default:
+        return <CreditCard className="h-5 w-5" />;
+    }
+  };
+
+  const getPlanColor = (plan: string | null) => {
+    switch (plan) {
+      case 'one_time':
+        return 'from-amber-50 to-yellow-50 border-amber-200';
+      case 'premium_monthly':
+        return 'from-purple-50 to-pink-50 border-purple-200';
+      default:
+        return 'from-gray-50 to-slate-50 border-gray-200';
+    }
+  };
+
   if (isProfileLoading && !loadedProfile) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -144,6 +188,56 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
           onProfileChange={handleProfileChange}
           onAvatarUpload={handleAvatarUpload} 
         />
+
+        {/* Billing Plan Card */}
+        <Card className={`bg-gradient-to-r ${getPlanColor(profileData.plan)} shadow-sm`}>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-lg">
+              {getPlanIcon(profileData.plan)}
+              <span>課金プラン</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">現在のプラン</p>
+                <p className="text-xl font-bold text-gray-800">{getPlanDisplayName(profileData.plan)}</p>
+              </div>
+              <Badge variant="outline" className="text-sm">
+                {profileData.plan === 'free' ? 'フリー' : profileData.plan === 'one_time' ? '買い切り' : 'プレミアム'}
+              </Badge>
+            </div>
+            
+            {profileData.points !== null && (
+              <div>
+                <p className="text-sm text-gray-600">残りポイント</p>
+                <p className="text-lg font-semibold text-blue-600">{profileData.points} ポイント</p>
+              </div>
+            )}
+
+            {profileData.plan === 'free' && (
+              <div className="pt-4 border-t">
+                <p className="text-sm text-gray-600 mb-3">
+                  プレミアムプランにアップグレードして、より多くの機能を利用しませんか？
+                </p>
+                <Button onClick={handleUpgrade} className="w-full">
+                  <Star className="h-4 w-4 mr-2" />
+                  プランをアップグレード
+                </Button>
+              </div>
+            )}
+
+            {profileData.plan !== 'free' && (
+              <div className="pt-4 border-t">
+                <Button variant="outline" onClick={handleUpgrade} className="w-full">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  課金設定を管理
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <MbtiCard mbti={profileData.mbti} onMbtiChange={handleMbtiChange} />
         <DisplaySettingsCard 
           showCountdown={profileData.show_countdown}
