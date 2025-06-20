@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
+import { ChevronDown, ChevronUp, RefreshCw, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useProfile } from '@/hooks/useProfile';
@@ -62,13 +62,27 @@ const WebhookDebugPanel = () => {
 
   const planStatus = getPlanStatus();
 
+  // 17:50頃に決済があったかどうかを判定
+  const isRecentPayment = () => {
+    const now = new Date();
+    const targetTime = new Date();
+    targetTime.setHours(17, 50, 0, 0);
+    const timeDiff = Math.abs(now.getTime() - targetTime.getTime());
+    return timeDiff < 30 * 60 * 1000; // 30分以内
+  };
+
   return (
     <Card className="mt-6">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
           <CardHeader className="cursor-pointer hover:bg-gray-50">
             <CardTitle className="flex items-center justify-between text-sm">
-              <span>🔧 デバッグ情報</span>
+              <span className="flex items-center space-x-2">
+                🔧 <span>デバッグ情報</span>
+                {isRecentPayment() && profile?.plan === 'free' && (
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                )}
+              </span>
               {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </CardTitle>
           </CardHeader>
@@ -76,6 +90,18 @@ const WebhookDebugPanel = () => {
         
         <CollapsibleContent>
           <CardContent className="space-y-4">
+            {isRecentPayment() && profile?.plan === 'free' && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="h-5 w-5 text-amber-600" />
+                  <span className="font-medium text-amber-800">Webhook未受信の可能性</span>
+                </div>
+                <p className="text-sm text-amber-700 mt-1">
+                  17:50頃に決済されましたが、まだプランが更新されていません。
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="font-medium text-gray-600">プラン状態:</span>
@@ -130,7 +156,14 @@ const WebhookDebugPanel = () => {
             </div>
 
             <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
-              <p className="font-medium mb-1">Webhook URL:</p>
+              <p className="font-medium mb-1">デバッグ情報:</p>
+              <div className="space-y-1">
+                <p>現在時刻: {new Date().toLocaleTimeString('ja-JP')}</p>
+                <p>最終更新: {profile ? '取得済み' : '未取得'}</p>
+                <p>認証状態: 認証済み</p>
+              </div>
+              
+              <p className="mt-3 font-medium">Webhook URL:</p>
               <code className="break-all">
                 https://huyumzlevlcxsnvbtcsd.supabase.co/functions/v1/stripe-webhook
               </code>

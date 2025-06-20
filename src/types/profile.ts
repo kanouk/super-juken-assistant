@@ -1,4 +1,3 @@
-
 export interface ExamSettings {
   kyotsu: {
     name: string;
@@ -21,6 +20,7 @@ export interface UserProfile {
   mbti: string | null;
   plan: string | null;
   points: number | null;
+  stripe_customer_id: string | null;
 }
 
 // Type guard for ExamSettings
