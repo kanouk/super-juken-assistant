@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useProfile } from '@/hooks/useProfile';
+import WebhookDebugPanel from '@/components/billing/WebhookDebugPanel';
 
 interface PlanFeature {
   name: string;
@@ -32,9 +32,33 @@ const BillingPage = () => {
     if (urlParams.get('success') === 'true') {
       toast({
         title: "決済が完了しました！",
-        description: "プランが正常にアップグレードされました。",
+        description: "プランが正常にアップグレードされました。数分お待ちください。",
       });
-      refetchProfile();
+      
+      // 決済成功後に状態を確認
+      const checkProfileUpdate = async () => {
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        const intervalId = setInterval(async () => {
+          attempts++;
+          await refetchProfile();
+          
+          if (attempts >= maxAttempts) {
+            clearInterval(intervalId);
+            toast({
+              title: "注意",
+              description: "プラン更新の確認に時間がかかっています。手動同期をお試しください。",
+              variant: "destructive",
+            });
+          }
+        }, 3000); // 3秒ごとにチェック
+        
+        // 30秒後にクリア
+        setTimeout(() => clearInterval(intervalId), 30000);
+      };
+      
+      checkProfileUpdate();
     } else if (urlParams.get('canceled') === 'true') {
       toast({
         title: "決済がキャンセルされました",
@@ -261,6 +285,11 @@ const BillingPage = () => {
           ))}
         </div>
 
+        {/* デバッグパネルを追加 */}
+        <div className="max-w-2xl mx-auto mt-12">
+          <WebhookDebugPanel />
+        </div>
+
         <div className="mt-16 text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             よくある質問
@@ -283,6 +312,12 @@ const BillingPage = () => {
                 <h3 className="font-semibold text-gray-900">決済は安全ですか？</h3>
                 <p className="text-gray-600 mt-2">
                   すべての決済はStripeによって処理され、業界標準のセキュリティで保護されています。クレジットカード情報は当社のサーバーには保存されません。
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">プラン更新が反映されない場合は？</h3>
+                <p className="text-gray-600 mt-2">
+                  決済完了後、プラン更新には最大で数分かかる場合があります。更新されない場合は、上記のデバッグパネルから手動同期をお試しください。
                 </p>
               </div>
             </div>
