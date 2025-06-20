@@ -99,7 +99,7 @@ serve(async (req) => {
               name: '買い切りプラン',
               description: 'API自己設定プラン',
             },
-            unit_amount: 198000, // 1980円
+            unit_amount: 1980, // 1980円
           },
           quantity: 1,
         },
@@ -114,7 +114,7 @@ serve(async (req) => {
               name: 'プレミアムプラン（月額）',
               description: '毎月200ポイント付与、全機能解放',
             },
-            unit_amount: 298000, // 2980円
+            unit_amount: 2980, // 2980円
             recurring: {
               interval: 'month',
             },
