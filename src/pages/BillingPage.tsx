@@ -62,12 +62,12 @@ const BillingPage = () => {
     {
       id: 'one_time',
       name: '買い切りプラン',
-      price: '¥998',
+      price: '¥1,980',
       period: '一回限り',
-      description: '追加機能を永続的に利用可能',
+      description: 'API自己設定プラン',
       features: [
         { name: '基本的なAI学習サポート', included: true },
-        { name: '100ポイント（一回限り）', included: true },
+        { name: 'API自己設定', included: true },
         { name: '全科目対応', included: true },
         { name: 'プレミアム機能の一部', included: true },
         { name: '無制限ポイント', included: false },
@@ -76,9 +76,9 @@ const BillingPage = () => {
     {
       id: 'premium_monthly',
       name: 'プレミアムプラン',
-      price: '¥1,998',
+      price: '¥2,980',
       period: '月額',
-      description: '全機能を無制限でご利用いただけます',
+      description: '全機能を無制限でご利用いただけます（追加200ポイント：¥2,000）',
       popular: true,
       features: [
         { name: '全てのAI学習サポート', included: true },
@@ -237,12 +237,11 @@ const BillingPage = () => {
                 <Button
                   onClick={() => handleUpgrade(plan.id)}
                   disabled={isLoading || isCurrentPlan(plan.id) || plan.id === 'free'}
-                  className={`w-full ${
+                  className={`w-full text-white ${
                     plan.popular 
                       ? 'bg-blue-600 hover:bg-blue-700' 
                       : 'bg-gray-900 hover:bg-gray-800'
                   } ${isCurrentPlan(plan.id) ? 'bg-green-600 hover:bg-green-600' : ''}`}
-                  variant={plan.popular ? 'default' : 'outline'}
                 >
                   {loadingPlan === plan.id ? (
                     <div className="flex items-center">
@@ -277,7 +276,7 @@ const BillingPage = () => {
               <div>
                 <h3 className="font-semibold text-gray-900">ポイントはどのように使用されますか？</h3>
                 <p className="text-gray-600 mt-2">
-                  ポイントはAIとの対話やプレミアム機能の利用時に消費されます。プレミアムプランでは毎月ポイントが自動的にリセットされます。
+                  ポイントはAIとの対話やプレミアム機能の利用時に消費されます。プレミアムプランでは毎月ポイントが自動的にリセットされ、追加ポイントも2,000円で購入可能です。
                 </p>
               </div>
               <div>

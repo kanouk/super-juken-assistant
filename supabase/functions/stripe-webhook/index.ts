@@ -71,12 +71,18 @@ serve(async (req) => {
         console.log(`Processing checkout completion for user ${userId}, plan ${planId}`);
 
         // プランと顧客IDを更新
+        let points = 10; // デフォルトのフリープランポイント
+        if (planId === 'premium_monthly') {
+          points = 200;
+        }
+        // 買い切りプランはポイント付与なし（API自己設定のため）
+
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
             plan: planId,
             stripe_customer_id: session.customer as string,
-            points: planId === 'one_time' ? 100 : 200,
+            points: points,
           })
           .eq('id', userId);
 
