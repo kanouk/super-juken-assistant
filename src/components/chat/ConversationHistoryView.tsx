@@ -28,9 +28,13 @@ const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = ({
   onNewChat,
   onBackToWelcome,
 }) => {
-  // Handle new chat - should go back to main chat view and start fresh
+  // Enhanced new chat handler - should close history view and start fresh chat
   const handleNewChat = () => {
-    onNewChat(); // This will trigger the proper new chat logic in the parent
+    console.log('New chat from history view - closing history and starting fresh');
+    // First trigger the new chat logic to reset all state
+    onNewChat();
+    // Then close the history view to return to main chat
+    onBackToList();
   };
 
   return (

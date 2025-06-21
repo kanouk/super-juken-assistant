@@ -104,9 +104,19 @@ export const useChatScreen = (props: UseChatScreenProps) => {
   // Override the understood handler to use the message handling version
   const handleUnderstood = messageHandleUnderstood;
 
-  // Override new chat handler to update URL
+  // Enhanced new chat handler to completely reset state and update URL
   const handleNewChat = () => {
+    console.log('Starting new chat - resetting all state');
+    // Reset all conversation-related state
+    setMessages([]);
+    setSelectedConversationId(null);
+    setConversationUnderstood(false);
+    setSelectedImages([]);
+    
+    // Call base new chat handler
     baseHandleNewChat();
+    
+    // Update URL to remove conversation ID
     if (onNavigateToConversation) {
       onNavigateToConversation(subject);
     }
