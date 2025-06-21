@@ -10,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import SidebarCountdownSection from "./sidebar/SidebarCountdownSection";
+import SidebarSubjectsSection from "./sidebar/SidebarSubjectsSection";
+import { getDisplaySubjects } from "./sidebar/sidebarUtils";
 
 interface SidebarProps {
   profile: UserProfile | null;
@@ -27,15 +29,6 @@ interface SidebarProps {
   isMobile: boolean;
   isOpen: boolean;
 }
-
-const subjects = [
-  { name: '数学', id: 'math', icon: BookOpen, color: 'from-blue-500 to-blue-600', textColor: 'text-blue-600' },
-  { name: '英語', id: 'english', icon: BookOpen, color: 'from-green-500 to-green-600', textColor: 'text-green-600' },
-  { name: '理科', id: 'science', icon: BookOpen, color: 'from-purple-500 to-purple-600', textColor: 'text-purple-600' },
-  { name: '社会', id: 'social', icon: BookOpen, color: 'from-orange-500 to-orange-600', textColor: 'text-orange-600' },
-  { name: '物理', id: 'physics', icon: BookOpen, color: 'from-red-500 to-red-600', textColor: 'text-red-600' },
-  { name: '歴史', id: 'history', icon: BookOpen, color: 'from-yellow-500 to-yellow-600', textColor: 'text-yellow-600' },
-];
 
 const SidebarHeader = ({ onToggleSidebar, profile, isMobile, onNavigate }: { onToggleSidebar: () => void, profile: UserProfile | null, isMobile: boolean, onNavigate: (screen: string) => void }) => {
   return (
@@ -158,42 +151,6 @@ const StatsSection = ({ dailyQuestions, understoodCount, totalQuestions, questio
   );
 };
 
-const SubjectsSection = ({ onSubjectSelect }: { onSubjectSelect: (subject: string) => void }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const handleSubjectClick = (subject: string) => {
-    onSubjectSelect(subject);
-  };
-
-  return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
-        <div className="flex items-center space-x-2">
-          <BookOpen className="h-4 w-4 text-indigo-600" />
-          <h3 className="font-semibold text-gray-800">科目を選択</h3>
-        </div>
-        {isCollapsed ? <ChevronDown className="h-4 w-4 text-gray-500" /> : <ChevronUp className="h-4 w-4 text-gray-500" />}
-      </div>
-      
-      {!isCollapsed && (
-        <div className="grid grid-cols-2 gap-2">
-          {subjects.map(subject => (
-            <Button
-              key={subject.id}
-              variant="ghost"
-              onClick={() => handleSubjectClick(subject.name)}
-              className={`h-auto p-3 flex flex-col items-center space-y-1 bg-gradient-to-br ${subject.color} text-white hover:shadow-lg transition-all duration-200 transform hover:scale-105`}
-            >
-              <subject.icon className="h-5 w-5" />
-              <span className="text-xs font-medium">{subject.name}</span>
-            </Button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
 const NavigationSection = ({ onNavigate }: { onNavigate: (screen: string) => void }) => {
   return (
     <div className="p-4 space-y-2">
@@ -242,6 +199,10 @@ const Sidebar = ({
   isOpen
 }: SidebarProps) => {
   const [isCountdownOpen, setIsCountdownOpen] = useState(true);
+  const [isSubjectsOpen, setIsSubjectsOpen] = useState(false);
+
+  // 設定から表示する教科リストを取得
+  const displaySubjects = getDisplaySubjects(settings);
 
   return (
     <div className="w-80 bg-white border-r border-gray-200 h-full flex flex-col shadow-lg">
@@ -280,7 +241,14 @@ const Sidebar = ({
 
         <Separator />
 
-        <SubjectsSection onSubjectSelect={onSubjectSelect} />
+        <div className="p-4">
+          <SidebarSubjectsSection
+            displaySubjects={displaySubjects}
+            isOpen={isSubjectsOpen}
+            onOpenChange={setIsSubjectsOpen}
+            onSubjectSelect={onSubjectSelect}
+          />
+        </div>
       </div>
 
       <SidebarFooter />
