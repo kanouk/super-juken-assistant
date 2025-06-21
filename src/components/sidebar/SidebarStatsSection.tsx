@@ -1,120 +1,85 @@
 
 import React from 'react';
-import { TrendingUp, ChevronUp, ChevronDown, CheckCircle, User, Sparkles, RefreshCw } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { UserProfile } from '@/types/profile';
-import SidebarSectionHeader from "./SidebarSectionHeader";
-import SidebarStatItem from "./SidebarStatItem";
-import SidebarStatItemWithDiff from "./SidebarStatItemWithDiff";
+import { Card, CardContent } from "@/components/ui/card";
+import { BarChart3 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SidebarStatsSectionProps {
-  profile: UserProfile | null;
   dailyQuestions: number;
   understoodCount: number;
+  totalQuestions: number;
   questionsDiff: number;
   understoodDiff: number;
   isStatsLoading: boolean;
-  displaySubjects: any[];
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
 }
 
 const SidebarStatsSection: React.FC<SidebarStatsSectionProps> = ({
-  profile,
   dailyQuestions,
   understoodCount,
+  totalQuestions,
   questionsDiff,
   understoodDiff,
-  isStatsLoading,
-  displaySubjects,
-  isOpen,
-  onOpenChange
+  isStatsLoading
 }) => {
-  const CollapsibleSectionHeader = (props: any) => (
-    <SidebarSectionHeader
-      {...props}
-      UpIcon={ChevronUp}
-      DownIcon={ChevronDown}
-    />
-  );
-
-  const getUnderstoodBySubject = () => {
-    const subjectCounts: Record<string, number> = {};
-    displaySubjects.forEach(subject => {
-      subjectCounts[subject.name] = Math.floor(Math.random() * 5);
-    });
-    return subjectCounts;
-  };
-
-  const understoodBySubject = getUnderstoodBySubject();
-
-  if (!profile?.show_stats) return null;
-
   return (
-    <Collapsible open={isOpen} onOpenChange={onOpenChange}>
-      <CollapsibleTrigger className="w-full">
-        <CollapsibleSectionHeader 
-          title="学習統計" 
-          icon={TrendingUp} 
-          iconBgColor="bg-gradient-to-r from-green-500 to-emerald-600" 
-          isOpen={isOpen} 
-        />
-      </CollapsibleTrigger>
-      <CollapsibleContent className="pt-2 space-y-3">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="cursor-help">
-                <SidebarStatItemWithDiff 
-                  label="本日理解した数" 
-                  value={understoodCount}
-                  diff={understoodDiff}
-                  isLoading={isStatsLoading}
-                  icon={CheckCircle}
-                  iconColor="text-green-600"
-                />
+    <div className="p-4 space-y-4">
+      <div className="flex items-center space-x-2 mb-3">
+        <BarChart3 className="h-4 w-4 text-emerald-600" />
+        <h3 className="font-semibold text-gray-800">今日の学習</h3>
+      </div>
+      
+      {isStatsLoading ? (
+        <div className="space-y-2">
+          <div className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
+          <div className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-blue-700 font-medium">質問数</p>
+                  <p className="text-2xl font-bold text-blue-800">{dailyQuestions}</p>
+                </div>
+                <div className="text-right">
+                  <span className={cn("text-sm font-medium", questionsDiff >= 0 ? "text-emerald-600" : "text-red-500")}>
+                    {questionsDiff >= 0 ? `+${questionsDiff}` : questionsDiff}
+                  </span>
+                </div>
               </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="space-y-1">
-                <p className="font-semibold">教科別本日理解数：</p>
-                {Object.entries(understoodBySubject).length > 0 ? (
-                  Object.entries(understoodBySubject).map(([subject, count]) => (
-                    <p key={subject} className="text-sm">{subject}: {String(count)}個</p>
-                  ))
-                ) : (
-                  <p className="text-sm">まだ理解した内容がありません</p>
-                )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-emerald-700 font-medium">理解度</p>
+                  <p className="text-2xl font-bold text-emerald-800">{understoodCount}</p>
+                </div>
+                <div className="text-right">
+                  <span className={cn("text-sm font-medium", understoodDiff >= 0 ? "text-emerald-600" : "text-red-500")}>
+                    {understoodDiff >= 0 ? `+${understoodDiff}` : understoodDiff}
+                  </span>
+                </div>
               </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <SidebarStatItemWithDiff 
-          label="本日の質問数" 
-          value={dailyQuestions} 
-          diff={questionsDiff}
-          isLoading={isStatsLoading}
-          icon={User}
-          iconColor="text-blue-600"
-        />
-        <SidebarStatItem 
-          label="本日のコスト" 
-          value={`¥0.00`}
-          isLoading={isStatsLoading}
-          icon={Sparkles}
-          iconColor="text-purple-600"
-        />
-        <SidebarStatItem 
-          label="累計コスト" 
-          value={`¥0.00`}
-          isLoading={isStatsLoading}
-          icon={RefreshCw}
-          iconColor="text-orange-600"
-        />
-      </CollapsibleContent>
-    </Collapsible>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-purple-700 font-medium">累計質問</p>
+                  <p className="text-2xl font-bold text-purple-800">{totalQuestions}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 };
 
