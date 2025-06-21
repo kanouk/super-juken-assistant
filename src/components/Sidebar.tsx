@@ -45,7 +45,7 @@ const Sidebar = ({
   isOpen
 }: SidebarProps) => {
   const [isCountdownOpen, setIsCountdownOpen] = useState(true);
-  const [isSubjectsOpen, setIsSubjectsOpen] = useState(false);
+  const [isSubjectsOpen, setIsSubjectsOpen] = useState(true); // Changed to true (default open)
 
   // 設定から表示する教科リストを取得
   const displaySubjects = getDisplaySubjects(settings);
@@ -65,17 +65,19 @@ const Sidebar = ({
         
         <Separator />
 
-        <SidebarStatsSection
-          dailyQuestions={dailyQuestions}
-          understoodCount={understoodCount}
-          totalQuestions={totalQuestions}
-          questionsDiff={questionsDiff}
-          understoodDiff={understoodDiff}
-          isStatsLoading={isStatsLoading}
-        />
+        {/* Reordered: Subjects first */}
+        <div className="p-4">
+          <SidebarSubjectsSection
+            displaySubjects={displaySubjects}
+            isOpen={isSubjectsOpen}
+            onOpenChange={setIsSubjectsOpen}
+            onSubjectSelect={onSubjectSelect}
+          />
+        </div>
 
         <Separator />
 
+        {/* Then countdown */}
         <div className="p-4">
           <SidebarCountdownSection
             profile={profile}
@@ -87,14 +89,15 @@ const Sidebar = ({
 
         <Separator />
 
-        <div className="p-4">
-          <SidebarSubjectsSection
-            displaySubjects={displaySubjects}
-            isOpen={isSubjectsOpen}
-            onOpenChange={setIsSubjectsOpen}
-            onSubjectSelect={onSubjectSelect}
-          />
-        </div>
+        {/* Finally stats */}
+        <SidebarStatsSection
+          dailyQuestions={dailyQuestions}
+          understoodCount={understoodCount}
+          totalQuestions={totalQuestions}
+          questionsDiff={questionsDiff}
+          understoodDiff={understoodDiff}
+          isStatsLoading={isStatsLoading}
+        />
       </div>
 
       <SidebarFooter />

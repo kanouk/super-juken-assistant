@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useConfettiStore } from '@/store/confettiStore';
 import { useProfile } from '@/hooks/useProfile';
+import { useSettings } from '@/hooks/useSettings';
 import { ImageData } from './types';
 import { useMessageHandling } from './hooks/useMessageHandling';
 import { useConversationActions } from './hooks/useConversationActions';
@@ -37,11 +38,14 @@ export const useChatScreen = (props: UseChatScreenProps) => {
   const [subjectName, setSubjectName] = useState(initialSubjectName || 'その他');
   const [selectedImages, setSelectedImages] = useState<(string | ImageData)[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [currentModel, setCurrentModel] = useState('gpt-4o-mini');
 
   const { profile } = useProfile();
+  const { settings, getCurrentModel } = useSettings();
   const { celebrate } = useConfettiStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Get current model from settings
+  const currentModel = getCurrentModel();
 
   // Use conversation actions hook
   const {

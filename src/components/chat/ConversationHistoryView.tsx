@@ -28,13 +28,18 @@ const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = ({
   onNewChat,
   onBackToWelcome,
 }) => {
+  // Handle new chat - should go back to main chat view and start fresh
+  const handleNewChat = () => {
+    onNewChat(); // This will trigger the proper new chat logic in the parent
+  };
+
   return (
     <div className="flex flex-col h-full min-h-0 bg-white">
       <ChatHeader
         subject={subject}
         subjectName={`会話履歴`}
         onBack={onBackToList}
-        onNewChat={onNewChat}
+        onNewChat={handleNewChat}
         messages={[]}
       />
       {/* 履歴リスト本体を、flex-1 min-h-0で高さを受け渡す */}
@@ -43,7 +48,7 @@ const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = ({
           conversations={conversations}
           onSelectConversation={onSelectConversation}
           onDeleteConversation={onDeleteConversation}
-          onNewChat={onNewChat}
+          onNewChat={handleNewChat}
         />
       </div>
     </div>
