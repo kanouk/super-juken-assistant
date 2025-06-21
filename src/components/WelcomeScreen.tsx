@@ -9,7 +9,6 @@ import {
 import StatCard from "./stats/StatCard";
 import UnderstoodUnits from "./UnderstoodUnits";
 import StreakDisplay from "./streak/StreakDisplay";
-import LearningCalendar from "./calendar/LearningCalendar";
 import ErrorBoundary from "./ErrorBoundary";
 
 interface WelcomeState {
@@ -199,12 +198,14 @@ const WelcomeScreen = ({
           />
         </div>
 
-        {/* Learning Calendar - with Error Boundary */}
+        {/* Learning Calendar - TEMPORARILY DISABLED for debugging */}
+        {/* 
         {canShowAdvancedFeatures && (
           <ErrorBoundary name="学習カレンダー" fallback={null}>
             <LearningCalendar userId={userId} />
           </ErrorBoundary>
         )}
+        */}
 
         {/* Understood Units */}
         <UnderstoodUnits onOpenConversation={onOpenConversation} />

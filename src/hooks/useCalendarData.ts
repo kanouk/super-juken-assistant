@@ -14,8 +14,9 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const currentYear = year || new Date().getFullYear();
-  const currentMonth = month || new Date().getMonth() + 1;
+  // Stabilize year and month values to prevent infinite loops
+  const currentYear = useMemo(() => year || new Date().getFullYear(), [year]);
+  const currentMonth = useMemo(() => month || new Date().getMonth() + 1, [month]);
 
   const fetchCalendarData = useCallback(async () => {
     if (!userId) {
@@ -26,6 +27,7 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
     try {
       setError(null);
       
+      // Create immutable Date objects
       const startDate = new Date(currentYear, currentMonth - 1, 1);
       const endDate = new Date(currentYear, currentMonth, 0);
       
@@ -56,7 +58,9 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
 
       const activityMap = new Map<string, DailyActivity>();
 
-      for (let day = 1; day <= endDate.getDate(); day++) {
+      // Pre-populate all days of the month
+      const daysInMonth = endDate.getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(currentYear, currentMonth - 1, day);
         const dateStr = date.toISOString().split('T')[0];
         activityMap.set(dateStr, {
@@ -67,6 +71,7 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
         });
       }
 
+      // Process conversations
       conversations?.forEach(conv => {
         const convDate = conv.created_at.split('T')[0];
         const activity = activityMap.get(convDate);
@@ -83,7 +88,8 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
         }
       });
 
-      setDailyActivities(Array.from(activityMap.values()).sort((a, b) => a.date.localeCompare(b.date)));
+      const sortedActivities = Array.from(activityMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+      setDailyActivities(sortedActivities);
     } catch (err) {
       console.error('Unexpected error:', err);
       setError('予期しないエラーが発生しました');
@@ -95,23 +101,38 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
   const calendarData = useMemo(() => {
     const firstDay = new Date(currentYear, currentMonth - 1, 1);
     const lastDay = new Date(currentYear, currentMonth, 0);
-    const startOfWeek = new Date(firstDay);
+    
+    // Create a new start date without mutating the original
+    const startOfWeek = new Date(firstDay.getTime());
     startOfWeek.setDate(firstDay.getDate() - firstDay.getDay());
     
     const weeks = [];
     let currentWeek = [];
     
-    for (let day = new Date(startOfWeek); day <= lastDay || currentWeek.length < 7; day.setDate(day.getDate() + 1)) {
-      const dateStr = day.toISOString().split('T')[0];
+    // Use a counter instead of mutating the date object
+    const startTime = startOfWeek.getTime();
+    const oneDay = 24 * 60 * 60 * 1000;
+    
+    for (let dayIndex = 0; dayIndex < 42; dayIndex++) { // 6 weeks max
+      const currentTime = startTime + (dayIndex * oneDay);
+      const currentDay = new Date(currentTime);
+      
+      if (dayIndex > 0 && currentDay > lastDay && currentWeek.length === 7) {
+        break;
+      }
+      
+      const dateStr = currentDay.toISOString().split('T')[0];
       const activity = dailyActivities.find(a => a.date === dateStr);
-      const isCurrentMonth = day.getMonth() === currentMonth - 1;
+      const isCurrentMonth = currentDay.getMonth() === currentMonth - 1;
+      const today = new Date();
+      const isToday = dateStr === today.toISOString().split('T')[0];
       
       currentWeek.push({
-        date: new Date(day),
+        date: new Date(currentDay),
         dateStr,
         activity: activity || null,
         isCurrentMonth,
-        isToday: dateStr === new Date().toISOString().split('T')[0]
+        isToday
       });
       
       if (currentWeek.length === 7) {

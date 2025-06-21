@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar, Flame, Target } from 'lucide-react';
@@ -18,11 +18,11 @@ const MONTH_NAMES = [
 
 const WEEKDAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
 
-const LearningCalendar: React.FC<LearningCalendarProps> = ({
+const LearningCalendar: React.FC<LearningCalendarProps> = memo(({
   userId,
   className
 }) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
 
@@ -30,7 +30,7 @@ const LearningCalendar: React.FC<LearningCalendarProps> = ({
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {
-      const newDate = new Date(prev);
+      const newDate = new Date(prev.getFullYear(), prev.getMonth(), 1);
       if (direction === 'prev') {
         newDate.setMonth(prev.getMonth() - 1);
       } else {
@@ -196,6 +196,8 @@ const LearningCalendar: React.FC<LearningCalendarProps> = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+LearningCalendar.displayName = 'LearningCalendar';
 
 export default LearningCalendar;
