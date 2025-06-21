@@ -1,9 +1,13 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Routes, Route } from "react-router-dom";
 import type { User, Session } from '@supabase/supabase-js';
-import MainApp from "@/components/MainApp";
+import AppLayout from "@/components/AppLayout";
+import WelcomePage from "@/pages/WelcomePage";
+import ChatPage from "@/pages/ChatPage";
+import SettingsPage from "@/pages/SettingsPage";
+import ProfilePage from "@/pages/ProfilePage";
 
 const AppPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -57,7 +61,16 @@ const AppPage = () => {
     return null; // Will redirect to login
   }
 
-  return <MainApp />;
+  return (
+    <AppLayout>
+      <Routes>
+        <Route path="/" element={<WelcomePage />} />
+        <Route path="/chat/:subject?/:conversationId?" element={<ChatPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+      </Routes>
+    </AppLayout>
+  );
 };
 
 export default AppPage;
