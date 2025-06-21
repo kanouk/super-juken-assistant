@@ -124,14 +124,14 @@ serve(async (req) => {
       ];
     }
 
-    // Checkout Sessionを作成
+    // Checkout Sessionを作成（新しいリダイレクト先を使用）
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: mode,
-      success_url: `${req.headers.get("origin")}/billing?success=true`,
-      cancel_url: `${req.headers.get("origin")}/billing?canceled=true`,
+      success_url: `${req.headers.get("origin")}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get("origin")}/payment-canceled?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
         user_id: user.id,
         plan_id: planId,
