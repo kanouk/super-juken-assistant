@@ -9,6 +9,7 @@ import { legacySubjects } from './sidebar/legacySubjects';
 interface ChatScreenProps extends UseChatScreenProps {
   onBackToWelcome?: () => void;
   conversationId?: string;
+  onNavigateToConversation?: (subject: string, conversationId?: string) => void;
 }
 
 const ChatScreen = (props: ChatScreenProps) => {

@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useConfettiStore } from '@/store/confettiStore';
 import { useProfile } from '@/hooks/useProfile';
@@ -18,10 +19,20 @@ export interface UseChatScreenProps {
   isMobile?: boolean;
   onConfettiComplete?: () => void;
   conversationId?: string;
+  onNavigateToConversation?: (subject: string, conversationId?: string) => void;
 }
 
 export const useChatScreen = (props: UseChatScreenProps) => {
-  const { subject: initialSubject, subjectName: initialSubjectName, initialMessages = [], isMobile = false, onConfettiComplete, conversationId } = props;
+  const { 
+    subject: initialSubject, 
+    subjectName: initialSubjectName, 
+    initialMessages = [], 
+    isMobile = false, 
+    onConfettiComplete, 
+    conversationId,
+    onNavigateToConversation
+  } = props;
+  
   const [subject, setSubject] = useState(initialSubject || 'other');
   const [subjectName, setSubjectName] = useState(initialSubjectName || 'その他');
   const [selectedImages, setSelectedImages] = useState<(string | ImageData)[]>([]);
@@ -44,7 +55,7 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     updateConversation,
     loadConversations,
     handleUnderstood: baseHandleUnderstood,
-    handleNewChat,
+    handleNewChat: baseHandleNewChat,
     handleShowHistory,
     handleBackToChat,
     handleSelectConversation: baseHandleSelectConversation,
@@ -55,6 +66,13 @@ export const useChatScreen = (props: UseChatScreenProps) => {
   const triggerConfetti = () => {
     setShowConfetti(true);
     celebrate();
+  };
+
+  // URL update callback for new conversations
+  const handleUrlUpdate = (newConversationId: string) => {
+    if (onNavigateToConversation) {
+      onNavigateToConversation(subject, newConversationId);
+    }
   };
 
   // Use message handling hook
@@ -76,10 +94,38 @@ export const useChatScreen = (props: UseChatScreenProps) => {
     updateConversation,
     setConversationUnderstood,
     onConfettiTrigger: triggerConfetti,
+    onUrlUpdate: handleUrlUpdate,
   });
 
   // Override the understood handler to use the message handling version
   const handleUnderstood = messageHandleUnderstood;
+
+  // Override new chat handler to update URL
+  const handleNewChat = () => {
+    baseHandleNewChat();
+    if (onNavigateToConversation) {
+      onNavigateToConversation(subject);
+    }
+  };
+
+  // Override conversation selection to update URL
+  const handleSelectConversation = (conversationId: string) => {
+    baseHandleSelectConversation(conversationId, setMessages, () => {});
+    if (onNavigateToConversation) {
+      onNavigateToConversation(subject, conversationId);
+    }
+  };
+
+  // Load conversation if conversationId is provided in URL
+  useEffect(() => {
+    if (conversationId && conversations.length > 0) {
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (conversation && selectedConversationId !== conversationId) {
+        console.log('Loading conversation from URL:', conversationId);
+        handleSelectConversation(conversationId);
+      }
+    }
+  }, [conversationId, conversations, selectedConversationId]);
 
   // Update subject and subjectName when props change
   useEffect(() => {
@@ -124,10 +170,6 @@ export const useChatScreen = (props: UseChatScreenProps) => {
 
   const handleQuickAction = (action: QuickAction) => {
     handleSendMessage(action.message);
-  };
-
-  const handleSelectConversation = (conversationId: string) => {
-    baseHandleSelectConversation(conversationId, setMessages, () => {});
   };
 
   const state = {

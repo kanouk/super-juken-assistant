@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +15,7 @@ interface UseMessageHandlingProps {
   updateConversation: (id: string, title?: string | null, isUnderstood?: boolean) => Promise<void>;
   setConversationUnderstood: (understood: boolean) => void;
   onConfettiTrigger?: () => void;
+  onUrlUpdate?: (conversationId: string) => void;
 }
 
 export const useMessageHandling = (props: UseMessageHandlingProps) => {
@@ -27,7 +29,8 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
     createConversation,
     updateConversation,
     setConversationUnderstood,
-    onConfettiTrigger
+    onConfettiTrigger,
+    onUrlUpdate
   } = props;
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -139,6 +142,11 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         const conversation = await createConversation(content.substring(0, 50), subject);
         conversationId = conversation.id;
         setSelectedConversationId(conversationId);
+        
+        // Update URL when new conversation is created
+        if (onUrlUpdate && conversationId) {
+          onUrlUpdate(conversationId);
+        }
       }
 
       // Create user message
@@ -234,7 +242,7 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, profile, subject, currentModel, selectedConversationId, setSelectedConversationId, createConversation, toast]);
+  }, [messages, profile, subject, currentModel, selectedConversationId, setSelectedConversationId, createConversation, toast, onUrlUpdate]);
 
   const handleUnderstood = useCallback(async () => {
     if (!selectedConversationId) return;
