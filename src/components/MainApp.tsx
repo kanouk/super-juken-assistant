@@ -84,6 +84,7 @@ const MainApp = () => {
         return (
           <WelcomeScreen
             onSubjectSelect={handleSubjectSelect}
+            onOpenConversation={handleOpenConversation}
             onToggleSidebar={handleToggleSidebar}
             isMobile={isMobile}
             dailyQuestions={chatStats.dailyQuestions}

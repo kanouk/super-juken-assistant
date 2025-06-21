@@ -10,7 +10,11 @@ import { formatDistanceToNow } from "date-fns";
 import { ja } from "date-fns/locale";
 import UnitHistoryModal from './UnitHistoryModal';
 
-const UnderstoodUnits: React.FC = () => {
+interface UnderstoodUnitsProps {
+  onOpenConversation: (conversationId: string, subject: string) => void;
+}
+
+const UnderstoodUnits: React.FC<UnderstoodUnitsProps> = ({ onOpenConversation }) => {
   const { units, isLoading, error } = useUnderstoodUnits();
   const [selectedUnit, setSelectedUnit] = useState<UnderstoodUnit | null>(null);
 
@@ -151,6 +155,7 @@ const UnderstoodUnits: React.FC = () => {
           unit={selectedUnit}
           isOpen={!!selectedUnit}
           onClose={() => setSelectedUnit(null)}
+          onOpenConversation={onOpenConversation}
         />
       )}
     </>

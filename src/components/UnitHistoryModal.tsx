@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +12,7 @@ interface UnitHistoryModalProps {
   unit: UnderstoodUnit;
   isOpen: boolean;
   onClose: () => void;
+  onOpenConversation: (conversationId: string, subject: string) => void;
 }
 
 interface ConversationHistory {
@@ -26,6 +26,7 @@ const UnitHistoryModal: React.FC<UnitHistoryModalProps> = ({
   unit,
   isOpen,
   onClose,
+  onOpenConversation,
 }) => {
   const [conversations, setConversations] = useState<ConversationHistory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -100,6 +101,11 @@ const UnitHistoryModal: React.FC<UnitHistoryModalProps> = ({
     return colorMap[subject] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
+  const handleConversationClick = (conversation: ConversationHistory) => {
+    onOpenConversation(conversation.id, conversation.subject);
+    onClose();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -137,7 +143,8 @@ const UnitHistoryModal: React.FC<UnitHistoryModalProps> = ({
             conversations.map((conversation) => (
               <div
                 key={conversation.id}
-                className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => handleConversationClick(conversation)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -154,17 +161,7 @@ const UnitHistoryModal: React.FC<UnitHistoryModalProps> = ({
                       </span>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      // This would navigate to the conversation
-                      // For now, just close the modal
-                      onClose();
-                    }}
-                  >
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+                  <ArrowRight className="h-4 w-4 text-gray-400" />
                 </div>
               </div>
             ))

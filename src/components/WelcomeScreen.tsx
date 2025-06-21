@@ -15,6 +15,7 @@ import UnderstoodUnits from "./UnderstoodUnits";
 
 interface WelcomeScreenProps {
   onSubjectSelect: (subject: string) => void;
+  onOpenConversation: (conversationId: string, subject: string) => void;
   onToggleSidebar: () => void;
   isMobile: boolean;
   dailyQuestions: number;
@@ -23,6 +24,7 @@ interface WelcomeScreenProps {
 
 const WelcomeScreen = ({ 
   onSubjectSelect, 
+  onOpenConversation,
   onToggleSidebar, 
   isMobile, 
   dailyQuestions, 
@@ -180,7 +182,7 @@ const WelcomeScreen = ({
         </div>
 
         {/* Understood Units */}
-        <UnderstoodUnits />
+        <UnderstoodUnits onOpenConversation={onOpenConversation} />
       </div>
     </div>
   );
