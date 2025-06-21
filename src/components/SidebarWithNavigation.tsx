@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useProfile } from '@/hooks/useProfile';
 import { useSettings } from '@/hooks/useSettings';
-import { useChatStats } from '@/hooks/useChatStats';
+import { useWelcomeScreenState } from '@/hooks/useWelcomeScreenState';
 import Sidebar from './Sidebar';
 
 interface SidebarWithNavigationProps {
@@ -23,7 +23,7 @@ const SidebarWithNavigation: React.FC<SidebarWithNavigationProps> = ({
   const location = useLocation();
   const { profile } = useProfile();
   const { settings } = useSettings();
-  const chatStats = useChatStats(userId);
+  const welcomeState = useWelcomeScreenState();
 
   const handleNavigate = (screen: string) => {
     switch (screen) {
@@ -41,7 +41,6 @@ const SidebarWithNavigation: React.FC<SidebarWithNavigationProps> = ({
     }
     
     if (isMobile) {
-      // Close sidebar on mobile after navigation
       setTimeout(() => onToggleSidebar(), 100);
     }
   };
@@ -51,7 +50,6 @@ const SidebarWithNavigation: React.FC<SidebarWithNavigationProps> = ({
     navigate(`/app/chat/${subject}`);
     
     if (isMobile) {
-      // Close sidebar on mobile after navigation
       setTimeout(() => onToggleSidebar(), 100);
     }
   };
@@ -61,7 +59,6 @@ const SidebarWithNavigation: React.FC<SidebarWithNavigationProps> = ({
     navigate(`/app/chat/${subject}/${conversationId}`);
     
     if (isMobile) {
-      // Close sidebar on mobile after navigation
       setTimeout(() => onToggleSidebar(), 100);
     }
   };
@@ -70,12 +67,12 @@ const SidebarWithNavigation: React.FC<SidebarWithNavigationProps> = ({
     <Sidebar
       profile={profile}
       settings={settings}
-      dailyQuestions={chatStats.dailyQuestions}
-      understoodCount={chatStats.today_understood || 0}
-      totalQuestions={chatStats.totalQuestions || 0}
-      questionsDiff={chatStats.questionsDiff}
-      understoodDiff={chatStats.understoodDiff}
-      isStatsLoading={chatStats.isLoading}
+      dailyQuestions={welcomeState.chatStats.dailyQuestions}
+      understoodCount={welcomeState.chatStats.today_understood || 0}
+      totalQuestions={welcomeState.chatStats.totalQuestions || 0}
+      questionsDiff={welcomeState.chatStats.questionsDiff}
+      understoodDiff={welcomeState.chatStats.understoodDiff}
+      isStatsLoading={welcomeState.chatStats.isLoading}
       onNavigate={handleNavigate}
       onSubjectSelect={handleSubjectSelect}
       onOpenConversation={handleOpenConversation}

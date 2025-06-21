@@ -1,9 +1,11 @@
 
 import { useNavigate } from 'react-router-dom';
 import WelcomeScreen from '@/components/WelcomeScreen';
+import { useWelcomeScreenState } from '@/hooks/useWelcomeScreenState';
 
 const WelcomePage = () => {
   const navigate = useNavigate();
+  const welcomeState = useWelcomeScreenState();
 
   const handleSubjectSelect = (subject: string) => {
     console.log('Subject selected:', subject);
@@ -26,8 +28,10 @@ const WelcomePage = () => {
       onOpenConversation={handleOpenConversation}
       onToggleSidebar={handleToggleSidebar}
       isMobile={window.innerWidth < 1024}
-      dailyQuestions={0} // Will be passed from parent
-      understoodCount={0} // Will be passed from parent
+      dailyQuestions={welcomeState.chatStats.dailyQuestions}
+      understoodCount={welcomeState.chatStats.today_understood || 0}
+      // Pass unified state
+      welcomeState={welcomeState}
     />
   );
 };

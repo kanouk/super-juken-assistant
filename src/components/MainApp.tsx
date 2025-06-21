@@ -1,13 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { useProfile } from '@/hooks/useProfile';
 import { useSettings } from '@/hooks/useSettings';
-import { useChatStats } from '@/hooks/useChatStats';
+import { useWelcomeScreenState } from '@/hooks/useWelcomeScreenState';
 import WelcomeScreen from './WelcomeScreen';
 import ChatScreen from './ChatScreen';
 import SettingsScreen from './SettingsScreen';
 import ProfileScreen from './ProfileScreen';
 import Sidebar from './Sidebar';
-import { supabase } from '@/integrations/supabase/client';
 
 type Screen = 'welcome' | 'chat' | 'settings' | 'profile';
 
@@ -21,11 +21,10 @@ const MainApp = () => {
   const [chatState, setChatState] = useState<ChatState>({ subject: '' });
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [userId, setUserId] = useState<string | undefined>(undefined);
 
   const { profile } = useProfile();
   const { settings } = useSettings();
-  const chatStats = useChatStats(userId);
+  const welcomeState = useWelcomeScreenState();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -42,17 +41,8 @@ const MainApp = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserId(user?.id);
-    };
-    getUser();
-  }, []);
-
   const handleSubjectSelect = (subject: string) => {
     console.log('Subject selected from sidebar:', subject);
-    // 新規チャットとして開始するため、conversationIdを明示的にundefinedに設定
     setChatState({ subject, conversationId: undefined });
     setCurrentScreen('chat');
     if (isMobile) {
@@ -87,8 +77,9 @@ const MainApp = () => {
             onOpenConversation={handleOpenConversation}
             onToggleSidebar={handleToggleSidebar}
             isMobile={isMobile}
-            dailyQuestions={chatStats.dailyQuestions}
-            understoodCount={chatStats.understoodCount}
+            dailyQuestions={welcomeState.chatStats.dailyQuestions}
+            understoodCount={welcomeState.chatStats.today_understood || 0}
+            welcomeState={welcomeState}
           />
         );
       case 'chat':
@@ -135,12 +126,12 @@ const MainApp = () => {
         <Sidebar
           profile={profile}
           settings={settings}
-          dailyQuestions={chatStats.dailyQuestions}
-          understoodCount={chatStats.today_understood || 0}
-          totalQuestions={chatStats.totalQuestions || 0}
-          questionsDiff={chatStats.questionsDiff}
-          understoodDiff={chatStats.understoodDiff}
-          isStatsLoading={chatStats.isLoading}
+          dailyQuestions={welcomeState.chatStats.dailyQuestions}
+          understoodCount={welcomeState.chatStats.today_understood || 0}
+          totalQuestions={welcomeState.chatStats.totalQuestions || 0}
+          questionsDiff={welcomeState.chatStats.questionsDiff}
+          understoodDiff={welcomeState.chatStats.understoodDiff}
+          isStatsLoading={welcomeState.chatStats.isLoading}
           onNavigate={(screen) => setCurrentScreen(screen as Screen)}
           onSubjectSelect={handleSubjectSelect}
           onOpenConversation={handleOpenConversation}

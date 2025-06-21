@@ -6,15 +6,24 @@ import {
   BookOpen, GraduationCap, Sparkles, 
   Target, TrendingUp, User, CheckCircle
 } from "lucide-react";
-import { useProfile } from "@/hooks/useProfile";
-import { useChatStats } from "@/hooks/useChatStats";
-import { useStreakData } from "@/hooks/useStreakData";
-import { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
 import StatCard from "./stats/StatCard";
 import UnderstoodUnits from "./UnderstoodUnits";
 import StreakDisplay from "./streak/StreakDisplay";
 import LearningCalendar from "./calendar/LearningCalendar";
+import ErrorBoundary from "./ErrorBoundary";
+
+interface WelcomeState {
+  userId: string | null;
+  isAuthenticated: boolean;
+  isBasicDataLoaded: boolean;
+  canShowAdvancedFeatures: boolean;
+  errors: string[];
+  isLoading: boolean;
+  profile: any;
+  chatStats: any;
+  streakData: any;
+  isLoadingStreak: boolean;
+}
 
 interface WelcomeScreenProps {
   onSubjectSelect: (subject: string) => void;
@@ -23,6 +32,7 @@ interface WelcomeScreenProps {
   isMobile: boolean;
   dailyQuestions: number;
   understoodCount: number;
+  welcomeState: WelcomeState;
 }
 
 const WelcomeScreen = ({ 
@@ -31,26 +41,17 @@ const WelcomeScreen = ({
   onToggleSidebar, 
   isMobile, 
   dailyQuestions, 
-  understoodCount 
+  understoodCount,
+  welcomeState
 }: WelcomeScreenProps) => {
-  const { profile, isLoading: isLoadingProfile } = useProfile();
-  const [userId, setUserId] = useState<string | undefined>(undefined);
-  const [enableAdvancedFeatures, setEnableAdvancedFeatures] = useState(false);
-  
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserId(user?.id);
-      // 5秒後に高度な機能を有効化（段階的復旧）
-      setTimeout(() => {
-        setEnableAdvancedFeatures(true);
-      }, 5000);
-    };
-    getUser();
-  }, []);
-  
-  const chatStats = useChatStats(userId);
-  const { streakData, isLoading: isLoadingStreak } = useStreakData(enableAdvancedFeatures ? userId : undefined);
+  const { 
+    userId, 
+    canShowAdvancedFeatures, 
+    chatStats, 
+    streakData, 
+    isLoadingStreak,
+    errors 
+  } = welcomeState;
 
   const getUnderstoodBySubject = () => {
     const subjectCounts: Record<string, number> = {};
@@ -58,6 +59,9 @@ const WelcomeScreen = ({
   };
 
   const understoodBySubject = getUnderstoodBySubject();
+
+  // Show error message if there are critical errors
+  const hasErrors = errors.length > 0;
 
   return (
     <div className="flex-1 bg-gradient-to-br from-slate-50 to-blue-50 overflow-auto">
@@ -85,13 +89,29 @@ const WelcomeScreen = ({
       </div>
 
       <div className="p-6 max-w-6xl mx-auto space-y-8">
-        {/* Streak Display - 条件付きレンダリング */}
-        {enableAdvancedFeatures && (
-          <StreakDisplay
-            currentStreak={streakData?.current_streak || 0}
-            longestStreak={streakData?.longest_streak || 0}
-            isLoading={isLoadingStreak}
-          />
+        {/* Error display if any */}
+        {hasErrors && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Sparkles className="h-5 w-5 text-red-600" />
+                <p className="text-sm text-red-800">
+                  一部の機能で問題が発生しています。基本機能は正常に動作します。
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Streak Display - with Error Boundary */}
+        {canShowAdvancedFeatures && (
+          <ErrorBoundary name="学習ストリーク" fallback={null}>
+            <StreakDisplay
+              currentStreak={streakData?.current_streak || 0}
+              longestStreak={streakData?.longest_streak || 0}
+              isLoading={isLoadingStreak}
+            />
+          </ErrorBoundary>
         )}
 
         {/* Stats */}
@@ -179,8 +199,12 @@ const WelcomeScreen = ({
           />
         </div>
 
-        {/* Learning Calendar - 条件付きレンダリング */}
-        {enableAdvancedFeatures && <LearningCalendar userId={userId} />}
+        {/* Learning Calendar - with Error Boundary */}
+        {canShowAdvancedFeatures && (
+          <ErrorBoundary name="学習カレンダー" fallback={null}>
+            <LearningCalendar userId={userId} />
+          </ErrorBoundary>
+        )}
 
         {/* Understood Units */}
         <UnderstoodUnits onOpenConversation={onOpenConversation} />
