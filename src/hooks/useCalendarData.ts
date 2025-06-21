@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DailyActivity {
@@ -17,7 +17,7 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
   const currentYear = year || new Date().getFullYear();
   const currentMonth = month || new Date().getMonth() + 1;
 
-  const fetchCalendarData = async () => {
+  const fetchCalendarData = useCallback(async () => {
     if (!userId) {
       setIsLoading(false);
       return;
@@ -26,14 +26,12 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
     try {
       setError(null);
       
-      // Get start and end dates for the month
       const startDate = new Date(currentYear, currentMonth - 1, 1);
       const endDate = new Date(currentYear, currentMonth, 0);
       
       const startDateStr = startDate.toISOString().split('T')[0];
       const endDateStr = endDate.toISOString().split('T')[0];
 
-      // Fetch conversations and messages for the month
       const { data: conversations, error: convError } = await supabase
         .from('conversations')
         .select(`
@@ -56,10 +54,8 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
         return;
       }
 
-      // Process data by date
       const activityMap = new Map<string, DailyActivity>();
 
-      // Initialize all dates in the month
       for (let day = 1; day <= endDate.getDate(); day++) {
         const date = new Date(currentYear, currentMonth - 1, day);
         const dateStr = date.toISOString().split('T')[0];
@@ -71,7 +67,6 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
         });
       }
 
-      // Count activities by date
       conversations?.forEach(conv => {
         const convDate = conv.created_at.split('T')[0];
         const activity = activityMap.get(convDate);
@@ -79,11 +74,9 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
         if (activity) {
           activity.has_activity = true;
           
-          // Count user messages (questions)
           const userMessages = conv.messages?.filter(msg => msg.role === 'user') || [];
           activity.question_count += userMessages.length;
           
-          // Count understood conversations
           if (conv.is_understood) {
             activity.understood_count += 1;
           }
@@ -97,9 +90,8 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, currentYear, currentMonth]);
 
-  // Memoized calendar grid data
   const calendarData = useMemo(() => {
     const firstDay = new Date(currentYear, currentMonth - 1, 1);
     const lastDay = new Date(currentYear, currentMonth, 0);
@@ -133,7 +125,7 @@ export const useCalendarData = (userId?: string, year?: number, month?: number) 
 
   useEffect(() => {
     fetchCalendarData();
-  }, [userId, currentYear, currentMonth]);
+  }, [fetchCalendarData]);
 
   return {
     dailyActivities,

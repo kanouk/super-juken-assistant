@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface StreakData {
@@ -14,7 +14,7 @@ export const useStreakData = (userId?: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStreakData = async () => {
+  const fetchStreakData = useCallback(async () => {
     if (!userId) {
       setIsLoading(false);
       return;
@@ -64,24 +64,22 @@ export const useStreakData = (userId?: string) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
 
-  const updateStreakOnActivity = async () => {
+  const updateStreakOnActivity = useCallback(async () => {
     if (!userId || !streakData) return;
 
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
     const lastActivityDate = streakData.last_activity_date;
 
-    // Check if user already studied today
     if (lastActivityDate === today) {
-      return; // No update needed
+      return;
     }
 
     let newCurrentStreak = streakData.current_streak;
     let newStreakStartDate = streakData.streak_start_date;
 
     if (!lastActivityDate) {
-      // First time studying
       newCurrentStreak = 1;
       newStreakStartDate = today;
     } else {
@@ -90,10 +88,8 @@ export const useStreakData = (userId?: string) => {
       const daysDiff = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
 
       if (daysDiff === 1) {
-        // Consecutive day - increment streak
         newCurrentStreak = streakData.current_streak + 1;
       } else if (daysDiff > 1) {
-        // Streak broken - restart
         newCurrentStreak = 1;
         newStreakStartDate = today;
       }
@@ -123,11 +119,11 @@ export const useStreakData = (userId?: string) => {
     } catch (err) {
       console.error('Error updating streak:', err);
     }
-  };
+  }, [userId, streakData]);
 
   useEffect(() => {
     fetchStreakData();
-  }, [userId]);
+  }, [fetchStreakData]);
 
   return {
     streakData,

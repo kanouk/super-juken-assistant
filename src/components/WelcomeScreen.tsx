@@ -35,19 +35,23 @@ const WelcomeScreen = ({
 }: WelcomeScreenProps) => {
   const { profile, isLoading: isLoadingProfile } = useProfile();
   const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [enableAdvancedFeatures, setEnableAdvancedFeatures] = useState(false);
   
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUserId(user?.id);
+      // 5秒後に高度な機能を有効化（段階的復旧）
+      setTimeout(() => {
+        setEnableAdvancedFeatures(true);
+      }, 5000);
     };
     getUser();
   }, []);
   
   const chatStats = useChatStats(userId);
-  const { streakData, isLoading: isLoadingStreak } = useStreakData(userId);
+  const { streakData, isLoading: isLoadingStreak } = useStreakData(enableAdvancedFeatures ? userId : undefined);
 
-  // Get understood by subject (placeholder for now)
   const getUnderstoodBySubject = () => {
     const subjectCounts: Record<string, number> = {};
     return subjectCounts;
@@ -81,12 +85,14 @@ const WelcomeScreen = ({
       </div>
 
       <div className="p-6 max-w-6xl mx-auto space-y-8">
-        {/* Streak Display */}
-        <StreakDisplay
-          currentStreak={streakData?.current_streak || 0}
-          longestStreak={streakData?.longest_streak || 0}
-          isLoading={isLoadingStreak}
-        />
+        {/* Streak Display - 条件付きレンダリング */}
+        {enableAdvancedFeatures && (
+          <StreakDisplay
+            currentStreak={streakData?.current_streak || 0}
+            longestStreak={streakData?.longest_streak || 0}
+            isLoading={isLoadingStreak}
+          />
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -173,8 +179,8 @@ const WelcomeScreen = ({
           />
         </div>
 
-        {/* Learning Calendar */}
-        <LearningCalendar userId={userId} />
+        {/* Learning Calendar - 条件付きレンダリング */}
+        {enableAdvancedFeatures && <LearningCalendar userId={userId} />}
 
         {/* Understood Units */}
         <UnderstoodUnits onOpenConversation={onOpenConversation} />
