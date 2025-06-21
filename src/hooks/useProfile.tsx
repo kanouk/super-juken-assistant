@@ -69,6 +69,7 @@ export const useProfile = () => {
           mbti: data.mbti || null,
           plan: data.plan || null,
           points: data.points || null,
+          stripe_customer_id: data.stripe_customer_id || null,
         });
       }
     } catch (error) {

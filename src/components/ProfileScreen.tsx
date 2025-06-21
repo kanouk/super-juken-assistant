@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +37,7 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     mbti: null,
     plan: null,
     points: null,
+    stripe_customer_id: null,
   });
   
   const [isSaving, setIsSaving] = useState(false);
