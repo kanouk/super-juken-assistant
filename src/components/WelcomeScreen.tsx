@@ -8,10 +8,13 @@ import {
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useChatStats } from "@/hooks/useChatStats";
+import { useStreakData } from "@/hooks/useStreakData";
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import StatCard from "./stats/StatCard";
 import UnderstoodUnits from "./UnderstoodUnits";
+import StreakDisplay from "./streak/StreakDisplay";
+import LearningCalendar from "./calendar/LearningCalendar";
 
 interface WelcomeScreenProps {
   onSubjectSelect: (subject: string) => void;
@@ -42,6 +45,7 @@ const WelcomeScreen = ({
   }, []);
   
   const chatStats = useChatStats(userId);
+  const { streakData, isLoading: isLoadingStreak } = useStreakData(userId);
 
   // Get understood by subject (placeholder for now)
   const getUnderstoodBySubject = () => {
@@ -77,24 +81,12 @@ const WelcomeScreen = ({
       </div>
 
       <div className="p-6 max-w-6xl mx-auto space-y-8">
-        {/* Welcome Message */}
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-blue-800">
-              <Sparkles className="h-6 w-6" />
-              <span>スーパー受験アシスタントへようこそ！</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-blue-700 leading-relaxed">
-              AIアシスタントとの対話を通じて効率的に学習を進めましょう。
-              サイドバーから教科を選択してチャットを開始できます。
-              {!isLoadingProfile && profile?.display_name && (
-                <span className="font-medium"> {profile.display_name}さん、一緒に頑張りましょう！</span>
-              )}
-            </p>
-          </CardContent>
-        </Card>
+        {/* Streak Display */}
+        <StreakDisplay
+          currentStreak={streakData?.current_streak || 0}
+          longestStreak={streakData?.longest_streak || 0}
+          isLoading={isLoadingStreak}
+        />
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -180,6 +172,9 @@ const WelcomeScreen = ({
             borderColor="border-orange-200"
           />
         </div>
+
+        {/* Learning Calendar */}
+        <LearningCalendar userId={userId} />
 
         {/* Understood Units */}
         <UnderstoodUnits onOpenConversation={onOpenConversation} />
