@@ -72,6 +72,10 @@ export const useChatHistory = (subject: string) => {
       }
       if (isUnderstood !== undefined) {
         updateData.is_understood = isUnderstood;
+        // Automatically set understood_at when marking as understood
+        if (isUnderstood) {
+          updateData.understood_at = new Date().toISOString();
+        }
       }
 
       const { error } = await supabase
@@ -98,7 +102,6 @@ export const useChatHistory = (subject: string) => {
       await loadConversations();
     } catch (error) {
       console.error('Failed to delete conversation:', error);
-      throw error;
     }
   };
 

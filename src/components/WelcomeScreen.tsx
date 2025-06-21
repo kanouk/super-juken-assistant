@@ -3,16 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
-  BookOpen, Calculator, FlaskConical, Atom, Languages, 
-  MapPin, Monitor, Plus, GraduationCap, Sparkles, 
-  Target, TrendingUp, Clock, User, CheckCircle, HelpCircle
+  BookOpen, GraduationCap, Sparkles, 
+  Target, TrendingUp, User, CheckCircle
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
-import { useSettings } from "@/hooks/useSettings";
 import { useChatStats } from "@/hooks/useChatStats";
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import StatCard from "./stats/StatCard";
+import UnderstoodUnits from "./UnderstoodUnits";
 
 interface WelcomeScreenProps {
   onSubjectSelect: (subject: string) => void;
@@ -30,7 +29,6 @@ const WelcomeScreen = ({
   understoodCount 
 }: WelcomeScreenProps) => {
   const { profile, isLoading: isLoadingProfile } = useProfile();
-  const { settings } = useSettings();
   const [userId, setUserId] = useState<string | undefined>(undefined);
   
   useEffect(() => {
@@ -43,38 +41,7 @@ const WelcomeScreen = ({
   
   const chatStats = useChatStats(userId);
 
-  // Get visible and sorted subjects from settings
-  const visibleSubjects = settings.subjectConfigs
-    .filter(config => config.visible)
-    .sort((a, b) => a.order - b.order);
-
-  // Legacy subject data for icons and colors
-  const legacySubjects = [
-    { id: 'math', name: '数学', icon: Calculator, color: 'bg-blue-100 text-blue-700 hover:bg-blue-200', gradient: 'from-blue-400 to-blue-600' },
-    { id: 'chemistry', name: '化学', icon: FlaskConical, color: 'bg-purple-100 text-purple-700 hover:bg-purple-200', gradient: 'from-purple-400 to-purple-600' },
-    { id: 'biology', name: '生物', icon: Atom, color: 'bg-green-100 text-green-700 hover:bg-green-200', gradient: 'from-green-400 to-green-600' },
-    { id: 'english', name: '英語', icon: Languages, color: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200', gradient: 'from-indigo-400 to-indigo-600' },
-    { id: 'japanese', name: '国語', icon: BookOpen, color: 'bg-red-100 text-red-700 hover:bg-red-200', gradient: 'from-red-400 to-red-600' },
-    { id: 'geography', name: '地理', icon: MapPin, color: 'bg-teal-100 text-teal-700 hover:bg-teal-200', gradient: 'from-teal-400 to-teal-600' },
-    { id: 'information', name: '情報', icon: Monitor, color: 'bg-gray-100 text-gray-700 hover:bg-gray-200', gradient: 'from-gray-400 to-gray-600' },
-    { id: 'other', name: '全般', icon: Plus, color: 'bg-orange-100 text-orange-700 hover:bg-orange-200', gradient: 'from-orange-400 to-orange-600' },
-    { id: 'physics', name: '物理', icon: Atom, color: 'bg-orange-100 text-orange-700 hover:bg-orange-200', gradient: 'from-orange-400 to-orange-600' },
-    { id: 'japanese_history', name: '日本史', icon: BookOpen, color: 'bg-pink-100 text-pink-700 hover:bg-pink-200', gradient: 'from-pink-400 to-pink-600' },
-    { id: 'world_history', name: '世界史', icon: BookOpen, color: 'bg-amber-100 text-amber-700 hover:bg-amber-200', gradient: 'from-amber-400 to-amber-600' },
-    { id: 'earth_science', name: '地学', icon: Calculator, color: 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200', gradient: 'from-cyan-400 to-cyan-600' },
-  ];
-
-  const displaySubjects = visibleSubjects.map(config => {
-    const legacyData = legacySubjects.find(s => s.id === config.id);
-    return {
-      id: config.id,
-      name: config.name && config.name.length > 0 ? config.name : (legacyData?.name || config.id),
-      icon: legacyData?.icon || Plus,
-      color: legacyData?.color || 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-    };
-  });
-
-  // 教科ごとの理解数を計算（今はダミーデータを返す）
+  // Get understood by subject (placeholder for now)
   const getUnderstoodBySubject = () => {
     const subjectCounts: Record<string, number> = {};
     return subjectCounts;
@@ -102,7 +69,7 @@ const WelcomeScreen = ({
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">ようこそ！</h1>
-            <p className="text-sm text-gray-600">学習したい教科を選択してください</p>
+            <p className="text-sm text-gray-600">学習の成果を確認してください</p>
           </div>
         </div>
       </div>
@@ -119,7 +86,7 @@ const WelcomeScreen = ({
           <CardContent>
             <p className="text-blue-700 leading-relaxed">
               AIアシスタントとの対話を通じて効率的に学習を進めましょう。
-              下の教科から選択してチャットを開始できます。
+              サイドバーから教科を選択してチャットを開始できます。
               {!isLoadingProfile && profile?.display_name && (
                 <span className="font-medium"> {profile.display_name}さん、一緒に頑張りましょう！</span>
               )}
@@ -127,7 +94,7 @@ const WelcomeScreen = ({
           </CardContent>
         </Card>
 
-        {/* Stats - 4 items with diff display */}
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <TooltipProvider>
             <Tooltip>
@@ -212,33 +179,8 @@ const WelcomeScreen = ({
           />
         </div>
 
-        {/* Subject Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <BookOpen className="h-6 w-6 text-blue-600" />
-              <span>教科を選択</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {displaySubjects.map((subject) => {
-                const IconComponent = subject.icon;
-                return (
-                  <Button
-                    key={subject.id}
-                    variant="outline"
-                    className={`h-20 flex flex-col items-center justify-center space-y-2 ${subject.color} border-0 hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl`}
-                    onClick={() => onSubjectSelect(subject.id)}
-                  >
-                    <IconComponent className="h-8 w-8" />
-                    <span className="font-medium text-sm">{subject.name}</span>
-                  </Button>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Understood Units */}
+        <UnderstoodUnits />
       </div>
     </div>
   );
