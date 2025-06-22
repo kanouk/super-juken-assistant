@@ -1,4 +1,3 @@
-
 import React from "react";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
@@ -28,6 +27,7 @@ interface ChatMainViewProps {
   messagesEndRef: React.RefObject<HTMLDivElement>;
   conversationUnderstood: boolean;
   onBackToWelcome?: () => void;
+  onStreakUpdate?: () => void;
 }
 
 const ChatMainView: React.FC<ChatMainViewProps> = ({
@@ -51,6 +51,7 @@ const ChatMainView: React.FC<ChatMainViewProps> = ({
   messagesEndRef,
   conversationUnderstood,
   onBackToWelcome,
+  onStreakUpdate,
 }) => {
   // モバイルでのインプットボックス高さを考慮
   const mobileInputHeight = conversationUnderstood ? 140 : 160; // 理解済み状態では少し高く
