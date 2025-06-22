@@ -16,7 +16,7 @@ interface UseMessageHandlingProps {
   setConversationUnderstood: (understood: boolean) => void;
   onConfettiTrigger?: () => void;
   onUrlUpdate?: (conversationId: string) => void;
-  onStreakUpdate?: () => void; // Add streak update callback
+  onStreakUpdate?: () => void;
 }
 
 export const useMessageHandling = (props: UseMessageHandlingProps) => {
@@ -40,18 +40,18 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
   const [isTagging, setIsTagging] = useState(false);
   const { toast } = useToast();
 
-  // Auto-tagging function for when conversation is understood
+  // 会話理解時の自動タグ付け機能
   const performAutoTagging = useCallback(async (conversationId: string, messages: Message[]) => {
     try {
-      console.log('🏷️ Starting auto-tagging for conversation:', conversationId);
+      console.log('🏷️ 会話自動タグ付け開始:', conversationId);
       setIsTagging(true);
       
-      // Get the user's question and AI's response
+      // ユーザーの質問とAIの回答を取得
       const userMessage = messages.find(msg => msg.role === 'user');
       const assistantMessage = messages.find(msg => msg.role === 'assistant');
       
       if (!userMessage) {
-        console.log('❌ No user message found for tagging');
+        console.log('❌ タグ付け用のユーザーメッセージが見つかりません');
         toast({
           title: "タグ付けエラー",
           description: "ユーザーメッセージが見つかりません。",
@@ -66,7 +66,7 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         subject: subject
       };
 
-      console.log('📤 Sending auto-tagging request...');
+      console.log('📤 自動タグ付けリクエスト送信...');
       const { data, error } = await supabase.functions.invoke('auto-tag-question', {
         body: {
           conversationId,
@@ -75,10 +75,10 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         }
       });
 
-      console.log('📥 Auto-tagging response:', data);
+      console.log('📥 自動タグ付けレスポンス:', data);
       
       if (error) {
-        console.error('❌ Auto-tagging error:', error);
+        console.error('❌ 自動タグ付けエラー:', error);
         toast({
           title: "自動タグ付けエラー",
           description: `タグ付けに失敗しました: ${error.message}`,
@@ -89,20 +89,20 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
 
       if (data?.success) {
         if (data.tagsCount > 0) {
-          console.log(`✅ Auto-tagging successful: ${data.tagsCount} tags applied`);
+          console.log(`✅ 自動タグ付け成功: ${data.tagsCount}個のタグを適用`);
           toast({
             title: "自動タグ付け完了",
             description: `${data.tagsCount}個のタグが自動的に付与されました。\n教科: ${data.subject}\n利用可能タグ数: ${data.availableTags}`,
           });
         } else {
-          console.log('ℹ️ Auto-tagging completed but no tags were applied');
+          console.log('ℹ️ 自動タグ付け完了（タグ適用なし）');
           toast({
             title: "タグ付け完了",
             description: `教科「${data.subject}」で処理しましたが、適用可能なタグがありませんでした。\n利用可能タグ数: ${data.availableTags}`,
           });
         }
       } else {
-        console.log('⚠️ Auto-tagging completed with warnings');
+        console.log('⚠️ 自動タグ付け完了（警告あり）');
         toast({
           title: "タグ付け警告",
           description: data?.message || "タグ付け処理が完了しましたが、予期しない結果でした。",
@@ -112,7 +112,7 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
       
       return true;
     } catch (error) {
-      console.error('💥 Auto-tagging failed:', error);
+      console.error('💥 自動タグ付け失敗:', error);
       toast({
         title: "自動タグ付けエラー",
         description: `予期しないエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`,
@@ -139,19 +139,19 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
     try {
       let conversationId = selectedConversationId;
       
-      // Create conversation if needed
+      // 必要に応じて会話を作成
       if (!conversationId) {
         const conversation = await createConversation(content.substring(0, 50), subject);
         conversationId = conversation.id;
         setSelectedConversationId(conversationId);
         
-        // Update URL when new conversation is created
+        // 新規会話作成時のURL更新
         if (onUrlUpdate && conversationId) {
           onUrlUpdate(conversationId);
         }
       }
 
-      // Create user message
+      // ユーザーメッセージ作成
       const userMessage: Message = {
         id: Date.now().toString(),
         content,
@@ -165,7 +165,7 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
 
       setMessages(prev => [...prev, userMessage]);
 
-      // Save user message to database
+      // ユーザーメッセージをデータベースに保存
       const { error: userMessageError } = await supabase
         .from('messages')
         .insert({
@@ -177,19 +177,19 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         });
 
       if (userMessageError) {
-        console.error('Failed to save user message:', userMessageError);
+        console.error('ユーザーメッセージ保存失敗:', userMessageError);
       }
 
-      // Prepare conversation history
+      // 会話履歴を準備
       const conversationHistory = messages.map(msg => ({
         role: msg.role,
         content: msg.content,
         image_url: msg.image_url
       }));
 
-      console.log('🚀 Calling AI and updating streak...');
+      console.log('🚀 AI呼び出しとストリーク更新...');
 
-      // Call AI using unified Edge Function approach (streak will be auto-updated)
+      // 統一Edge Function方式でAI呼び出し（ストリークは自動更新される）
       const { data, error } = await supabase.functions.invoke('ask-ai', {
         body: {
           message: content,
@@ -205,7 +205,7 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         throw error;
       }
 
-      // Create AI message
+      // AIメッセージ作成
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: data.response,
@@ -220,7 +220,7 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
 
       setMessages(prev => [...prev, aiMessage]);
 
-      // Save AI message to database
+      // AIメッセージをデータベースに保存
       const { error: aiMessageError } = await supabase
         .from('messages')
         .insert({
@@ -233,19 +233,19 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         });
 
       if (aiMessageError) {
-        console.error('Failed to save AI message:', aiMessageError);
+        console.error('AIメッセージ保存失敗:', aiMessageError);
       }
 
-      // Trigger streak data refresh
-      console.log('🔄 Triggering streak data refresh...');
+      // ストリークデータ更新をトリガー
+      console.log('🔄 ストリークデータ更新トリガー...');
       if (onStreakUpdate) {
         onStreakUpdate();
       }
 
-      console.log('✅ Message sent and streak updated successfully');
+      console.log('✅ メッセージ送信とストリーク更新成功');
 
     } catch (error) {
-      console.error('Send message error:', error);
+      console.error('メッセージ送信エラー:', error);
       toast({
         title: "エラー",
         description: "メッセージの送信に失敗しました。",
@@ -260,24 +260,24 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
     if (!selectedConversationId) return;
 
     try {
-      // Update conversation as understood
+      // 会話を理解済みとして更新
       await updateConversation(selectedConversationId, null, true);
       setConversationUnderstood(true);
       
-      // Trigger confetti effect
+      // 紙吹雪エフェクトをトリガー
       if (onConfettiTrigger) {
         onConfettiTrigger();
       }
       
-      // Perform auto-tagging with the complete conversation
+      // 完全な会話で自動タグ付けを実行
       const taggingSuccess = await performAutoTagging(selectedConversationId, messages);
       
       if (!taggingSuccess) {
-        console.warn('⚠️ Auto-tagging was not successful, but conversation was marked as understood');
+        console.warn('⚠️ 自動タグ付けは成功しませんでしたが、会話は理解済みとしてマークされました');
       }
       
     } catch (error) {
-      console.error("❌ Failed to update conversation:", error);
+      console.error("❌ 会話更新失敗:", error);
       toast({
         title: "エラー",
         description: "理解したことの記録に失敗しました。",

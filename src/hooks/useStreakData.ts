@@ -9,11 +9,11 @@ interface StreakData {
   streak_start_date: string | null;
 }
 
-// Get current date in JST (Japan Standard Time)
+// JST（日本標準時）で現在の日付を取得
 const getJSTDate = () => {
   const now = new Date();
-  const jstTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC + 9 hours
-  return jstTime.toISOString().split('T')[0]; // YYYY-MM-DD format
+  const jstTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC + 9時間
+  return jstTime.toISOString().split('T')[0]; // YYYY-MM-DD形式
 };
 
 export const useStreakData = (userId?: string) => {
@@ -29,7 +29,7 @@ export const useStreakData = (userId?: string) => {
 
     try {
       setError(null);
-      console.log('🔄 Fetching streak data for user:', userId);
+      console.log('🔄 ストリークデータを取得中 - User:', userId);
       
       const { data, error: fetchError } = await supabase
         .from('learning_streaks')
@@ -38,14 +38,14 @@ export const useStreakData = (userId?: string) => {
         .maybeSingle();
 
       if (fetchError) {
-        console.error('❌ Error fetching streak data:', fetchError);
+        console.error('❌ ストリークデータ取得エラー:', fetchError);
         setError(fetchError.message);
         return;
       }
 
       if (!data) {
-        console.log('🆕 No streak data found, creating initial record');
-        // Create initial streak record for new user
+        console.log('🆕 ストリークデータなし、初期記録作成');
+        // 新規ユーザー用の初期ストリーク記録を作成
         const { data: newData, error: insertError } = await supabase
           .from('learning_streaks')
           .insert({
@@ -59,99 +59,30 @@ export const useStreakData = (userId?: string) => {
           .single();
 
         if (insertError) {
-          console.error('❌ Error creating streak data:', insertError);
+          console.error('❌ ストリークデータ作成エラー:', insertError);
           setError(insertError.message);
           return;
         }
 
-        console.log('✅ Initial streak record created');
+        console.log('✅ 初期ストリーク記録作成完了');
         setStreakData(newData);
       } else {
-        console.log('📊 Streak data fetched:', data);
+        console.log('📊 ストリークデータ取得完了:', data);
         setStreakData(data);
       }
     } catch (err) {
-      console.error('💥 Unexpected error:', err);
+      console.error('💥 予期しないエラー:', err);
       setError('予期しないエラーが発生しました');
     } finally {
       setIsLoading(false);
     }
   }, [userId]);
 
-  const updateStreakOnActivity = useCallback(async () => {
-    if (!userId || !streakData) {
-      console.log('⚠️ Cannot update streak: missing userId or streakData');
-      return;
-    }
-
-    const today = getJSTDate(); // Use JST
-    const lastActivityDate = streakData.last_activity_date;
-
-    console.log(`🗾 Checking streak update: today=${today}, lastActivity=${lastActivityDate}`);
-
-    if (lastActivityDate === today) {
-      console.log('ℹ️ Streak already updated today');
-      return;
-    }
-
-    let newCurrentStreak = streakData.current_streak;
-    let newStreakStartDate = streakData.streak_start_date;
-
-    if (!lastActivityDate) {
-      newCurrentStreak = 1;
-      newStreakStartDate = today;
-      console.log('🎯 First time activity - starting streak');
-    } else {
-      const lastDate = new Date(lastActivityDate + 'T00:00:00.000Z');
-      const todayDate = new Date(today + 'T00:00:00.000Z');
-      const daysDiff = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-
-      console.log(`📅 Days difference: ${daysDiff}`);
-
-      if (daysDiff === 1) {
-        newCurrentStreak = streakData.current_streak + 1;
-        console.log(`🔥 Consecutive day! New streak: ${newCurrentStreak}`);
-      } else if (daysDiff > 1) {
-        newCurrentStreak = 1;
-        newStreakStartDate = today;
-        console.log(`💔 Streak broken. Restarting at 1`);
-      }
-    }
-
-    const newLongestStreak = Math.max(streakData.longest_streak, newCurrentStreak);
-
-    try {
-      console.log(`📈 Updating local streak: current=${newCurrentStreak}, longest=${newLongestStreak}`);
-      
-      const { data, error } = await supabase
-        .from('learning_streaks')
-        .update({
-          current_streak: newCurrentStreak,
-          longest_streak: newLongestStreak,
-          last_activity_date: today,
-          streak_start_date: newStreakStartDate
-        })
-        .eq('user_id', userId)
-        .select('current_streak, longest_streak, last_activity_date, streak_start_date')
-        .single();
-
-      if (error) {
-        console.error('❌ Error updating streak:', error);
-        return;
-      }
-
-      console.log('✅ Streak updated successfully in database');
-      setStreakData(data);
-    } catch (err) {
-      console.error('💥 Error updating streak:', err);
-    }
-  }, [userId, streakData]);
-
-  // Set up real-time subscription for streak updates
+  // リアルタイム購読設定でストリーク更新を監視
   useEffect(() => {
     if (!userId) return;
 
-    console.log('👂 Setting up realtime subscription for streak updates');
+    console.log('👂 ストリーク更新のリアルタイム購読設定');
     
     const channel = supabase
       .channel('streak-updates')
@@ -164,14 +95,14 @@ export const useStreakData = (userId?: string) => {
           filter: `user_id=eq.${userId}`
         },
         (payload) => {
-          console.log('🔄 Real-time streak update received:', payload.new);
+          console.log('🔄 リアルタイムストリーク更新受信:', payload.new);
           setStreakData(payload.new as StreakData);
         }
       )
       .subscribe();
 
     return () => {
-      console.log('🔌 Cleaning up realtime subscription');
+      console.log('🔌 リアルタイム購読クリーンアップ');
       supabase.removeChannel(channel);
     };
   }, [userId]);
@@ -180,11 +111,16 @@ export const useStreakData = (userId?: string) => {
     fetchStreakData();
   }, [fetchStreakData]);
 
+  const refreshStreak = useCallback(() => {
+    console.log('🔄 手動ストリークデータ更新');
+    fetchStreakData();
+  }, [fetchStreakData]);
+
   return {
     streakData,
     isLoading,
     error,
-    updateStreakOnActivity,
-    refetch: fetchStreakData
+    refetch: fetchStreakData,
+    refreshStreak
   };
 };

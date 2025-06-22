@@ -20,9 +20,9 @@ export const useWelcomeScreenState = () => {
   
   const { profile, isLoading: isLoadingProfile } = useProfile();
   const chatStats = useChatStats(userId);
-  const { streakData, isLoading: isLoadingStreak, error: streakError } = useStreakData(userId);
+  const { streakData, isLoading: isLoadingStreak, error: streakError, refreshStreak } = useStreakData(userId);
 
-  // Get user authentication state
+  // ユーザー認証状態を取得
   useEffect(() => {
     const getUser = async () => {
       try {
@@ -35,7 +35,7 @@ export const useWelcomeScreenState = () => {
           setAuthError(null);
         }
       } catch (err) {
-        setAuthError('Authentication check failed');
+        setAuthError('認証チェック失敗');
         setUserId(null);
       }
     };
@@ -43,22 +43,22 @@ export const useWelcomeScreenState = () => {
     getUser();
   }, []);
 
-  // Calculate state based on actual conditions
+  // 実際の条件に基づいて状態を計算
   const state = useMemo<WelcomeScreenState>(() => {
     const isAuthenticated = Boolean(userId);
     const errors: string[] = [];
     
     if (authError) errors.push(authError);
-    if (chatStats.error) errors.push('Stats loading failed');
-    if (streakError) errors.push('Streak data failed');
+    if (chatStats.error) errors.push('統計読み込み失敗');
+    if (streakError) errors.push('ストリークデータ失敗');
     
     const isBasicDataLoaded = !isLoadingProfile && !chatStats.isLoading;
     const isLoading = isLoadingProfile || chatStats.isLoading;
     
-    // Advanced features are enabled when:
-    // 1. User is authenticated
-    // 2. Basic data is loaded successfully
-    // 3. No critical errors occurred
+    // 高度な機能は以下の場合に有効：
+    // 1. ユーザーが認証済み
+    // 2. 基本データが正常に読み込まれた
+    // 3. 重大なエラーが発生していない
     const canShowAdvancedFeatures = 
       isAuthenticated && 
       isBasicDataLoaded && 
@@ -80,6 +80,7 @@ export const useWelcomeScreenState = () => {
     profile,
     chatStats,
     streakData,
-    isLoadingStreak
+    isLoadingStreak,
+    refreshStreak
   };
 };

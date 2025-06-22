@@ -59,12 +59,12 @@ const WelcomeScreen = ({
 
   const understoodBySubject = getUnderstoodBySubject();
 
-  // Show error message if there are critical errors
+  // 重大なエラーがある場合のエラーメッセージ表示
   const hasErrors = errors.length > 0;
 
   return (
     <div className="flex-1 bg-gradient-to-br from-slate-50 to-blue-50 overflow-auto">
-      {/* Header */}
+      {/* ヘッダー */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         {isMobile && (
           <Button
@@ -88,7 +88,7 @@ const WelcomeScreen = ({
       </div>
 
       <div className="p-6 max-w-6xl mx-auto space-y-8">
-        {/* Error display if any */}
+        {/* エラー表示（ある場合） */}
         {hasErrors && (
           <Card className="border-red-200 bg-red-50">
             <CardContent className="p-4">
@@ -102,7 +102,7 @@ const WelcomeScreen = ({
           </Card>
         )}
 
-        {/* Streak Display - with Error Boundary - NOW ENABLED */}
+        {/* ストリーク表示 - エラーバウンダリ付き - 再有効化 */}
         {canShowAdvancedFeatures && (
           <ErrorBoundary name="学習ストリーク" fallback={null}>
             <StreakDisplay
@@ -113,7 +113,7 @@ const WelcomeScreen = ({
           </ErrorBoundary>
         )}
 
-        {/* Stats */}
+        {/* 統計情報 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <TooltipProvider>
             <Tooltip>
@@ -198,16 +198,7 @@ const WelcomeScreen = ({
           />
         </div>
 
-        {/* Learning Calendar - TEMPORARILY DISABLED for debugging */}
-        {/* 
-        {canShowAdvancedFeatures && (
-          <ErrorBoundary name="学習カレンダー" fallback={null}>
-            <LearningCalendar userId={userId} />
-          </ErrorBoundary>
-        )}
-        */}
-
-        {/* Understood Units */}
+        {/* 理解済みユニット */}
         <UnderstoodUnits onOpenConversation={onOpenConversation} />
       </div>
     </div>

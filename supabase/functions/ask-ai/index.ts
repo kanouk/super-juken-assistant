@@ -17,7 +17,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// --- メイン処理 ---
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -43,10 +42,9 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    console.log("Current user ID:", user.id);
+    console.log("🎯 AI質問によるストリーク更新開始 - User ID:", user.id);
 
     // 学習ストリークを自動更新（AI質問時）
-    console.log("🔥 Updating user learning streak for user:", user.id);
     await updateUserStreak(supabaseClient, user.id);
 
     // 設定取得
@@ -65,7 +63,7 @@ serve(async (req) => {
       .eq('id', user.id)
       .single();
 
-    // 管理者デフォルト取得 - より詳細なログを追加
+    // 管理者デフォルト取得
     console.log("Attempting to fetch admin_settings...");
     const { data: adminRows, error: adminError } = await supabaseClient
       .from('admin_settings')
@@ -73,9 +71,6 @@ serve(async (req) => {
 
     console.log("Admin settings query error:", adminError);
     console.log("Admin settings data:", adminRows);
-
-    // デバッグログの追加
-    console.log("adminRows fetched (debug):", adminRows);
 
     const adminSettingMap: Record<string, any> = {};
     if (adminRows) {
@@ -86,13 +81,12 @@ serve(async (req) => {
 
     console.log("Processed adminSettingMap:", adminSettingMap);
 
-    // --- APIキー・モデルどちらを使うか決定
+    // APIキー・モデルどちらを使うか決定
     const { apiKeys, models, selectedProvider, usedFreeApi } = getApiConfig(settings, adminSettingMap, user.id);
 
-    // 追加ログ
     console.log("apiKeys to be used", apiKeys, "selectedProvider", selectedProvider);
 
-    // システムメッセージ用の設定オブジェクトを構築（管理者設定とユーザー設定を統合）
+    // システムメッセージ用の設定オブジェクトを構築
     const systemSettings = {
       ...settings,
       user_mbti: profile?.mbti,
@@ -133,7 +127,6 @@ serve(async (req) => {
             ]
           : message
       });
-      // 追加ログ
       console.log("OpenAI apiRequest", { model: model || models.openai, messages });
       const result = await requestOpenAI({
         apiKey: apiKeys.openai,
@@ -184,8 +177,7 @@ serve(async (req) => {
 
     const displayCost = getDisplayCost({ usedFreeApi, baseCost });
 
-    // 追加ログ
-    console.log("AI Response", { aiResponse, usedModel, baseCost, displayCost });
+    console.log("✅ AI Response完了、ストリーク更新済み", { aiResponse: aiResponse.substring(0, 100) + "...", usedModel, baseCost, displayCost });
 
     return new Response(JSON.stringify({
       response: aiResponse,

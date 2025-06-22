@@ -8,18 +8,18 @@ const WelcomePage = () => {
   const welcomeState = useWelcomeScreenState();
 
   const handleSubjectSelect = (subject: string) => {
-    console.log('Subject selected:', subject);
+    console.log('教科選択:', subject);
     navigate(`/app/chat/${subject}`);
   };
 
   const handleOpenConversation = (conversationId: string, subject: string) => {
-    console.log('Opening conversation:', conversationId, subject);
+    console.log('会話オープン:', conversationId, subject);
     navigate(`/app/chat/${subject}/${conversationId}`);
   };
 
   const handleToggleSidebar = () => {
-    // This will be handled by AppLayout in the future
-    console.log('Toggle sidebar from welcome page');
+    // 将来AppLayoutで処理される予定
+    console.log('ウェルカムページからサイドバートグル');
   };
 
   return (
@@ -30,7 +30,6 @@ const WelcomePage = () => {
       isMobile={window.innerWidth < 1024}
       dailyQuestions={welcomeState.chatStats.dailyQuestions}
       understoodCount={welcomeState.chatStats.today_understood || 0}
-      // Pass unified state
       welcomeState={welcomeState}
     />
   );

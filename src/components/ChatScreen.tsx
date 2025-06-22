@@ -10,6 +10,7 @@ interface ChatScreenProps extends UseChatScreenProps {
   onBackToWelcome?: () => void;
   conversationId?: string;
   onNavigateToConversation?: (subject: string, conversationId?: string) => void;
+  onStreakUpdate?: () => void; // ストリーク更新コールバック追加
 }
 
 const ChatScreen = (props: ChatScreenProps) => {
@@ -42,20 +43,20 @@ const ChatScreen = (props: ChatScreenProps) => {
     }
   } = useChatScreen(props);
 
-  // Get the proper subject name from legacySubjects
+  // legacySubjectsから適切な教科名を取得
   const subjectConfig = legacySubjects.find(s => s.id === subject) || legacySubjects.find(s => s.id === 'other');
   const displaySubjectName = subjectConfig?.name || subjectName;
 
-  // Convert selectedImages to ImageData format if needed
+  // selectedImagesをImageData形式に変換（必要に応じて）
   const imageData: ImageData[] = Array.isArray(selectedImages) 
     ? selectedImages.map(img => typeof img === 'string' ? { url: img } : img)
     : [];
 
   const handleSetImages = (imgs: ImageData[]) => {
-    console.log('Setting images:', imgs);
+    console.log('画像設定:', imgs);
   };
 
-  // Fix the quick action handler to match the expected signature
+  // 期待される署名に合わせてクイックアクションハンドラーを修正
   const handleQuickActionWrapper = (prompt: string) => {
     const quickAction = { id: Date.now().toString(), message: prompt, label: prompt };
     handleQuickAction(quickAction);
@@ -100,6 +101,7 @@ const ChatScreen = (props: ChatScreenProps) => {
       messagesEndRef={messagesEndRef}
       conversationUnderstood={conversationUnderstood}
       onBackToWelcome={props.onBackToWelcome}
+      onStreakUpdate={props.onStreakUpdate} // ストリーク更新コールバックを渡す
     />
   );
 };
