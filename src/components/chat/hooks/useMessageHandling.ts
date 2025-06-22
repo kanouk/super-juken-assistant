@@ -16,6 +16,7 @@ interface UseMessageHandlingProps {
   setConversationUnderstood: (understood: boolean) => void;
   onConfettiTrigger?: () => void;
   onUrlUpdate?: (conversationId: string) => void;
+  onStreakUpdate?: () => void; // Add streak update callback
 }
 
 export const useMessageHandling = (props: UseMessageHandlingProps) => {
@@ -30,7 +31,8 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
     updateConversation,
     setConversationUnderstood,
     onConfettiTrigger,
-    onUrlUpdate
+    onUrlUpdate,
+    onStreakUpdate
   } = props;
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -185,7 +187,9 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         image_url: msg.image_url
       }));
 
-      // Call AI using unified Edge Function approach
+      console.log('🚀 Calling AI and updating streak...');
+
+      // Call AI using unified Edge Function approach (streak will be auto-updated)
       const { data, error } = await supabase.functions.invoke('ask-ai', {
         body: {
           message: content,
@@ -232,6 +236,14 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
         console.error('Failed to save AI message:', aiMessageError);
       }
 
+      // Trigger streak data refresh
+      console.log('🔄 Triggering streak data refresh...');
+      if (onStreakUpdate) {
+        onStreakUpdate();
+      }
+
+      console.log('✅ Message sent and streak updated successfully');
+
     } catch (error) {
       console.error('Send message error:', error);
       toast({
@@ -242,7 +254,7 @@ export const useMessageHandling = (props: UseMessageHandlingProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, profile, subject, currentModel, selectedConversationId, setSelectedConversationId, createConversation, toast, onUrlUpdate]);
+  }, [messages, profile, subject, currentModel, selectedConversationId, setSelectedConversationId, createConversation, toast, onUrlUpdate, onStreakUpdate]);
 
   const handleUnderstood = useCallback(async () => {
     if (!selectedConversationId) return;

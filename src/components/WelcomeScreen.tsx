@@ -102,7 +102,7 @@ const WelcomeScreen = ({
           </Card>
         )}
 
-        {/* Streak Display - with Error Boundary */}
+        {/* Streak Display - with Error Boundary - NOW ENABLED */}
         {canShowAdvancedFeatures && (
           <ErrorBoundary name="学習ストリーク" fallback={null}>
             <StreakDisplay

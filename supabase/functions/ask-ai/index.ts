@@ -10,6 +10,7 @@ import { getDisplayCost } from "./utils/cost.ts";
 import { safeParseJson, sanitize } from "./utils/parse.ts";
 import { getApiConfig } from "./utils/apiConfig.ts";
 import { buildSystemMessage } from "./utils/systemMessage.ts";
+import { updateUserStreak } from "./utils/streakUpdate.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,6 +44,10 @@ serve(async (req) => {
     }
 
     console.log("Current user ID:", user.id);
+
+    // 学習ストリークを自動更新（AI質問時）
+    console.log("🔥 Updating user learning streak for user:", user.id);
+    await updateUserStreak(supabaseClient, user.id);
 
     // 設定取得
     const { data: settings } = await supabaseClient
