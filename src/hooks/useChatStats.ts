@@ -16,6 +16,12 @@ interface ChatStats {
   questionsDiff?: number;
 }
 
+// TypeScript interfaces for better type safety
+interface MessageWithCost {
+  cost?: number;
+  role?: string;
+}
+
 // グローバルなインスタンスカウンタ（デバッグ用）
 let chatStatsInstanceId = 0;
 
@@ -194,11 +200,12 @@ export const useChatStats = (userId: string | undefined) => {
       const todayUnderstoodCount = results[0].status === 'fulfilled' ? results[0].value.count || 0 : 0;
       const yesterdayUnderstoodCount = results[1].status === 'fulfilled' ? results[1].value.count || 0 : 0;
       const totalUnderstoodCount = results[2].status === 'fulfilled' ? results[2].value.count || 0 : 0;
-      const totalCostData = results[3].status === 'fulfilled' ? results[3].value.data || [] : [];
+      const totalCostData = results[3].status === 'fulfilled' ? (results[3].value.data as MessageWithCost[]) || [] : [];
       const totalQuestionsCount = results[4].status === 'fulfilled' ? results[4].value.count || 0 : 0;
-      const todayData = results[5].status === 'fulfilled' ? results[5].value.data || [] : [];
-      const yesterdayData = results[6].status === 'fulfilled' ? results[6].value.data || [] : [];
+      const todayData = results[5].status === 'fulfilled' ? (results[5].value.data as MessageWithCost[]) || [] : [];
+      const yesterdayData = results[6].status === 'fulfilled' ? (results[6].value.data as MessageWithCost[]) || [] : [];
 
+      // Type-safe calculations
       const totalCost = totalCostData.reduce((sum, msg) => sum + (msg.cost || 0), 0);
       const dailyCost = todayData.reduce((sum, msg) => sum + (msg.cost || 0), 0);
       const dailyQuestions = todayData.filter(msg => msg.role === 'user').length;
