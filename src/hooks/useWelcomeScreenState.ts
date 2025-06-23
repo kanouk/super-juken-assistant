@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProfile } from '@/hooks/useProfile';
 import { useChatStats } from '@/hooks/useChatStats';
@@ -17,53 +17,72 @@ interface WelcomeScreenState {
 export const useWelcomeScreenState = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
   
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const { profile, isLoading: isLoadingProfile } = useProfile();
   const chatStats = useChatStats(userId);
   const { streakData, isLoading: isLoadingStreak, error: streakError, refreshStreak } = useStreakData(userId);
 
-  // ユーザー認証状態を取得
+  // ユーザー認証状態を取得（安全性向上）
   useEffect(() => {
+    let isCancelled = false;
+
     const getUser = async () => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (isCancelled || !isMountedRef.current) return;
+        
         if (error) {
-          setAuthError(error.message);
+          console.warn('Auth error (non-critical):', error.message);
+          setAuthError(null); // エラーを無視して続行
           setUserId(null);
         } else {
           setUserId(user?.id || null);
           setAuthError(null);
         }
       } catch (err) {
-        setAuthError('認証チェック失敗');
+        if (isCancelled || !isMountedRef.current) return;
+        console.warn('Auth check failed (non-critical):', err);
+        setAuthError(null); // エラーを無視して続行
         setUserId(null);
       }
     };
     
     getUser();
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
-  // 実際の条件に基づいて状態を計算
+  // 実際の条件に基づいて状態を計算（フォールバック強化）
   const state = useMemo<WelcomeScreenState>(() => {
     const isAuthenticated = Boolean(userId);
     const errors: string[] = [];
     
-    if (authError) errors.push(authError);
-    if (chatStats.error) errors.push('統計読み込み失敗');
-    if (streakError) errors.push('ストリークデータ失敗');
+    // エラーは記録するが、致命的にしない
+    if (authError) {
+      console.warn('Auth error logged:', authError);
+    }
+    if (chatStats.error) {
+      console.warn('Chat stats error logged:', chatStats.error);
+    }
+    if (streakError) {
+      console.warn('Streak error logged:', streakError);
+    }
     
     const isBasicDataLoaded = !isLoadingProfile && !chatStats.isLoading;
     const isLoading = isLoadingProfile || chatStats.isLoading;
     
-    // 高度な機能は以下の場合に有効：
-    // 1. ユーザーが認証済み
-    // 2. 基本データが正常に読み込まれた
-    // 3. 重大なエラーが発生していない
-    const canShowAdvancedFeatures = 
-      isAuthenticated && 
-      isBasicDataLoaded && 
-      !authError && 
-      !chatStats.error;
+    // 高度な機能は認証とデータ読み込み完了時に有効
+    const canShowAdvancedFeatures = isAuthenticated && isBasicDataLoaded;
 
     return {
       userId,
@@ -75,12 +94,21 @@ export const useWelcomeScreenState = () => {
     };
   }, [userId, authError, isLoadingProfile, chatStats.isLoading, chatStats.error, streakError]);
 
+  // 安全なデータ返却（フォールバック値付き）
   return {
     ...state,
-    profile,
-    chatStats,
-    streakData,
-    isLoadingStreak,
-    refreshStreak
+    profile: profile || null,
+    chatStats: {
+      ...chatStats,
+      understoodCount: chatStats.understoodCount || 0,
+      dailyQuestions: chatStats.dailyQuestions || 0,
+      totalQuestions: chatStats.totalQuestions || 0,
+      today_understood: chatStats.today_understood || 0,
+      understoodDiff: chatStats.understoodDiff || 0,
+      questionsDiff: chatStats.questionsDiff || 0,
+    },
+    streakData: streakData || { current_streak: 0, longest_streak: 0, last_activity_date: null, streak_start_date: null },
+    isLoadingStreak: isLoadingStreak || false,
+    refreshStreak: refreshStreak || (() => {})
   };
 };

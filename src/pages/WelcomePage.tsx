@@ -22,14 +22,18 @@ const WelcomePage = () => {
     console.log('ウェルカムページからサイドバートグル');
   };
 
+  // welcomeStateが完全に初期化されていない場合の安全な処理
+  const safeChatStats = welcomeState.chatStats || { dailyQuestions: 0 };
+  const safeUnderstoodCount = welcomeState.chatStats?.today_understood || 0;
+
   return (
     <WelcomeScreen
       onSubjectSelect={handleSubjectSelect}
       onOpenConversation={handleOpenConversation}
       onToggleSidebar={handleToggleSidebar}
       isMobile={window.innerWidth < 1024}
-      dailyQuestions={welcomeState.chatStats.dailyQuestions}
-      understoodCount={welcomeState.chatStats.today_understood || 0}
+      dailyQuestions={safeChatStats.dailyQuestions || 0}
+      understoodCount={safeUnderstoodCount}
       welcomeState={welcomeState}
     />
   );

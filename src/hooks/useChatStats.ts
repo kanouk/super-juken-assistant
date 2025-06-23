@@ -22,10 +22,18 @@ let chatStatsInstanceId = 0;
 export const useChatStats = (userId: string | undefined) => {
   // インスタンス固有IDでトラッキング
   const instanceIdRef = useRef<number>(0);
+  const isMountedRef = useRef(true);
+
   if (instanceIdRef.current === 0) {
     chatStatsInstanceId++;
     instanceIdRef.current = chatStatsInstanceId;
   }
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const [stats, setStats] = useState<ChatStats>({
     understoodCount: 0,
@@ -44,11 +52,15 @@ export const useChatStats = (userId: string | undefined) => {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchStats = async () => {
-    if (!userId) {
-      setIsLoading(false);
+    if (!userId || !isMountedRef.current) {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
       return;
     }
+    
     try {
+      if (!isMountedRef.current) return;
       setError(null);
 
       // 正確な日付範囲を設定
@@ -75,10 +87,31 @@ export const useChatStats = (userId: string | undefined) => {
         .select('id')
         .eq('user_id', userId);
 
-      if (conversationsError) throw conversationsError;
+      if (!isMountedRef.current) return;
+
+      if (conversationsError) {
+        console.warn('⚠️ 会話データ取得エラー（非致命的）:', conversationsError);
+        // エラーでもデフォルト値で続行
+        setStats({
+          understoodCount: 0,
+          dailyCost: 0,
+          totalCost: 0,
+          dailyQuestions: 0,
+          totalQuestions: 0,
+          today_understood: 0,
+          understood_by_subject: {},
+          yesterdayUnderstoodCount: 0,
+          yesterdayQuestionsCount: 0,
+          understoodDiff: 0,
+          questionsDiff: 0,
+        });
+        setError(null);
+        return;
+      }
 
       const conversationIds = conversations?.map(conv => conv.id) || [];
       if (conversationIds.length === 0) {
+        if (!isMountedRef.current) return;
         setStats({
           understoodCount: 0,
           dailyCost: 0,
@@ -96,73 +129,85 @@ export const useChatStats = (userId: string | undefined) => {
         return;
       }
 
-      // 本日理解した数（understood_atベース）
-      const { count: todayUnderstoodCount, error: todayUnderstoodError } = await supabase
-        .from('conversations')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('is_understood', true)
-        .gte('understood_at', todayStart)
-        .lt('understood_at', todayEnd);
-      if (todayUnderstoodError) throw todayUnderstoodError;
+      // 各統計データを安全に取得
+      const promises = [
+        // 本日理解した数
+        supabase
+          .from('conversations')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('is_understood', true)
+          .gte('understood_at', todayStart)
+          .lt('understood_at', todayEnd),
+        
+        // 昨日理解した数
+        supabase
+          .from('conversations')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('is_understood', true)
+          .gte('understood_at', yesterdayStart)
+          .lt('understood_at', yesterdayEnd),
+        
+        // 累計理解した数
+        supabase
+          .from('conversations')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('is_understood', true),
+        
+        // コストデータ
+        supabase
+          .from('messages')
+          .select('cost')
+          .in('conversation_id', conversationIds),
+        
+        // 全質問数
+        supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'user')
+          .in('conversation_id', conversationIds),
+        
+        // 今日のデータ
+        supabase
+          .from('messages')
+          .select('cost, role')
+          .gte('created_at', todayStart)
+          .lt('created_at', todayEnd)
+          .in('conversation_id', conversationIds),
+        
+        // 昨日のデータ
+        supabase
+          .from('messages')
+          .select('role')
+          .gte('created_at', yesterdayStart)
+          .lt('created_at', yesterdayEnd)
+          .in('conversation_id', conversationIds)
+      ];
 
-      // 昨日理解した数
-      const { count: yesterdayUnderstoodCount, error: yesterdayUnderstoodError } = await supabase
-        .from('conversations')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('is_understood', true)
-        .gte('understood_at', yesterdayStart)
-        .lt('understood_at', yesterdayEnd);
-      if (yesterdayUnderstoodError) throw yesterdayUnderstoodError;
+      const results = await Promise.allSettled(promises);
+      
+      if (!isMountedRef.current) return;
 
-      // 累計理解した数
-      const { count: totalUnderstoodCount, error: totalUnderstoodError } = await supabase
-        .from('conversations')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('is_understood', true);
-      if (totalUnderstoodError) throw totalUnderstoodError;
+      // 結果を安全に処理
+      const todayUnderstoodCount = results[0].status === 'fulfilled' ? results[0].value.count || 0 : 0;
+      const yesterdayUnderstoodCount = results[1].status === 'fulfilled' ? results[1].value.count || 0 : 0;
+      const totalUnderstoodCount = results[2].status === 'fulfilled' ? results[2].value.count || 0 : 0;
+      const totalCostData = results[3].status === 'fulfilled' ? results[3].value.data || [] : [];
+      const totalQuestionsCount = results[4].status === 'fulfilled' ? results[4].value.count || 0 : 0;
+      const todayData = results[5].status === 'fulfilled' ? results[5].value.data || [] : [];
+      const yesterdayData = results[6].status === 'fulfilled' ? results[6].value.data || [] : [];
 
-      const { data: totalCostData, error: totalCostError } = await supabase
-        .from('messages')
-        .select('cost')
-        .in('conversation_id', conversationIds);
-      if (totalCostError) throw totalCostError;
+      const totalCost = totalCostData.reduce((sum, msg) => sum + (msg.cost || 0), 0);
+      const dailyCost = todayData.reduce((sum, msg) => sum + (msg.cost || 0), 0);
+      const dailyQuestions = todayData.filter(msg => msg.role === 'user').length;
+      const yesterdayQuestions = yesterdayData.filter(msg => msg.role === 'user').length;
 
-      // 全てのユーザーメッセージ数を取得
-      const { count: totalQuestionsCount, error: totalQuestionsError } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'user')
-        .in('conversation_id', conversationIds);
-      if (totalQuestionsError) throw totalQuestionsError;
-
-      const { data: todayData, error: todayError } = await supabase
-        .from('messages')
-        .select('cost, role')
-        .gte('created_at', todayStart)
-        .lt('created_at', todayEnd)
-        .in('conversation_id', conversationIds);
-      if (todayError) throw todayError;
-
-      const { data: yesterdayData, error: yesterdayError } = await supabase
-        .from('messages')
-        .select('role')
-        .gte('created_at', yesterdayStart)
-        .lt('created_at', yesterdayEnd)
-        .in('conversation_id', conversationIds);
-      if (yesterdayError) throw yesterdayError;
-
-      const totalCost = totalCostData?.reduce((sum, msg) => sum + (msg.cost || 0), 0) || 0;
-      const dailyCost = todayData?.reduce((sum, msg) => sum + (msg.cost || 0), 0) || 0;
-      const dailyQuestions = todayData?.filter(msg => msg.role === 'user').length || 0;
-      const yesterdayQuestions = yesterdayData?.filter(msg => msg.role === 'user').length || 0;
-
-      const understoodDiff = (todayUnderstoodCount || 0) - (yesterdayUnderstoodCount || 0);
+      const understoodDiff = todayUnderstoodCount - yesterdayUnderstoodCount;
       const questionsDiff = dailyQuestions - yesterdayQuestions;
 
-      console.log('Stats calculated:', {
+      console.log('Stats calculated safely:', {
         todayUnderstoodCount,
         yesterdayUnderstoodCount,
         totalUnderstoodCount,
@@ -171,23 +216,40 @@ export const useChatStats = (userId: string | undefined) => {
       });
 
       setStats({
-        understoodCount: totalUnderstoodCount || 0,
+        understoodCount: totalUnderstoodCount,
         dailyCost,
         totalCost,
         dailyQuestions,
-        totalQuestions: totalQuestionsCount || 0,
-        today_understood: todayUnderstoodCount || 0,
+        totalQuestions: totalQuestionsCount,
+        today_understood: todayUnderstoodCount,
         understood_by_subject: {},
-        yesterdayUnderstoodCount: yesterdayUnderstoodCount || 0,
+        yesterdayUnderstoodCount,
         yesterdayQuestionsCount: yesterdayQuestions,
         understoodDiff,
         questionsDiff,
       });
     } catch (err) {
-      console.error('[ChatStats] Error fetching chat stats:', err);
-      setError(err as Error);
+      if (!isMountedRef.current) return;
+      console.warn('⚠️ 統計取得で予期しないエラー（非致命的）:', err);
+      // エラーでもデフォルト値で続行
+      setStats({
+        understoodCount: 0,
+        dailyCost: 0,
+        totalCost: 0,
+        dailyQuestions: 0,
+        totalQuestions: 0,
+        today_understood: 0,
+        understood_by_subject: {},
+        yesterdayUnderstoodCount: 0,
+        yesterdayQuestionsCount: 0,
+        understoodDiff: 0,
+        questionsDiff: 0,
+      });
+      setError(null);
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 

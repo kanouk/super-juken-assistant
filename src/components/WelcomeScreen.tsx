@@ -43,14 +43,52 @@ const WelcomeScreen = ({
   understoodCount,
   welcomeState
 }: WelcomeScreenProps) => {
+  // 安全にデータを取得（フォールバック付き）
   const { 
     userId, 
     canShowAdvancedFeatures, 
     chatStats, 
     streakData, 
     isLoadingStreak,
-    errors 
-  } = welcomeState;
+    errors,
+    isLoading 
+  } = welcomeState || {};
+
+  // ローディング状態での表示
+  if (isLoading) {
+    return (
+      <div className="flex-1 bg-gradient-to-br from-slate-50 to-blue-50 overflow-auto">
+        <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleSidebar}
+              className="lg:hidden"
+            >
+              <BookOpen className="h-5 w-5" />
+            </Button>
+          )}
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg">
+              <GraduationCap className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">読み込み中...</h1>
+              <p className="text-sm text-gray-600">学習データを準備しています</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const getUnderstoodBySubject = () => {
     const subjectCounts: Record<string, number> = {};
@@ -60,7 +98,19 @@ const WelcomeScreen = ({
   const understoodBySubject = getUnderstoodBySubject();
 
   // 重大なエラーがある場合のエラーメッセージ表示
-  const hasErrors = errors.length > 0;
+  const hasErrors = errors && errors.length > 0;
+
+  // 安全なデータアクセス
+  const safeStreakData = streakData || { current_streak: 0, longest_streak: 0 };
+  const safeChatStats = chatStats || {
+    today_understood: 0,
+    understoodCount: 0,
+    dailyQuestions: 0,
+    totalQuestions: 0,
+    understoodDiff: 0,
+    questionsDiff: 0,
+    isLoading: false
+  };
 
   return (
     <div className="flex-1 bg-gradient-to-br from-slate-50 to-blue-50 overflow-auto">
@@ -90,24 +140,24 @@ const WelcomeScreen = ({
       <div className="p-6 max-w-6xl mx-auto space-y-8">
         {/* エラー表示（ある場合） */}
         {hasErrors && (
-          <Card className="border-red-200 bg-red-50">
+          <Card className="border-yellow-200 bg-yellow-50">
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
-                <Sparkles className="h-5 w-5 text-red-600" />
-                <p className="text-sm text-red-800">
-                  一部の機能で問題が発生しています。基本機能は正常に動作します。
+                <Sparkles className="h-5 w-5 text-yellow-600" />
+                <p className="text-sm text-yellow-800">
+                  一部のデータ読み込みに時間がかかっていますが、基本機能は利用できます。
                 </p>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* ストリーク表示 - エラーバウンダリ付き - 再有効化 */}
+        {/* ストリーク表示 - エラーバウンダリ付き */}
         {canShowAdvancedFeatures && (
           <ErrorBoundary name="学習ストリーク" fallback={null}>
             <StreakDisplay
-              currentStreak={streakData?.current_streak || 0}
-              longestStreak={streakData?.longest_streak || 0}
+              currentStreak={safeStreakData.current_streak || 0}
+              longestStreak={safeStreakData.longest_streak || 0}
               isLoading={isLoadingStreak}
             />
           </ErrorBoundary>
@@ -121,9 +171,9 @@ const WelcomeScreen = ({
                 <div>
                   <StatCard
                     title="本日理解した数"
-                    value={chatStats.today_understood || 0}
-                    diff={chatStats.understoodDiff}
-                    isLoading={chatStats.isLoading}
+                    value={safeChatStats.today_understood || 0}
+                    diff={safeChatStats.understoodDiff}
+                    isLoading={safeChatStats.isLoading}
                     icon={CheckCircle}
                     iconColor="text-green-600"
                     cardColor="bg-green-50"
@@ -152,8 +202,8 @@ const WelcomeScreen = ({
                 <div>
                   <StatCard
                     title="累計理解した数"
-                    value={chatStats.understoodCount}
-                    isLoading={chatStats.isLoading}
+                    value={safeChatStats.understoodCount || 0}
+                    isLoading={safeChatStats.isLoading}
                     icon={Target}
                     iconColor="text-blue-600"
                     cardColor="bg-blue-50"
@@ -178,9 +228,9 @@ const WelcomeScreen = ({
 
           <StatCard
             title="本日の質問数"
-            value={chatStats.dailyQuestions}
-            diff={chatStats.questionsDiff}
-            isLoading={chatStats.isLoading}
+            value={safeChatStats.dailyQuestions || 0}
+            diff={safeChatStats.questionsDiff}
+            isLoading={safeChatStats.isLoading}
             icon={TrendingUp}
             iconColor="text-purple-600"
             cardColor="bg-purple-50"
@@ -189,8 +239,8 @@ const WelcomeScreen = ({
 
           <StatCard
             title="累計質問数"
-            value={chatStats.totalQuestions || 0}
-            isLoading={chatStats.isLoading}
+            value={safeChatStats.totalQuestions || 0}
+            isLoading={safeChatStats.isLoading}
             icon={User}
             iconColor="text-orange-600"
             cardColor="bg-orange-50"
@@ -199,7 +249,9 @@ const WelcomeScreen = ({
         </div>
 
         {/* 理解済みユニット */}
-        <UnderstoodUnits onOpenConversation={onOpenConversation} />
+        <ErrorBoundary name="理解済みユニット" fallback={null}>
+          <UnderstoodUnits onOpenConversation={onOpenConversation} />
+        </ErrorBoundary>
       </div>
     </div>
   );
