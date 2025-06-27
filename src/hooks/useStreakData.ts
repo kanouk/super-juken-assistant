@@ -21,6 +21,7 @@ export const useStreakData = (userId?: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
+  const channelRef = useRef<any>(null);
 
   useEffect(() => {
     return () => {
@@ -127,40 +128,62 @@ export const useStreakData = (userId?: string) => {
     }
   }, [userId]);
 
-  // リアルタイム購読設定でストリーク更新を監視（エラー処理強化）
+  // リアルタイム購読設定でストリーク更新を監視（エラー処理強化・重複防止）
   useEffect(() => {
     if (!userId || !isMountedRef.current) return;
 
+    // 既存のチャンネルがある場合はクリーンアップ
+    if (channelRef.current) {
+      console.log('🧹 既存チャンネルクリーンアップ');
+      try {
+        supabase.removeChannel(channelRef.current);
+      } catch (err) {
+        console.warn('⚠️ 既存チャンネルクリーンアップエラー（非致命的）:', err);
+      }
+      channelRef.current = null;
+    }
+
     console.log('👂 ストリーク更新のリアルタイム購読設定');
     
-    const channel = supabase
-      .channel('streak-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'learning_streaks',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          if (!isMountedRef.current) return;
-          console.log('🔄 リアルタイムストリーク更新受信:', payload.new);
-          try {
-            setStreakData(payload.new as StreakData);
-          } catch (err) {
-            console.warn('⚠️ リアルタイム更新処理エラー（非致命的）:', err);
+    try {
+      const channel = supabase
+        .channel(`streak-updates-${userId}-${Date.now()}`) // ユニークなチャンネル名
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'learning_streaks',
+            filter: `user_id=eq.${userId}`
+          },
+          (payload) => {
+            if (!isMountedRef.current) return;
+            console.log('🔄 リアルタイムストリーク更新受信:', payload.new);
+            try {
+              setStreakData(payload.new as StreakData);
+            } catch (err) {
+              console.warn('⚠️ リアルタイム更新処理エラー（非致命的）:', err);
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe((status) => {
+          console.log('📡 ストリーク購読ステータス:', status);
+        });
+
+      channelRef.current = channel;
+    } catch (err) {
+      console.warn('⚠️ リアルタイム購読設定エラー（非致命的）:', err);
+    }
 
     return () => {
       console.log('🔌 リアルタイム購読クリーンアップ');
-      try {
-        supabase.removeChannel(channel);
-      } catch (err) {
-        console.warn('⚠️ チャンネルクリーンアップエラー（非致命的）:', err);
+      if (channelRef.current) {
+        try {
+          supabase.removeChannel(channelRef.current);
+        } catch (err) {
+          console.warn('⚠️ チャンネルクリーンアップエラー（非致命的）:', err);
+        }
+        channelRef.current = null;
       }
     };
   }, [userId]);

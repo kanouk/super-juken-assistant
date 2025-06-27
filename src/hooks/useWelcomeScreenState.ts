@@ -18,6 +18,7 @@ export const useWelcomeScreenState = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
+  const authInitializedRef = useRef(false);
   
   useEffect(() => {
     return () => {
@@ -29,36 +30,64 @@ export const useWelcomeScreenState = () => {
   const chatStats = useChatStats(userId);
   const { streakData, isLoading: isLoadingStreak, error: streakError, refreshStreak } = useStreakData(userId);
 
-  // ユーザー認証状態を取得（安全性向上）
+  // ユーザー認証状態を取得（重複防止・安全性向上）
   useEffect(() => {
+    if (authInitializedRef.current) return;
+    
     let isCancelled = false;
 
-    const getUser = async () => {
+    const initializeAuth = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser();
+        console.log('🔐 認証状態初期化開始');
+        
+        // 既存セッション確認
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (isCancelled || !isMountedRef.current) return;
         
-        if (error) {
-          console.warn('Auth error (non-critical):', error.message);
-          setAuthError(null); // エラーを無視して続行
+        if (sessionError) {
+          console.warn('セッション取得エラー（非致命的）:', sessionError.message);
+          setAuthError(null);
           setUserId(null);
         } else {
-          setUserId(user?.id || null);
+          console.log('💻 既存セッション:', session ? 'あり' : 'なし');
+          setUserId(session?.user?.id || null);
           setAuthError(null);
         }
+
+        // 認証状態変更の監視（重複防止）
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            if (!isMountedRef.current) return;
+            console.log('🔄 認証状態変更:', event);
+            setUserId(session?.user?.id || null);
+            setAuthError(null);
+          }
+        );
+
+        authInitializedRef.current = true;
+
+        return () => {
+          isCancelled = true;
+          if (subscription) {
+            subscription.unsubscribe();
+          }
+        };
       } catch (err) {
         if (isCancelled || !isMountedRef.current) return;
-        console.warn('Auth check failed (non-critical):', err);
-        setAuthError(null); // エラーを無視して続行
+        console.warn('認証初期化エラー（非致命的）:', err);
+        setAuthError(null);
         setUserId(null);
+        authInitializedRef.current = true;
       }
     };
-    
-    getUser();
 
+    const cleanup = initializeAuth();
+    
     return () => {
-      isCancelled = true;
+      if (cleanup) {
+        cleanup.then(cleanupFn => cleanupFn && cleanupFn());
+      }
     };
   }, []);
 
